@@ -366,6 +366,67 @@ def run_system_r(task: TrackSTask, simulator: UserSimulator, trial: int, provide
         final_patch=final_patch,
     )
 
+def run_system_f(task: TrackSTask, simulator: UserSimulator, trial: int, provider=None, tau_d: float = 0.0, k: int = 3, **kwargs) -> PolicyResult:
+    """System F: ProbeGate (System E + Canary validation)."""
+    from .canary import inject_canaries, verify_canary_safety, filter_canary_artifacts
+
+    provider = provider or task.get_provider()
+    plans = provider.generate_k(task.prompt, seed=task.seed, k=k)
+
+    # 1. Run canaries on temporary copy
+    df_canary, canary_rids = inject_canaries(task.df, task.seed)
+    any_unsafe = any(not verify_canary_safety(p, df_canary, canary_rids) for p in plans)
+
+    # 2. Consensus on original dataset
+    patches = [plan_to_patch(task.df, p) for p in plans]
+    consensus = calculate_consensus(patches)
+    tokens = sum(provider.token_count(task.prompt, p) for p in plans)
+    latency = 1.0
+
+    # Ask if consensus exceeds tau_d OR canaries detected unsafe behavior
+    should_ask = consensus.should_ask(tau_d) or any_unsafe
+
+    questions_asked = 0
+    if should_ask:
+        question = generate_clarification_question(task.df, plans, patches, consensus)
+        if question and question.options:
+            questions_asked = 1
+            latency += 0.5
+            ans = simulator.answer_question(question, task.gold)
+            if ans == "unsure":
+                maj = majority_vote_patch(patches)
+                contested_rids = {atom[1] for atom in consensus.contested_atoms}
+                final_patch = Patch.create(
+                    deleted_rids=maj.deleted_rids,
+                    cell_edits=maj.cell_edits_dict(),
+                    flagged={r: "canary_consensus_unsure" for r in contested_rids},
+                )
+            else:
+                final_patch = question.options[ans].patch
+        else:
+            final_patch = majority_vote_patch(patches)
+    else:
+        final_patch = majority_vote_patch(patches)
+
+    # Clean any canaries if they somehow got in
+    final_patch = filter_canary_artifacts(final_patch, canary_rids)
+
+    task_success, silent_error, q_prec = evaluate_metrics(final_patch, task.gold, questions_asked, task.gold["ambiguous"])
+
+    return PolicyResult(
+        system="F",
+        task_id=task.task_id,
+        mode=simulator.mode,
+        trial=trial,
+        task_success=task_success,
+        silent_error=silent_error,
+        questions_asked=questions_asked,
+        question_precision=q_prec,
+        tokens=tokens,
+        simulated_latency=latency,
+        final_patch=final_patch,
+    )
+
 SYSTEM_DISPATCH = {
     "A": run_system_a,
     "A2": run_system_a2,
@@ -373,5 +434,6 @@ SYSTEM_DISPATCH = {
     "C": run_system_c,
     "D": run_system_d,
     "E": run_system_e,
+    "F": run_system_f,
     "R": run_system_r,
 }

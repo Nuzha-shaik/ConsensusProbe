@@ -1,0 +1,9 @@
+{
+  "configs/frozen.toml": "5885aa7efb24be803d48954ce3e2690a7d9dc12efd9ff93a5623a9d2b8177a27",
+  "prereg/PREREG.md": "dae8b0882fabbda2e1e8e4b0a5c758b07fa109cdf8de3e1c688de0d34b5d6f9c",
+  "research/tests/test_p2.py": "b571fe0e199a616b2368ab2b85248b8e4783f284fddbf79c6ac45cf8ac80f984",
+  "research/tests/test_p3_track_s.py": "841fdbdabae4ca6b9262e4fb09c5d53a8fcf999ad01f28cfdb6e1fa6019436d4",
+  "research/tests/test_p4_policies.py": "49b1c1da465bf5733840bed294407a9528bbac1e4119b7f246ff8dea87879508",
+  "research/tests/test_p5_canary.py": "1ef024034e4a3dce6d7637b678adf3ca94ed7cde2330c66470af89b40dd8630d",
+  "research/track_s.py": "aa71a6c4d09724006f58e83c2c9d12fc503abf8431f95d51e4b793deedba218b"
+}
