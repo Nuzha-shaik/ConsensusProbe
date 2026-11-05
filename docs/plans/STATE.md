@@ -1,23 +1,23 @@
 # ConsensusProbe 2.0 Loop State
 
-Current Phase: Phase 1 Complete -> Advancing to Phase 2 (Swarm Pipeline & Gatekeeper)
+Current Phase: Phase 2 Complete -> Advancing to Phase 3 (Results Views)
 Branch: feat/cp2-showcase
 Baseline Tag: pre-cp2
-Latest Phase Tag: cp2-phase1-done
+Latest Phase Tag: cp2-phase2-done
 
 ## Status
-- Last item done: P1.9 Phase 1 verification, review ritual, and tag
-- Next item: P2.1 (Phase 2 planning: Agent Swarm Cards & Model Registry)
+- Last item done: P2.8 Phase 2 verification, review ritual, and tag
+- Next item: P3.1 (Phase 3 planning: Results view toggle & Unified Diff)
 - Blocked items: None
 
-## Phase 1 Shipped
-- HeroStrip with pitch and 5-step pipeline progress navigation
-- Ingestion Web Worker (parseWorker.ts) for streaming BOM/encoding/delimiter sniffing
-- Sample generator (scripts/make_samples.py) with retail_clean.csv and customers_contested.csv
-- Companion ground-truth JSON files with injected ambiguities
-- IngestionDropzone with animated drag/drop border, visible Browse button, and 20-row preview
-- SampleButtons for instant one-click execution
-- Pipeline tuning verified: clean d=0.0000, contested d=1.0000
+## Phase 2 Shipped
+- Model Registry (config/modelRegistry.ts) resolving labels and mock status
+- SwarmAgentCards: Cleaner (cyan), Supervisor (indigo), Gatekeeper (emerald/amber)
+- ThresholdSimulator: interactive slider testing d > tau_d boundary
+- AgentTraceTimeline & CanaryAuditPanel
+- ClarificationModal with focus trap, shortcuts (1,2), and impact preview
+- Removed legacy fake Candidate Plan cards with hardcoded columns
 
-## Open Risks
-- Phase 2 Agent Swarm must strictly adhere to Rule R3 (no invented reasoning logs; real timestamps or marked reconstructed).
+## Tooling Installed
+- CodeRabbit CLI v0.9.2 installed globally
+- Playwright Chromium, Headless Shell, and FFmpeg binaries installed locally

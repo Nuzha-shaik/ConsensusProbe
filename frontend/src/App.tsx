@@ -5,6 +5,12 @@ import { LoginPage } from './pages/LoginPage';
 import { HeroStrip, PipelineStepId } from './components/showcase/HeroStrip';
 import { IngestionDropzone } from './components/showcase/IngestionDropzone';
 import { SampleButtons } from './components/showcase/SampleButtons';
+import { SwarmAgentCards } from './components/showcase/SwarmAgentCards';
+import { ThresholdSimulator } from './components/showcase/ThresholdSimulator';
+import { AgentTraceTimeline } from './components/showcase/AgentTraceTimeline';
+import { CanaryAuditPanel } from './components/showcase/CanaryAuditPanel';
+import { ClarificationModal, RecordedDecision } from './components/showcase/ClarificationModal';
+import { adaptApiResponseToRunViewModel } from './adapters/runViewModel';
 import {
   Upload,
   Database,
@@ -75,10 +81,26 @@ function MainStudio() {
 
   // Workspace states
   const [consensusScore, setConsensusScore] = useState<number | null>(null);
-  const [cleanStatus, setCleanStatus] = useState<string | null>(null);
-  const [clarification, setClarification] = useState<ClarificationQuestion | null>(null);
+  const [cleanStatus, setCleanStatus] = useState<'applied' | 'needs_clarification' | 'no_changes' | null>(null);
+  const [clarification, setClarification] = useState<any | null>(null);
   const [selectedOption, setSelectedOption] = useState<number>(0);
   const [patchSummary, setPatchSummary] = useState<any | null>(null);
+  const [simulatedTauD, setSimulatedTauD] = useState<number>(0.0);
+  const [recordedDecisions, setRecordedDecisions] = useState<RecordedDecision[]>([]);
+  const [isClarifyModalOpen, setIsClarifyModalOpen] = useState<boolean>(false);
+
+  const viewModel = currentDataset
+    ? adaptApiResponseToRunViewModel(
+        currentDataset,
+        {
+          status: cleanStatus || 'applied',
+          consensus_score: consensusScore ?? 0.0,
+          question: clarification,
+          patch_summary: patchSummary,
+        },
+        simulatedTauD
+      )
+    : null;
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
@@ -661,116 +683,81 @@ function MainStudio() {
               )}
             </div>
 
-            {/* Consensus Status Banner */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className={`p-3 rounded-2xl ${
-                  cleanStatus === 'needs_clarification' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
-                }`}>
-                  {cleanStatus === 'needs_clarification' ? (
-                    <HelpCircle className="w-6 h-6" />
-                  ) : (
-                    <CheckCircle2 className="w-6 h-6" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-base">
-                    {cleanStatus === 'needs_clarification'
-                      ? 'Semantic Disagreement Detected'
-                      : 'Patches Unified & Verified'}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Mean Pairwise Disagreement Score ($d$):{' '}
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {consensusScore !== null ? consensusScore.toFixed(4) : '0.0000'}
-                    </span>
-                  </p>
-                </div>
-              </div>
+            {/* Visual Multi-Agent Swarm Command Center */}
+            {viewModel && (
+              <>
+                <SwarmAgentCards
+                  viewModel={viewModel}
+                  simulatedTauD={simulatedTauD}
+                  isRunning={loading}
+                />
 
-              {patchSummary && (
-                <div className="flex space-x-6 text-xs text-slate-600 dark:text-slate-400">
-                  <div>
-                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.deleted_rows}</span> rows deleted
-                  </div>
-                  <div>
-                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.edited_cells}</span> cells modified
-                  </div>
-                  <div>
-                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.flagged_rows}</span> rows flagged
-                  </div>
-                </div>
-              )}
-            </div>
+                <ThresholdSimulator
+                  meanDisagreement={viewModel.meanDisagreement}
+                  simulatedTauD={simulatedTauD}
+                  onChangeTauD={setSimulatedTauD}
+                  onReset={() => setSimulatedTauD(0.0)}
+                />
 
-            {/* Clarification Dialog if needed */}
+                <AgentTraceTimeline viewModel={viewModel} />
+
+                <CanaryAuditPanel viewModel={viewModel} />
+              </>
+            )}
+
+            {/* Clarification Trigger Banner */}
             {clarification && (
-              <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-6 shadow-xs space-y-4">
-                <div className="flex items-start justify-between">
+              <div className="p-5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-500/30 shadow-xs flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/30">
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Interactive Clarification Required</span>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">{clarification.question_text}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                      Ambiguous Candidate Operations
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                      {clarification.question_text}
+                    </h3>
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  {clarification.options.map((opt) => (
-                    <label
-                      key={opt.option_id}
-                      className={`flex items-start p-4 rounded-xl border cursor-pointer transition ${
-                        selectedOption === opt.option_id
-                          ? 'border-sky-500 bg-white dark:bg-slate-900 shadow-xs ring-1 ring-sky-500'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="clarification_opt"
-                        checked={selectedOption === opt.option_id}
-                        onChange={() => setSelectedOption(opt.option_id)}
-                        className="mt-1 text-sky-600"
-                      />
-                      <div className="ml-3 text-sm">
-                        <div className="font-semibold text-slate-900 dark:text-white">{opt.description}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                          Affected rows: <span className="font-medium text-slate-700 dark:text-slate-300 font-mono">{opt.affected_rows_count}</span>
-                          {opt.example_rids.length > 0 && ` (Sample IDs: ${opt.example_rids.join(', ')})`}
-                        </div>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-
-                <div className="pt-2 flex justify-end">
-                  <button
-                    onClick={handleResolveClarification}
-                    disabled={loading}
-                    className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition"
-                  >
-                    Confirm & Apply Selected Strategy
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsClarifyModalOpen(true)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white shadow-xs transition"
+                >
+                  Review & Resolve Conflicts
+                </button>
               </div>
             )}
 
-            {/* Three Candidate-Plan Columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[0, 1, 2].map((idx) => (
-                <div key={idx} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <span className="font-bold text-sm text-slate-900 dark:text-white">Candidate Plan {idx + 1}</span>
-                    <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded font-mono">
-                      Conf: {(0.88 - idx * 0.05).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="text-xs space-y-2 text-slate-700 dark:text-slate-300 font-mono bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
-                    <div>1. Deduplicate(by=['product_name'], keep='{idx === 1 ? 'last' : 'first'}')</div>
-                    <div>2. HandleMissing(col='price', strategy='{idx === 0 ? 'drop' : 'fill_mean'}')</div>
-                    <div>3. NormalizeCategory(col='category')</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            {/* Interactive Clarification Modal */}
+            {clarification && (
+              <ClarificationModal
+                question={{
+                  questionText: clarification.question_text,
+                  parameterName: clarification.parameter_name,
+                  options: (clarification.options || []).map((o: any) => ({
+                    optionId: o.option_id,
+                    description: o.description,
+                    affectedRowsCount: o.affected_rows_count,
+                    exampleRids: o.example_rids,
+                  })),
+                }}
+                isOpen={isClarifyModalOpen}
+                onClose={() => setIsClarifyModalOpen(false)}
+                onConfirm={(optId, applyToSimilar) => {
+                  setSelectedOption(optId);
+                  handleResolveClarification();
+                  setIsClarifyModalOpen(false);
+                }}
+                onRecordDecision={(dec) => {
+                  setRecordedDecisions((prev) => [...prev, dec]);
+                }}
+                isLoading={loading}
+              />
+            )}
           </div>
         )}
       </main>
