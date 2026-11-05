@@ -1,0 +1,5 @@
+sku,product_name,category,price
+SKU-1,Laptop Pro,Electronics,999.0
+SKU-1,Laptop Pro,Electronics,999.0
+SKU-2,=SUM(A1:A2),Office,25.0
+SKU-3,Mouse,Electronics,

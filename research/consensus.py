@@ -127,8 +127,8 @@ def generate_clarification_question(
     param_name = list(sorted(diff_params))[0] if diff_params else "cleaning_strategy"
 
     for opt_id, (cand_patch, plan_indices) in enumerate(unique_candidates[:4]):
-        affected_rids = sorted(list(set(cand_patch.deleted_rids) | {rid for (rid, col) in cand_patch.cell_edits_dict().keys()}))
-        example_rids = affected_rids[:3]
+        affected_rids = sorted(list({int(r) for r in cand_patch.deleted_rids} | {int(rid) for (rid, col) in cand_patch.cell_edits_dict().keys()}))
+        example_rids = [int(x) for x in affected_rids[:3]]
 
         desc = f"Strategy {opt_id + 1} (supported by {len(plan_indices)} plans): "
         if cand_patch.deleted_rids:
