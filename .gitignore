@@ -13,3 +13,4 @@ build/
 results/parts/
 .pytest_cache/
 backend/storage/
+firebase-debug.log
