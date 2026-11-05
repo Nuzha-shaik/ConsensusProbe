@@ -1,0 +1,4 @@
+key,title,authors,venue,year,doi_or_url,verified,note
+lambda2025,LAMBDA: A Large Model Based Data Agent,Zhang et al.,JASA,2025,,no,Verify DOI and page numbers
+prepbench,PrepBench: A Benchmark for Data Preparation,,,,,no,Verify full citation
+autodcworkflow,AutoDCWorkflow: LLM-Based Data Cleaning Workflow,,,,,no,Verify full citation
