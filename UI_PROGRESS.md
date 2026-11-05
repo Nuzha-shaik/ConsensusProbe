@@ -3,7 +3,7 @@
 ## Phase Overview
 
 - [x] **P0: Recon & Safety Harness** (baseline recorded, frozen paths locked, ui_gate operational)
-- [ ] **P1: Design System & Tokens** (Impeccable teach context, design tokens in Tailwind, base components normalized)
+- [x] **P1: Design System & Tokens** (Impeccable teach context, design tokens in Tailwind, base components normalized)
 - [ ] **P2: Auth Plumbing** (`@react-oauth/google`, `AuthProvider`, `ProtectedRoute`, router guards, bearer headers)
 - [ ] **P3: Login Page** (desktop split layout, Google button, loading/error states, AA contrast)
 - [ ] **P4: App Shell** (header wordmark, clear active nav states, theme toggle, user menu)
