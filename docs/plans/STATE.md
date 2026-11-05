@@ -5,10 +5,10 @@ Branch: feat/cp2-showcase
 Baseline Tag: pre-cp2
 
 ## Status
-- Last item done: P0.1 Recon and Data Availability (docs/DATA_AVAILABILITY.md)
-- Next item: P0.2 Backend paths list (scripts/backend_paths.txt)
+- Last item done: P0.2-P0.3 Backend paths list & Core freeze check script
+- Next item: P0.4 Design token check script (scripts/token_check.py)
 - Blocked items: None
 
 ## Open Risks
-- Backend API exposes limited pipeline telemetry in REST responses (canaries, pairwise d, per-plan cell diffs, model IDs). RunViewModel will explicitly type these as `{ available: false, reason: string }` per R2 & R6 to prevent any fabricated data.
-- Core freeze constraint (R1): zero modifications to backend/ or research/ folders.
+- Frontend code may contain hex/rgb literals that must be migrated or permitted via tokens.css.
+- Forbidden literals check (P0.5) must ensure no legacy mock numbers (98.4, 94.2, 58%) remain.
