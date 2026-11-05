@@ -1,7 +1,10 @@
 PYTHON ?= python
 PHASE ?= 1
 
-.PHONY: verify_all tests build gate lock_check paper security numbers_check clean
+.PHONY: verify_all tests build gate lock_check paper security numbers_check clean ui_gate
+
+ui_gate:
+	$(PYTHON) scripts/ui_gate.py
 
 verify_all: security tests build lock_check numbers_check paper
 	@echo "All checks passed."

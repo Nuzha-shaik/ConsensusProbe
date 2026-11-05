@@ -41,6 +41,11 @@ if "%TARGET%"=="numbers_check" (
     exit /b %ERRORLEVEL%
 )
 
+if "%TARGET%"=="ui_gate" (
+    python scripts\ui_gate.py
+    exit /b %ERRORLEVEL%
+)
+
 if "%TARGET%"=="paper" (
     echo latexmk not available (DEGRADED mode)
     exit /b 0
