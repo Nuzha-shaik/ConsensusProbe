@@ -1,0 +1,57 @@
+{
+  "k_ablation": {
+    "K_2": {
+      "k": 2,
+      "task_success_rate": 0.7033,
+      "silent_error_rate": 0.02,
+      "avg_questions": 0.27,
+      "avg_tokens": 50.2
+    },
+    "K_3": {
+      "k": 3,
+      "task_success_rate": 0.7133,
+      "silent_error_rate": 0.0,
+      "avg_questions": 0.38,
+      "avg_tokens": 75.2
+    },
+    "K_4": {
+      "k": 4,
+      "task_success_rate": 0.7267,
+      "silent_error_rate": 0.0,
+      "avg_questions": 0.49,
+      "avg_tokens": 100.1
+    },
+    "K_5": {
+      "k": 5,
+      "task_success_rate": 0.7267,
+      "silent_error_rate": 0.0,
+      "avg_questions": 0.51,
+      "avg_tokens": 125.2
+    }
+  },
+  "p_amb_sensitivity": {
+    "p_0.2": {
+      "p_amb": 0.2,
+      "task_success_rate": 0.7233,
+      "silent_error_rate": 0.0,
+      "avg_questions": 0.24
+    },
+    "p_0.4": {
+      "p_amb": 0.4,
+      "task_success_rate": 0.7133,
+      "silent_error_rate": 0.0,
+      "avg_questions": 0.38
+    },
+    "p_0.6": {
+      "p_amb": 0.6,
+      "task_success_rate": 0.6733,
+      "silent_error_rate": 0.02,
+      "avg_questions": 0.42
+    }
+  },
+  "canary_detection": {
+    "total_canary_evaluations": 300,
+    "unsafe_plans_intercepted": 0,
+    "interception_rate": 0.0
+  }
+}

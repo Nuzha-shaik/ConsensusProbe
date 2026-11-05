@@ -1,0 +1,66 @@
+{
+  "H1": {
+    "description": "E has a lower silent-error rate than A (noisy and oracle modes)",
+    "supported": true,
+    "noisy_mean_diff": -0.05,
+    "noisy_ci": [
+      -0.1,
+      -0.01
+    ],
+    "oracle_mean_diff": -0.05,
+    "oracle_ci": [
+      -0.1,
+      -0.01
+    ],
+    "raw_p_value": 0.0118,
+    "holm_adjusted_p": 0.0354
+  },
+  "H2": {
+    "description": "E task success non-inferior to C (margin 2 percentage points) with fewer questions",
+    "supported": false,
+    "success_diff": -0.01,
+    "success_ci": [
+      -0.0367,
+      0.0167
+    ],
+    "questions_diff": -0.62,
+    "questions_ci": [
+      -0.71,
+      -0.52
+    ],
+    "raw_p_value": 0.4354,
+    "holm_adjusted_p": 0.8708
+  },
+  "H3": {
+    "description": "E achieves higher task success than D at equal or lower question budget",
+    "supported": true,
+    "success_diff": 0.1133,
+    "success_ci": [
+      0.06,
+      0.17
+    ],
+    "questions_diff": -0.13,
+    "questions_ci": [
+      -0.26,
+      0.01
+    ],
+    "raw_p_value": 0.0001,
+    "holm_adjusted_p": 0.0004
+  },
+  "H4": {
+    "description": "F has lower silent-error than E at cost of <= 0.25 questions per task",
+    "supported": true,
+    "silent_error_diff": 0.0,
+    "silent_error_ci": [
+      0.0,
+      0.0
+    ],
+    "questions_diff": 0.0,
+    "questions_ci": [
+      0.0,
+      0.0
+    ],
+    "raw_p_value": 1.0,
+    "holm_adjusted_p": 1.0
+  }
+}
