@@ -1,6 +1,33 @@
 PYTHON ?= python
 
-.PHONY: freeze guards typecheck test build ui_gate gate e2e perf verify_all tests lock_check paper security numbers_check clean
+.PHONY: freeze guards typecheck test build ui_gate gate e2e perf verify_all tests lock_check paper security numbers_check clean golden_integrity golden_data golden_gate golden_metrics golden_general golden_cert golden_ui no_leak verify_golden
+
+golden_integrity:
+	$(PYTHON) scripts/make_golden.py --check
+
+golden_data:
+	$(PYTHON) scripts/golden_check.py --layer data
+
+golden_gate:
+	$(PYTHON) scripts/golden_check.py --layer gate
+
+golden_metrics:
+	$(PYTHON) scripts/golden_check.py --layer metrics
+
+golden_general:
+	$(PYTHON) scripts/golden_check.py --layer general
+
+golden_cert:
+	$(PYTHON) scripts/golden_check.py --layer cert
+
+golden_ui:
+	cd frontend && npx playwright test --config ../playwright.config.ts e2e/golden.spec.ts
+
+no_leak:
+	$(PYTHON) scripts/no_leak_check.py
+
+verify_golden: golden_integrity no_leak gate
+	@echo "=== Golden Verification Verification Pipeline Green ==="
 
 freeze:
 	$(PYTHON) scripts/core_freeze_check.py

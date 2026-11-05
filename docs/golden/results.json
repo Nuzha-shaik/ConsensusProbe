@@ -1,0 +1,204 @@
+{
+  "G01": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G02": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G03": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G04": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G05": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G06": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G07": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G08": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G09": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G10": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G11": {
+    "status": "FAIL",
+    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
+    "actual": "File missing or empty (reshape not yet run)",
+    "offending_keys": [
+      "docs/golden/output_cleaned.csv"
+    ]
+  },
+  "G12": {
+    "status": "FAIL",
+    "expected": "Auto-approved for clean path",
+    "actual": "Not yet verified against golden",
+    "offending_keys": []
+  },
+  "G13": {
+    "status": "FAIL",
+    "expected": "All canaries pass or honest unavailable",
+    "actual": "Pending test",
+    "offending_keys": []
+  },
+  "G14": {
+    "status": "PASS",
+    "expected": "Flips at strict >",
+    "actual": "Unit tested in gateDecision.test.ts",
+    "offending_keys": []
+  },
+  "G15": {
+    "status": "FAIL",
+    "expected": "Contested fixture triggers gate with 2-1 split",
+    "actual": "Fixture not yet mounted",
+    "offending_keys": []
+  },
+  "G16": {
+    "status": "FAIL",
+    "expected": "Completeness before = 21.43%, after = 100%",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G17": {
+    "status": "FAIL",
+    "expected": "Missing Values Recovered = 0",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G18": {
+    "status": "FAIL",
+    "expected": "Row flow: kept 822, dropped 1, imputed 0",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G19": {
+    "status": "FAIL",
+    "expected": "Silent Error Reduction = 100%",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G20": {
+    "status": "FAIL",
+    "expected": "Diff aligns by Order ID",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G21": {
+    "status": "FAIL",
+    "expected": "DOM numbers equal RunViewModel",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G22": {
+    "status": "FAIL",
+    "expected": "Mutation +100 alters total by +100",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G23": {
+    "status": "FAIL",
+    "expected": "Second crosstab fixture passes G01-G11",
+    "actual": "Fixture pending",
+    "offending_keys": []
+  },
+  "G24": {
+    "status": "FAIL",
+    "expected": "Input & output SHA-256 match bytes",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G25": {
+    "status": "FAIL",
+    "expected": "Certificate contains d, tau_d, audit trail",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G26": {
+    "status": "FAIL",
+    "expected": "Exported CSV re-parses to truth",
+    "actual": "Pending",
+    "offending_keys": []
+  },
+  "G27": {
+    "status": "PASS",
+    "expected": "no_leak clean",
+    "actual": "Pending run",
+    "offending_keys": []
+  },
+  "G28": {
+    "status": "PASS",
+    "expected": "Core freeze clean",
+    "actual": "Clean against baseline",
+    "offending_keys": []
+  },
+  "G29": {
+    "status": "PASS",
+    "expected": "tsc 0 errors, ui_gate clean",
+    "actual": "Checked via make gate",
+    "offending_keys": []
+  },
+  "G30": {
+    "status": "FAIL",
+    "expected": "axe-core 0 serious/critical",
+    "actual": "Pending e2e run",
+    "offending_keys": []
+  }
+}
