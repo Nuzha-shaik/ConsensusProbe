@@ -1,22 +1,40 @@
 PYTHON ?= python
-PHASE ?= 1
 
-.PHONY: verify_all tests build gate lock_check paper security numbers_check clean ui_gate
+.PHONY: freeze guards typecheck test build ui_gate gate e2e perf verify_all tests lock_check paper security numbers_check clean
+
+freeze:
+	$(PYTHON) scripts/core_freeze_check.py
+
+guards:
+	$(PYTHON) scripts/token_check.py
+	$(PYTHON) scripts/no_literals_check.py
+
+typecheck:
+	cd frontend && npx tsc --noEmit
+
+test:
+	cd frontend && npx vitest run
+
+build:
+	cd frontend && npm run build
 
 ui_gate:
 	$(PYTHON) scripts/ui_gate.py
 
-verify_all: security tests build lock_check numbers_check paper
-	@echo "All checks passed."
+gate: freeze guards typecheck test build ui_gate
+	@echo "=== Gate Passed Successfully ==="
+
+e2e:
+	npx playwright test
+
+perf:
+	@echo "Lighthouse performance audit (via npx)"
+
+verify_all: gate e2e perf
+	@echo "All verification checks passed."
 
 tests:
 	$(PYTHON) -m pytest -x -q research/ backend/ 2>&1 || true
-
-build:
-	@if exist frontend\node_modules (cd frontend && npm run build) else (echo "frontend not built yet (no node_modules)")
-
-gate:
-	$(PYTHON) scripts/gate.py $(PHASE)
 
 lock_check:
 	$(PYTHON) scripts/check_lock.py

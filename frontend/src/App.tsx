@@ -245,7 +245,7 @@ function MainStudio() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200">
       {/* Top Header Shell */}
       <header className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-6 py-3.5 flex items-center justify-between sticky top-0 z-50 shadow-xs">
         {/* Brand / Logo */}
@@ -405,7 +405,7 @@ function MainStudio() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
                 <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Silent Error Reduction</span>
-                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">94.2%</div>
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">—</div>
                 <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">System E vs Unregulated System A</p>
               </div>
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">

@@ -1,0 +1,33 @@
+{
+  "dataset_id": "test-dataset-contested-001",
+  "filename": "customers_contested.csv",
+  "rows": 120,
+  "cols": 6,
+  "clean_response": {
+    "status": "needs_clarification",
+    "consensus_score": 0.4286,
+    "question": {
+      "question_text": "Conflict detected on row deduplication for column 'customer_name'. Plan 0 keeps first occurrence, Plan 2 keeps last occurrence.",
+      "parameter_name": "deduplicate_strategy",
+      "options": [
+        {
+          "option_id": 0,
+          "description": "Keep first occurrence (chronological baseline)",
+          "affected_rows_count": 12,
+          "example_rids": [5, 18, 42]
+        },
+        {
+          "option_id": 1,
+          "description": "Keep last occurrence (latest modification)",
+          "affected_rows_count": 12,
+          "example_rids": [5, 18, 42]
+        }
+      ]
+    },
+    "patch_summary": {
+      "deleted_rows": 12,
+      "edited_cells": 26,
+      "flagged_rows": 2
+    }
+  }
+}
