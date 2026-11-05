@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { recordCleaningRun } from './firebase';
+import React, { useState, useEffect } from 'react';
+import { recordCleaningRun, subscribeToAuth, logoutUser, User } from './firebase';
+import { AuthModal } from './AuthModal';
 import {
   Upload,
   Database,
@@ -11,7 +12,10 @@ import {
   HelpCircle,
   FileText,
   Layers,
-  ArrowRight
+  ArrowRight,
+  LogIn,
+  LogOut,
+  User as UserIcon
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -67,6 +71,17 @@ export default function App() {
   const [clarification, setClarification] = useState<ClarificationQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<number>(0);
   const [patchSummary, setPatchSummary] = useState<any | null>(null);
+
+  // Auth states
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToAuth((user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   // File upload handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -266,6 +281,31 @@ export default function App() {
         </nav>
 
         <div className="flex items-center space-x-3">
+          {/* User Auth Button / Badge */}
+          {currentUser ? (
+            <div className="flex items-center space-x-2 bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-full text-xs">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span className="font-mono truncate max-w-[130px]" title={currentUser.email || ''}>
+                {currentUser.displayName || currentUser.email}
+              </span>
+              <button
+                onClick={() => logoutUser()}
+                title="Sign Out"
+                className="text-slate-400 hover:text-rose-400 transition ml-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="flex items-center space-x-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white px-3.5 py-1.5 rounded-full text-xs font-semibold shadow transition"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
+
           {/* Firebase Status Pill */}
           <div className="hidden sm:flex items-center space-x-1.5 text-xs bg-amber-950/40 text-amber-300 border border-amber-600/30 px-2.5 py-1 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -609,6 +649,16 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* Firebase Authentication Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(user) => {
+          setCurrentUser(user);
+          setShowAuthModal(false);
+        }}
+      />
     </div>
   );
 }

@@ -78,6 +78,22 @@ def main():
         driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "01_dashboard.png"))
         print("  ✓ Captured: 01_dashboard.png")
 
+        # Test Firebase Sign In Modal
+        print("  --> Testing Firebase Sign In Modal...")
+        sign_in_btn = wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Sign In')]"))
+        )
+        sign_in_btn.click()
+        time.sleep(1)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sign In to ConsensusProbe')]")))
+        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "01_b_login_modal.png"))
+        print("  ✓ Captured: 01_b_login_modal.png (Firebase Auth Modal verified)")
+
+        # Close Login Modal to continue flow
+        close_btn = driver.find_element(By.XPATH, "//button[contains(., 'Continue as Guest')]")
+        close_btn.click()
+        time.sleep(1)
+
         # Step 2: Navigate to Upload
         print("[4/6] Navigating to Upload view & uploading dataset...")
         upload_tab_btn = wait.until(
