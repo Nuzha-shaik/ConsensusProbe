@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "ai-powered-multi-agents",
     "public": "frontend/dist",
     "ignore": [
       "firebase.json",

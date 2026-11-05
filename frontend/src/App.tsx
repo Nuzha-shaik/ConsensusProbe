@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { recordCleaningRun } from './firebase';
 import {
   Upload,
   Database,
@@ -128,7 +129,29 @@ export default function App() {
       // Refresh profile
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
+
+      // Sync resolved state to Firebase Firestore
+      recordCleaningRun({
+        datasetId: currentDataset.id,
+        filename: currentDataset.filename,
+        rows: currentDataset.rows,
+        cols: currentDataset.cols,
+        consensusScore: consensusScore,
+        status: data.status,
+        patchSummary: data.patch_summary,
+      });
       setActiveTab('workspace');
+
+      // Sync run metadata to Firebase Firestore
+      recordCleaningRun({
+        datasetId: currentDataset.id,
+        filename: currentDataset.filename,
+        rows: currentDataset.rows,
+        cols: currentDataset.cols,
+        consensusScore: data.consensus_score,
+        status: data.status,
+        patchSummary: data.patch_summary,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -160,6 +183,17 @@ export default function App() {
       // Refresh profile
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
+
+      // Sync resolved state to Firebase Firestore
+      recordCleaningRun({
+        datasetId: currentDataset.id,
+        filename: currentDataset.filename,
+        rows: currentDataset.rows,
+        cols: currentDataset.cols,
+        consensusScore: consensusScore,
+        status: data.status,
+        patchSummary: data.patch_summary,
+      });
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -231,16 +265,24 @@ export default function App() {
           </button>
         </nav>
 
-        {/* Dataset Status Badge */}
-        {currentDataset ? (
-          <div className="flex items-center space-x-2 text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span className="font-mono truncate max-w-[150px]">{currentDataset.filename}</span>
-            <span className="text-slate-500">({currentDataset.rows} rows)</span>
+        <div className="flex items-center space-x-3">
+          {/* Firebase Status Pill */}
+          <div className="hidden sm:flex items-center space-x-1.5 text-xs bg-amber-950/40 text-amber-300 border border-amber-600/30 px-2.5 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            <span className="font-medium">Firebase: ai-powered-multi-agents</span>
           </div>
-        ) : (
-          <span className="text-xs text-slate-500">No active dataset</span>
-        )}
+
+          {/* Dataset Status Badge */}
+          {currentDataset ? (
+            <div className="flex items-center space-x-2 text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span className="font-mono truncate max-w-[150px]">{currentDataset.filename}</span>
+              <span className="text-slate-500">({currentDataset.rows} rows)</span>
+            </div>
+          ) : (
+            <span className="text-xs text-slate-500">No active dataset</span>
+          )}
+        </div>
       </header>
 
       {/* Main Container */}
