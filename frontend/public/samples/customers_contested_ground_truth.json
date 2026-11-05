@@ -1,0 +1,67 @@
+{
+  "dataset_name": "customers_contested.csv",
+  "description": "Contested dataset with duplicate conflict, missing numeric spend, and ambiguous date formatting.",
+  "expected_disagreement_range": [
+    0.25,
+    0.95
+  ],
+  "expected_gate_decision": "needs_human_clarification",
+  "injected_errors_count": 8,
+  "cell_ground_truth": [
+    {
+      "row_idx": 50,
+      "column": "customer_name",
+      "injected_issue": "Conflicting duplicate with updated email/spend",
+      "correct_resolution": "Merge or retain latest record"
+    },
+    {
+      "row_idx": 5,
+      "column": "total_spend",
+      "injected_issue": "Missing monetary value",
+      "true_value": "225.00",
+      "correct_resolution": "Impute median value"
+    },
+    {
+      "row_idx": 12,
+      "column": "total_spend",
+      "injected_issue": "Missing monetary value",
+      "true_value": "312.50",
+      "correct_resolution": "Impute median value"
+    },
+    {
+      "row_idx": 19,
+      "column": "total_spend",
+      "injected_issue": "Missing monetary value",
+      "true_value": "400.00",
+      "correct_resolution": "Impute median value"
+    },
+    {
+      "row_idx": 27,
+      "column": "total_spend",
+      "injected_issue": "Missing monetary value",
+      "true_value": "500.00",
+      "correct_resolution": "Impute median value"
+    },
+    {
+      "row_idx": 34,
+      "column": "total_spend",
+      "injected_issue": "Missing monetary value",
+      "true_value": "587.50",
+      "correct_resolution": "Impute median value"
+    },
+    {
+      "row_idx": 8,
+      "column": "signup_date",
+      "injected_issue": "Ambiguous slash date format (DD/MM vs MM/DD)",
+      "true_value": "2026-04-03",
+      "correct_resolution": "ISO 8601 normalization (2026-04-03)"
+    },
+    {
+      "row_idx": 15,
+      "column": "support_tickets",
+      "injected_issue": "Negative count of support tickets",
+      "true_value": "0",
+      "correct_resolution": "Rectify to 0"
+    }
+  ]
+}

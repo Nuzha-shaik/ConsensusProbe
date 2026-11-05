@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { recordCleaningRun } from './firebase';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { LoginPage } from './pages/LoginPage';
+import { HeroStrip, PipelineStepId } from './components/showcase/HeroStrip';
+import { IngestionDropzone } from './components/showcase/IngestionDropzone';
+import { SampleButtons } from './components/showcase/SampleButtons';
 import {
   Upload,
   Database,
@@ -110,6 +113,65 @@ function MainStudio() {
   if (status === 'unauthenticated' || !user) {
     return <LoginPage />;
   }
+
+  // Unified Ingest File Handler
+  const handleIngestFile = async (file: File) => {
+    setLoading(true);
+    setError(null);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Upload failed');
+      }
+      const data: DatasetInfo = await res.json();
+      setCurrentDataset(data);
+
+      const profRes = await fetch(`${API_BASE}/profile/${data.id}`);
+      if (profRes.ok) {
+        const profData: DatasetProfile = await profRes.json();
+        setProfile(profData);
+      }
+      setActiveTab('profile');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // One-click Sample Experiment Loader
+  const handleLoadSample = async (sampleType: 'clean' | 'contested') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const filename = sampleType === 'clean' ? 'retail_clean.csv' : 'customers_contested.csv';
+      const res = await fetch(`/samples/${filename}`);
+      if (!res.ok) throw new Error(`Failed to load sample dataset ${filename}`);
+      const blob = await res.blob();
+      const file = new File([blob], filename, { type: 'text/csv' });
+      await handleIngestFile(file);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getPipelineStep = (): PipelineStepId => {
+    if (!currentDataset) return 'ingest';
+    if (loading) return 'propose';
+    if (cleanStatus === 'needs_clarification') return 'gate';
+    if (cleanStatus === 'applied' || cleanStatus === 'no_changes') return 'result';
+    if (activeTab === 'profile') return 'propose';
+    return 'audit';
+  };
 
   // File upload handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -366,6 +428,16 @@ function MainStudio() {
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+        {/* Research Showcase Hero & 5-Step Pipeline Navigation */}
+        <HeroStrip
+          currentStep={getPipelineStep()}
+          onStepSelect={(step) => {
+            if (step === 'ingest') setActiveTab('upload');
+            else if (step === 'propose' || step === 'audit') setActiveTab('profile');
+            else if (step === 'gate' || step === 'result') setActiveTab('workspace');
+          }}
+        />
+
         {error && (
           <div className="mb-6 p-4 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 flex items-center space-x-3">
             <AlertTriangle className="w-5 h-5 flex-shrink-0" />
@@ -429,7 +501,10 @@ function MainStudio() {
 
         {/* 2. Upload Tab */}
         {activeTab === 'upload' && (
-          <div className="max-w-2xl mx-auto space-y-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <IngestionDropzone onFileConfirmed={handleIngestFile} isLoading={loading} />
+            <SampleButtons onLoadSample={handleLoadSample} isLoading={loading} />
+
             <div className="text-center">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Upload Dataset for Consensus Profiling</h2>
               <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-1">Supported formats: CSV, XLSX (maximum 50 MB)</p>
