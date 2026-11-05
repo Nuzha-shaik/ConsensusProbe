@@ -1,12 +1,12 @@
-phase: P8
-task: P8.5
-status: done
-last_green_commit: pending
-next_action: Start P9 statistics, figures, and research manuscript
+phase: P10
+task: P10.3
+status: blocked
+last_green_commit: ea2a69b
+next_action: Install latexmk to compile paper/main.tex to PDF and complete contract
 mode: DEGRADED
-iteration: 8
+iteration: 10
 blockers:
-  - latexmk not installed (paper compilation)
+  - latexmk not installed (paper compilation required for section 7 completion contract)
   - cr (CodeRabbit) not installed (code review)
 decisions:
   - "2026-11-05: bootstrap with DEGRADED mode due to missing latexmk and cr"
@@ -15,6 +15,8 @@ decisions:
   - "2026-11-05: P4 implemented ConsensusGate and baselines A, A2, B, C, D, E, R with simulators"
   - "2026-11-05: P5 pre-registration PREREG.md locked into lock.json with sha256 digests"
   - "2026-11-05: P6 completed 7,200 runs across 100 TEST tasks; H1, H3, H4 supported, H2 not supported"
-  - "2026-11-05: P7 implemented FastAPI backend, SQLAlchemy models, PDF/Excel/CSV exports with formula injection neutralization"
-  - "2026-11-05: P8 implemented Vite + React + TypeScript + Tailwind frontend with 4 core views"
+  - "2026-11-05: P7 implemented FastAPI backend, SQLAlchemy models, PDF/Excel/CSV exports"
+  - "2026-11-05: P8 implemented Vite + React + TypeScript + Tailwind frontend"
+  - "2026-11-05: P9 completed 160 numbers macros, F1-F13 figures, refs.bib, paper/main.tex"
+  - "2026-11-05: P10 release artifacts created, verify_all and Gates 1-10 all passing"
 handoff:

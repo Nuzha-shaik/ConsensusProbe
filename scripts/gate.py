@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Phase gate checker."""
-import subprocess, sys, os
+import subprocess, sys, os, shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -69,7 +69,8 @@ def gate_8():
     pkg = os.path.join(ROOT, 'frontend', 'package.json')
     checks = [("frontend/package.json", os.path.isfile(pkg))]
     if os.path.isdir(os.path.join(ROOT, 'frontend', 'node_modules')):
-        checks.append(("npm build", run(['npm', 'run', 'build', '--prefix', os.path.join(ROOT, 'frontend')])))
+        npm_bin = shutil.which('npm') or 'npm'
+        checks.append(("npm build", run([npm_bin, 'run', 'build', '--prefix', os.path.join(ROOT, 'frontend')])))
     return checks
 
 def gate_9():
