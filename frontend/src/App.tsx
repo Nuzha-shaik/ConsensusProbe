@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { recordCleaningRun, subscribeToAuth, logoutUser, User } from './firebase';
-import { AuthModal } from './AuthModal';
+import { recordCleaningRun } from './firebase';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginPage } from './pages/LoginPage';
 import {
   Upload,
   Database,
@@ -58,7 +59,8 @@ interface ClarificationQuestion {
   options: ClarificationOption[];
 }
 
-export default function App() {
+function MainStudio() {
+  const { user, status, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<'dashboard' | 'upload' | 'profile' | 'workspace'>('dashboard');
   const [currentDataset, setCurrentDataset] = useState<DatasetInfo | null>(null);
   const [profile, setProfile] = useState<DatasetProfile | null>(null);
@@ -72,16 +74,20 @@ export default function App() {
   const [selectedOption, setSelectedOption] = useState<number>(0);
   const [patchSummary, setPatchSummary] = useState<any | null>(null);
 
-  // Auth states
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-8 h-8 border-2 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-slate-400 font-mono">Initializing ConsensusProbe Session...</p>
+        </div>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    const unsubscribe = subscribeToAuth((user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
+  if (status === 'unauthenticated' || !user) {
+    return <LoginPage />;
+  }
 
   // File upload handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,30 +287,21 @@ export default function App() {
         </nav>
 
         <div className="flex items-center space-x-3">
-          {/* User Auth Button / Badge */}
-          {currentUser ? (
-            <div className="flex items-center space-x-2 bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-full text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span className="font-mono truncate max-w-[130px]" title={currentUser.email || ''}>
-                {currentUser.displayName || currentUser.email}
-              </span>
-              <button
-                onClick={() => logoutUser()}
-                title="Sign Out"
-                className="text-slate-400 hover:text-rose-400 transition ml-1"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ) : (
+          {/* User Profile & Sign Out Button */}
+          <div className="flex items-center space-x-2 bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-full text-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span className="font-mono truncate max-w-[130px]" title={user.email}>
+              {user.name || user.email}
+            </span>
             <button
-              onClick={() => setShowAuthModal(true)}
-              className="flex items-center space-x-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white px-3.5 py-1.5 rounded-full text-xs font-semibold shadow transition"
+              onClick={() => signOut()}
+              title="Sign Out to Login Page"
+              className="text-slate-400 hover:text-rose-400 transition ml-1 flex items-center space-x-1"
             >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span className="text-[10px] uppercase font-bold">Exit</span>
             </button>
-          )}
+          </div>
 
           {/* Firebase Status Pill */}
           <div className="hidden sm:flex items-center space-x-1.5 text-xs bg-amber-950/40 text-amber-300 border border-amber-600/30 px-2.5 py-1 rounded-full">
@@ -649,16 +646,14 @@ export default function App() {
           </div>
         )}
       </main>
-
-      {/* Firebase Authentication Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={(user) => {
-          setCurrentUser(user);
-          setShowAuthModal(false);
-        }}
-      />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainStudio />
+    </AuthProvider>
   );
 }
