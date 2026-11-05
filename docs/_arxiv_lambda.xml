@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api//tZd3mF7WcXJay+a/hX2wAiua84</id>
+  <title>arXiv Query: search_query=&amp;id_list=2407.17535&amp;start=0&amp;max_results=10</title>
+  <updated>2026-11-05T11:42:19Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=10&amp;id_list=2407.17535" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2407.17535v3</id>
+    <title>LAMBDA: A Large Model Based Data Agent</title>
+    <updated>2025-05-28T15:05:41Z</updated>
+    <link href="https://arxiv.org/abs/2407.17535v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2407.17535v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce LArge Model Based Data Agent (LAMBDA), a novel open-source, code-free multi-agent data analysis system that leverages the power of large language models. LAMBDA is designed to address data analysis challenges in data-driven applications through innovatively designed data agents using natural language. At the core of LAMBDA are two key agent roles: the programmer and the inspector, which are engineered to work together seamlessly. Specifically, the programmer generates code based on the user's instructions and domain-specific knowledge, while the inspector debugs the code when necessary. To ensure robustness and handle adverse scenarios, LAMBDA features a user interface that allows direct user intervention. Moreover, LAMBDA can flexibly integrate external models and algorithms through our proposed Knowledge Integration Mechanism, catering to the needs of customized data analysis. LAMBDA has demonstrated strong performance on various data analysis tasks. It has the potential to enhance data analysis paradigms by seamlessly integrating human and artificial intelligence, making it more accessible, effective, and efficient for users from diverse backgrounds. The strong performance of LAMBDA in solving data analysis problems is demonstrated using real-world data examples. The code for LAMBDA is available at https://github.com/AMA-CMFAI/LAMBDA and videos of three case studies can be viewed at https://www.polyu.edu.hk/ama/cmfai/lambda.html.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-07-24T06:26:36Z</published>
+    <arxiv:comment>56 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <arxiv:journal_ref>Journal of the American Statistical Association, 2025</arxiv:journal_ref>
+    <author>
+      <name>Maojun Sun</name>
+    </author>
+    <author>
+      <name>Ruijian Han</name>
+    </author>
+    <author>
+      <name>Binyan Jiang</name>
+    </author>
+    <author>
+      <name>Houduo Qi</name>
+    </author>
+    <author>
+      <name>Defeng Sun</name>
+    </author>
+    <author>
+      <name>Yancheng Yuan</name>
+    </author>
+    <author>
+      <name>Jian Huang</name>
+    </author>
+    <arxiv:doi>10.1080/01621459.2025.2510000</arxiv:doi>
+    <link rel="related" href="https://doi.org/10.1080/01621459.2025.2510000" title="doi"/>
+  </entry>
+</feed>

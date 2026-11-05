@@ -1,0 +1,310 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/Cvvdsv1O+GjgFT4oRg1vwRJLwT0</id>
+  <title>arXiv Query: search_query=&amp;id_list=2310.10996,2407.17535,2412.06724,2409.00557,2203.11171,2302.09664,2605.08687,2606.25388,2606.03135,2609.24290,2605.07937&amp;start=0&amp;max_results=10</title>
+  <updated>2026-11-05T12:15:14Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=10&amp;id_list=2310.10996,2407.17535,2412.06724,2409.00557,2203.11171,2302.09664,2605.08687,2606.25388,2606.03135,2609.24290,2605.07937" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <opensearch:totalResults>11</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2203.11171v4</id>
+    <title>Self-Consistency Improves Chain of Thought Reasoning in Language Models</title>
+    <updated>2023-03-07T17:57:37Z</updated>
+    <link href="https://arxiv.org/abs/2203.11171v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2203.11171v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Chain-of-thought prompting combined with pre-trained large language models has achieved encouraging results on complex reasoning tasks. In this paper, we propose a new decoding strategy, self-consistency, to replace the naive greedy decoding used in chain-of-thought prompting. It first samples a diverse set of reasoning paths instead of only taking the greedy one, and then selects the most consistent answer by marginalizing out the sampled reasoning paths. Self-consistency leverages the intuition that a complex reasoning problem typically admits multiple different ways of thinking leading to its unique correct answer. Our extensive empirical evaluation shows that self-consistency boosts the performance of chain-of-thought prompting with a striking margin on a range of popular arithmetic and commonsense reasoning benchmarks, including GSM8K (+17.9%), SVAMP (+11.0%), AQuA (+12.2%), StrategyQA (+6.4%) and ARC-challenge (+3.9%).</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2022-03-21T17:48:52Z</published>
+    <arxiv:comment>Published at ICLR 2023. V2: added PaLM results; V3: added UL2 results; V4: camera ready version at ICLR 2023</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Xuezhi Wang</name>
+    </author>
+    <author>
+      <name>Jason Wei</name>
+    </author>
+    <author>
+      <name>Dale Schuurmans</name>
+    </author>
+    <author>
+      <name>Quoc Le</name>
+    </author>
+    <author>
+      <name>Ed Chi</name>
+    </author>
+    <author>
+      <name>Sharan Narang</name>
+    </author>
+    <author>
+      <name>Aakanksha Chowdhery</name>
+    </author>
+    <author>
+      <name>Denny Zhou</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.25388v1</id>
+    <title>TabClean: Reusable LLM-Synthesized Programs for Tabular Data Cleaning</title>
+    <updated>2026-06-24T04:35:35Z</updated>
+    <link href="https://arxiv.org/abs/2606.25388v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.25388v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Reliable analytics and machine-learning pipelines depend on clean tabular data, yet production tables often contain missing values, typographical errors, inconsistent formats, violated dependencies, unit mismatches, and ambiguous categorical values. Existing cleaning systems make different trade-offs. Constraint-based systems need experts to specify rules. Learning-based systems need labels or retraining. Recent LLM-based cleaners reduce setup effort, but many call an LLM on rows, cells, or repeated workflow steps, so their cost grows with table size and with every recurring batch.
+  We present TabClean, a model-training-free system that compiles LLM reasoning into reusable guarded cleaning programs. Given a dirty table and a small annotated development set, TabClean profiles table evidence, diagnoses repair mechanisms, synthesizes executable Python transformations, validates candidates with cell-level feedback, and commits the best program for reuse on schema-compatible batches. The key abstraction is an evidence-backed guarded repair clause. A deterministic transformation may fire only when its dirty pattern, target-negative condition, evidence support, and scope constraints are satisfied. Across six benchmarks, TabClean achieves high precision, improves F1 over representative rule-based, learning-based, and LLM-based baselines on five datasets, and substantially reduces recurring runtime and API cost by replacing repeated LLM inference with deterministic program execution.</summary>
+    <category term="cs.DB" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-24T04:35:35Z</published>
+    <arxiv:comment>13 pages</arxiv:comment>
+    <arxiv:primary_category term="cs.DB"/>
+    <author>
+      <name>Yibo Wang</name>
+    </author>
+    <author>
+      <name>Riteng Zhang</name>
+    </author>
+    <author>
+      <name>Yinghao He</name>
+    </author>
+    <author>
+      <name>Yongye Su</name>
+    </author>
+    <author>
+      <name>Bharat Bhargava</name>
+    </author>
+    <author>
+      <name>Chunwei Liu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2409.00557v4</id>
+    <title>Learning to Ask: When LLM Agents Meet Unclear Instruction</title>
+    <updated>2026-04-29T05:49:57Z</updated>
+    <link href="https://arxiv.org/abs/2409.00557v4" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2409.00557v4" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Equipped with the capability to call functions, modern large language models (LLMs) can leverage external tools for addressing a range of tasks unattainable through language skills alone. However, the effective execution of these tools relies heavily not just on the advanced capabilities of LLMs but also on precise user instructions, which often cannot be ensured in the real world. To evaluate the performance of LLMs tool-use under imperfect instructions, we meticulously examine the real-world instructions queried from users, analyze the error patterns, and build a challenging tool-use benchmark called Noisy ToolBench (NoisyToolBench). We find that due to the next-token prediction training objective, LLMs tend to arbitrarily generate the missed argument, which may lead to hallucinations and risks. To address this issue, we propose a novel framework, Ask-when-Needed (AwN), which prompts LLMs to ask questions to users whenever they encounter obstacles due to unclear instructions. Moreover, to reduce the manual labor involved in user-LLM interaction and assess LLMs performance in tool utilization from both accuracy and efficiency perspectives, we design an automated evaluation tool named ToolEvaluator. Our experiments demonstrate that the AwN significantly outperforms existing frameworks for tool learning in the NoisyToolBench. We will release all related code and datasets to support future research.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-08-31T23:06:12Z</published>
+    <arxiv:comment>EMNLP 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Wenxuan Wang</name>
+    </author>
+    <author>
+      <name>Juluan Shi</name>
+    </author>
+    <author>
+      <name>Zixuan Ling</name>
+    </author>
+    <author>
+      <name>Yuk-Kit Chan</name>
+    </author>
+    <author>
+      <name>Chaozheng Wang</name>
+    </author>
+    <author>
+      <name>Cheryl Lee</name>
+    </author>
+    <author>
+      <name>Youliang Yuan</name>
+    </author>
+    <author>
+      <name>Jen-tse Huang</name>
+    </author>
+    <author>
+      <name>Wenxiang Jiao</name>
+    </author>
+    <author>
+      <name>Michael R. Lyu</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.08687v1</id>
+    <title>PrepBench: How Far Are We from Natural-Language-Driven Data Preparation?</title>
+    <updated>2026-05-09T04:52:47Z</updated>
+    <link href="https://arxiv.org/abs/2605.08687v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.08687v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Data preparation is a central and time-consuming stage in data analysis workflows. Traditionally, commercial tools have relied on graphical user interfaces (GUIs) to simplify data preparation, allowing users to define transformations through visual operators and workflows. Recent advances in large language models (LLMs) raise the possibility of a paradigm shift toward natural language (NL)-driven data preparation, in which users can specify preparation intents in NL directly. However, it remains unclear how far current LLM-based agents are from this paradigm shift in practice. Existing code generation benchmarks do not capture key characteristics of data preparation, including ambiguous user intents, imperfect real-world data, and the need to translate code into interpretable workflows for validation. To bridge this gap, we present PrepBench, a benchmark designed to evaluate NL-driven data preparation along three core capabilities: interactive disambiguation, prep-code generation, and code-to-workflow translation. We crawl data from the Preppin' Data Challenges, and then extend it into a systematically designed benchmark. The benchmark covers diverse domains, and each task involves 3 to 18 data preparation steps. Nearly half of the tasks require over 100 lines of Python code, and the longest solutions approach 300 lines. Our evaluation shows that, despite recent progress, realizing this paradigm shift remains challenging for state-of-the-art LLMs. PrepBench provides a principled benchmark for measuring this gap and helps identify key challenges toward realizing NL-driven data preparation.</summary>
+    <category term="cs.DB" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-09T04:52:47Z</published>
+    <arxiv:primary_category term="cs.DB"/>
+    <author>
+      <name>Jingzhe Xu</name>
+    </author>
+    <author>
+      <name>Rui Wang</name>
+    </author>
+    <author>
+      <name>Jiannan Wang</name>
+    </author>
+    <author>
+      <name>Guoliang Li</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2609.24290v1</id>
+    <title>When and How Should an Agent Clarify? CIGAsk: Teaching LLMs to Clarify via Counterfactual Information Gain</title>
+    <updated>2026-09-21T08:47:39Z</updated>
+    <link href="https://arxiv.org/abs/2609.24290v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2609.24290v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Instruction-tuned LLMs faced with underspecified queries often commit to a single interpretation rather than ask for clarification, producing confidently wrong answers. In our experiments, prompting alone is insufficient: models either ask for clarification on every query or ask vague questions that fail to recover the missing information. Addressing this failure requires learning two coupled skills: when to ask rather than answer and how to ask a question that recovers the disambiguating information. Existing recipes either address only one of these skills or require a separately trained critic. We propose CIGAsk, an RL recipe that teaches both skills through two complementary reward signals within a multi-turn GRPO loop. Counterfactual Information Gain (CIG) compares the gold-answer log-likelihood under a frozen reference model with and without the user response, providing per-turn credit that guides how to ask. The Asymmetric Ambiguity Bonus assigns a signed reward at the terminal token based on the gold ambiguity label, guiding when to ask. Across three clarification benchmarks spanning table, passage, and open-domain QA, CIGAsk-7B outperforms the strongest external baseline despite using a smaller backbone. It also transfers across datasets without per-dataset tuning while preserving single-turn QA performance on out-of-distribution benchmarks.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-09-21T08:47:39Z</published>
+    <arxiv:comment>Accepted to EMNLP 2026 (Findings)</arxiv:comment>
+    <arxiv:primary_category term="cs.AI"/>
+    <author>
+      <name>Yunxiang Li</name>
+    </author>
+    <author>
+      <name>Xixin Wu</name>
+    </author>
+    <author>
+      <name>Helen Meng</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2302.09664v3</id>
+    <title>Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation</title>
+    <updated>2023-04-15T12:55:45Z</updated>
+    <link href="https://arxiv.org/abs/2302.09664v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2302.09664v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce a method to measure uncertainty in large language models. For tasks like question answering, it is essential to know when we can trust the natural language outputs of foundation models. We show that measuring uncertainty in natural language is challenging because of "semantic equivalence" -- different sentences can mean the same thing. To overcome these challenges we introduce semantic entropy -- an entropy which incorporates linguistic invariances created by shared meanings. Our method is unsupervised, uses only a single model, and requires no modifications to off-the-shelf language models. In comprehensive ablation studies we show that the semantic entropy is more predictive of model accuracy on question answering data sets than comparable baselines.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-02-19T20:10:07Z</published>
+    <arxiv:comment>International Conference on Learning Representations 2023 (Spotlight)</arxiv:comment>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Lorenz Kuhn</name>
+    </author>
+    <author>
+      <name>Yarin Gal</name>
+    </author>
+    <author>
+      <name>Sebastian Farquhar</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2606.03135v1</id>
+    <title>Uncertainty-Aware Clarification in LLM Agents with Information Gain</title>
+    <updated>2026-06-02T04:23:59Z</updated>
+    <link href="https://arxiv.org/abs/2606.03135v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2606.03135v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Large Language Model (LLM) agents often operate under underspecified user instructions, where latent uncertainty over user intent leads to erroneous tool actions. To address this challenge, we propose a goal-oriented clarification framework that aligns clarification behavior with ambiguity resolution. Central to our approach is the Information Gain Reward, a metric that quantifies the utility of clarification questions by measuring the Bayesian belief update towards the ground-truth goal induced by the clarification exchange. We train the clarifier (LLM) using this reward to optimize for high information gain, ensuring that clarifications effectively reduce uncertainty and improve task completion within the agent-tool-user environment. We validate our framework within a clarification-enhanced $τ$-Bench environment, conducting cross-agent evaluations across five heterogeneous backbones. Empirical results demonstrate that our method consistently improves the success rate by 3.7\% over the no-clarification baseline, while adding only 0.3 total interaction steps on average.</summary>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-06-02T04:23:59Z</published>
+    <arxiv:primary_category term="cs.AI"/>
+    <arxiv:journal_ref>ICML 2026</arxiv:journal_ref>
+    <author>
+      <name>Mengyi Deng</name>
+    </author>
+    <author>
+      <name>Zhiwei Li</name>
+    </author>
+    <author>
+      <name>Xin Li</name>
+    </author>
+    <author>
+      <name>Tingyu Zhu</name>
+    </author>
+    <author>
+      <name>Ying Zhao</name>
+    </author>
+    <author>
+      <name>Zhijiang Guo</name>
+    </author>
+    <author>
+      <name>Wei Wang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2605.07937v1</id>
+    <title>Ask Early, Ask Late, Ask Right: When Does Clarification Timing Matter for Long-Horizon Agents?</title>
+    <updated>2026-05-08T16:08:03Z</updated>
+    <link href="https://arxiv.org/abs/2605.07937v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2605.07937v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Long-horizon AI agents execute complex workflows spanning hundreds of sequential actions, yet a single wrong assumption early on can cascade into irreversible errors. When instructions are incomplete, the agent must decide not only whether to ask for clarification but when, and no prior work measures how clarification value changes over the course of execution. We introduce a forced-injection framework that provides ground-truth clarifications at controlled points in the agent's trajectory across four information dimensions (goal, input, constraint, context), three agent benchmarks, and four frontier models (three per benchmark; one on a single benchmark only; 84 task variants; 6,000+ runs). Counter to the common intuition that "earlier is always better," we find that the value of clarification depends sharply on what information is missing: goal clarification loses nearly all value after 10% of execution (pass@3 drops from 0.78 to baseline), while input clarification retains value through roughly 50%. Deferring any clarification type past mid-trajectory degrades performance below never asking at all. Cross-model Kendall tau correlations (0.78-0.87 among models sharing identical task coverage; 0.34-0.67 across the full 4-model panel) confirm these timing profiles are substantially task-intrinsic. A complementary study of 300 unscripted sessions reveals that no current frontier model asks within the empirically optimal window, with strategies ranging from over-asking (52% of sessions) to never asking at all. These empirical demand curves provide the quantitative foundation that existing theoretical frameworks require but have lacked, and establish concrete design targets for timing-aware clarification policies. Code and data will be publicly released.</summary>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2026-05-08T16:08:03Z</published>
+    <arxiv:primary_category term="cs.CL"/>
+    <author>
+      <name>Anmol Gulati</name>
+    </author>
+    <author>
+      <name>Hariom Gupta</name>
+    </author>
+    <author>
+      <name>Elias Lumer</name>
+    </author>
+    <author>
+      <name>Sahil Sen</name>
+    </author>
+    <author>
+      <name>Vamse Kumar Subbiah</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2412.06724v3</id>
+    <title>AutoDCWorkflow: LLM-based Data Cleaning Workflow Auto-Generation and Benchmark</title>
+    <updated>2025-08-23T21:01:08Z</updated>
+    <link href="https://arxiv.org/abs/2412.06724v3" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2412.06724v3" rel="related" type="application/pdf" title="pdf"/>
+    <summary>Data cleaning is a time-consuming and error-prone manual process, even with modern workflow tools such as OpenRefine. We present AutoDCWorkflow, an LLM-based pipeline for automatically generating data-cleaning workflows. The pipeline takes a raw table and a data analysis purpose, and generates a sequence of OpenRefine operations designed to produce a minimal, clean table sufficient to address the purpose. Six operations correspond to common data quality issues, including format inconsistencies, type errors, and duplicates.
+  To evaluate AutoDCWorkflow, we create a benchmark with metrics assessing answers, data, and workflow quality for 142 purposes using 96 tables across six topics. The evaluation covers three key dimensions: (1) Purpose Answer: can the cleaned table produce a correct answer? (2) Column (Value): how closely does it match the ground truth table? (3) Workflow (Operations): to what extent does the generated workflow resemble the human-curated ground truth? Experiments show that Llama 3.1, Mistral, and Gemma 2 significantly enhance data quality, outperforming the baseline across all metrics. Gemma 2-27B consistently generates high-quality tables and answers, while Gemma 2-9B excels in producing workflows that closely resemble human-annotated versions.</summary>
+    <category term="cs.DB" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-12-09T18:13:27Z</published>
+    <arxiv:comment>EMNLP Findings, 2025</arxiv:comment>
+    <arxiv:primary_category term="cs.DB"/>
+    <author>
+      <name>Lan Li</name>
+    </author>
+    <author>
+      <name>Liri Fang</name>
+    </author>
+    <author>
+      <name>Bertram Ludäscher</name>
+    </author>
+    <author>
+      <name>Vetle I. Torvik</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2310.10996v1</id>
+    <title>ClarifyGPT: Empowering LLM-based Code Generation with Intention Clarification</title>
+    <updated>2023-10-17T04:57:53Z</updated>
+    <link href="https://arxiv.org/abs/2310.10996v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2310.10996v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>We introduce a novel framework named ClarifyGPT, which aims to enhance code generation by empowering LLMs with the ability to identify ambiguous requirements and ask targeted clarifying questions. In particular, ClarifyGPT first detects whether a given requirement is ambiguous by performing a code consistency check. If it is ambiguous, ClarifyGPT prompts an LLM to generate targeted clarifying questions. After receiving question responses, ClarifyGPT refines the ambiguous requirement and inputs it into the same LLM to generate a final code solution. To evaluate our ClarifyGPT, we first conduct a human evaluation involving ten participants who use ClarifyGPT for code generation on two publicly available benchmarks: MBPP-sanitized and MBPP-ET. The results show that ClarifyGPT elevates the performance (Pass@1) of GPT-4 from 70.96% to 80.80% on MBPP-sanitized. Furthermore, to perform large-scale automated evaluations of ClarifyGPT across different LLMs and benchmarks without requiring user participation, we introduce a high-fidelity simulation method to simulate user responses. The automated evaluation results also demonstrate that ClarifyGPT can significantly enhance code generation performance compared to the baselines. In particular, ClarifyGPT improves the average performance of GPT-4 and ChatGPT across four benchmarks from 68.02% to 75.75% and from 58.55% to 67.22%, respectively. We believe that ClarifyGPT can effectively facilitate the practical application of LLMs in real-world development environments.</summary>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2023-10-17T04:57:53Z</published>
+    <arxiv:primary_category term="cs.SE"/>
+    <author>
+      <name>Fangwen Mu</name>
+    </author>
+    <author>
+      <name>Lin Shi</name>
+    </author>
+    <author>
+      <name>Song Wang</name>
+    </author>
+    <author>
+      <name>Zhuohao Yu</name>
+    </author>
+    <author>
+      <name>Binquan Zhang</name>
+    </author>
+    <author>
+      <name>Chenxue Wang</name>
+    </author>
+    <author>
+      <name>Shichao Liu</name>
+    </author>
+    <author>
+      <name>Qing Wang</name>
+    </author>
+  </entry>
+</feed>
