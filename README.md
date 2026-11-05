@@ -85,6 +85,22 @@ const firebaseConfig = {
 };
 ```
 
+### Google OAuth 2.0 Setup
+
+1. Open [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
+2. Click **Create Credentials** -> **OAuth client ID**.
+3. Select **Application type: Web application**.
+4. Set **Authorized JavaScript origins**:
+   - `http://localhost:5173`
+   - `http://127.0.0.1:5173`
+   - `https://ai-powered-multi-agents.web.app`
+5. Set **OAuth consent screen** user type to **External** so any Google user can sign in.
+6. Copy the generated Client ID and add it to your `.env` or `frontend/.env`:
+   ```bash
+   VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+   ```
+7. Rebuild the frontend (`cd frontend && npm run build`).
+
 ### Deploying to Firebase
 ```bash
 # 1. Login to your Firebase account
