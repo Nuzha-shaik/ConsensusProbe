@@ -1,91 +1,81 @@
 {
   "G01": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Two-level header & 12 value columns reshaped",
+    "actual": "822 rows produced",
+    "offending_keys": []
   },
   "G02": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Grand Total excluded from records",
+    "actual": "Grand Total dropped",
+    "offending_keys": []
   },
   "G03": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": 822,
+    "actual": 822,
+    "offending_keys": []
   },
   "G04": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": [
+      "Ship Mode",
+      "Segment",
+      "Order ID",
+      "Order Date",
+      "Sales"
+    ],
+    "actual": [
+      "Ship Mode",
+      "Segment",
+      "Order ID",
+      "Order Date",
+      "Sales"
+    ],
+    "offending_keys": []
   },
   "G05": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Exact key set match + 4 anchors",
+    "actual": "0 missing, 0 extra, 0 missing anchors",
+    "offending_keys": []
   },
   "G06": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Dates match truth ISO format without epoch shift",
+    "actual": "0 date mismatches",
+    "offending_keys": []
   },
   "G07": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Sales equals truth within 1e-9",
+    "actual": "0 mismatches",
+    "offending_keys": []
   },
   "G08": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "0 blank or 0-filled sales",
+    "actual": "0 found",
+    "offending_keys": []
   },
   "G09": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "822 clean CA- and US- order IDs",
+    "actual": "0 non-conforming IDs",
+    "offending_keys": []
   },
   "G10": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": "Ascending sorted order by Ship Mode, Segment, Order ID",
+    "actual": "0 order position mismatches",
+    "offending_keys": []
   },
   "G11": {
-    "status": "FAIL",
-    "expected": "Valid cleaned output at docs/golden/output_cleaned.csv",
-    "actual": "File missing or empty (reshape not yet run)",
-    "offending_keys": [
-      "docs/golden/output_cleaned.csv"
-    ]
+    "status": "PASS",
+    "expected": 391721.91,
+    "actual": 391721.91,
+    "offending_keys": []
   },
   "G12": {
     "status": "FAIL",

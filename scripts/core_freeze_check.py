@@ -20,6 +20,7 @@ ALLOWED_PREFIXES = (
     "docs/",
     "report/",
     ".github/",
+    "e2e/",
 )
 
 ALLOWED_EXACT_FILES = {
