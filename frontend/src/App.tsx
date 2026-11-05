@@ -376,45 +376,52 @@ function MainStudio() {
         {/* 1. Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <div className="bg-gradient-to-r from-sky-900 to-indigo-950 text-white rounded-2xl p-8 shadow-sm">
-              <h2 className="text-2xl font-bold mb-2">Automated Data Cleaning with Provable Consensus</h2>
-              <p className="text-sky-200 max-w-3xl text-sm leading-relaxed mb-6">
-                ConsensusProbe addresses the core vulnerability of LLM-based data cleaning: silent destructive errors.
-                By generating multiple independent candidate plans ($K=3$) and measuring pairwise semantic patch disagreement ($d$),
-                ConsensusGate safely identifies ambiguous transformations and engages human clarification only when uncertainty warrants it.
-              </p>
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setActiveTab('upload')}
-                  className="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold rounded-lg text-sm shadow transition flex items-center space-x-2"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Dataset</span>
-                </button>
+            <div className="bg-slate-900 dark:bg-slate-950 border border-slate-800 text-white rounded-2xl p-8 shadow-xs relative overflow-hidden">
+              <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:20px_20px]"></div>
+              <div className="relative z-10">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 mb-3">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Provable Cleaning Governance</span>
+                </div>
+                <h2 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-white mb-2">Automated Data Cleaning with Provable Consensus</h2>
+                <p className="text-slate-300 max-w-3xl text-xs lg:text-sm leading-relaxed mb-6">
+                  ConsensusProbe eliminates silent destructive errors in LLM-assisted data cleaning.
+                  By generating multiple independent candidate plans ($K=3$) and measuring pairwise semantic patch disagreement ($d$),
+                  ConsensusGate safely identifies ambiguous transformations and engages human clarification only when uncertainty warrants it.
+                </p>
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setActiveTab('upload')}
+                    className="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold rounded-xl text-xs shadow-xs transition flex items-center space-x-2"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Dataset</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Benchmark Highlights */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Silent Error Reduction</span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">94.2%</div>
-                <p className="text-xs text-emerald-600 mt-1 font-medium">System E vs Unregulated System A</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Silent Error Reduction</span>
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">94.2%</div>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 font-medium">System E vs Unregulated System A</p>
               </div>
-              <div className="grid-card bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Task Success Rate</span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">91.8%</div>
-                <p className="text-xs text-sky-600 mt-1 font-medium">On 100 held-out TEST tasks</p>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Task Success Rate</span>
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">91.8%</div>
+                <p className="text-xs text-sky-600 dark:text-sky-400 mt-1 font-medium">On 100 held-out TEST tasks</p>
               </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Clarification Efficiency</span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">0.45</div>
-                <p className="text-xs text-slate-500 mt-1">Questions/task (vs 1.0 in eager System C)</p>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Clarification Efficiency</span>
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">0.45</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Questions/task (vs 1.0 in System C)</p>
               </div>
-              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Canary Interception</span>
-                <div className="text-2xl font-bold text-slate-900 mt-1">100%</div>
-                <p className="text-xs text-indigo-600 mt-1 font-medium">System F ProbeGate protection</p>
+              <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Canary Interception</span>
+                <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">100%</div>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium">System F ProbeGate protection</p>
               </div>
             </div>
           </div>
@@ -424,14 +431,16 @@ function MainStudio() {
         {activeTab === 'upload' && (
           <div className="max-w-2xl mx-auto space-y-6">
             <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900">Upload Dataset for Consensus Profiling</h2>
-              <p className="text-sm text-slate-500 mt-1">Supported formats: CSV, XLSX (maximum 50 MB)</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Upload Dataset for Consensus Profiling</h2>
+              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-1">Supported formats: CSV, XLSX (maximum 50 MB)</p>
             </div>
 
-            <div className="border-2 border-dashed border-slate-300 hover:border-sky-500 rounded-2xl p-10 text-center transition bg-white shadow-sm">
-              <Upload className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-sky-500 dark:hover:border-sky-400 rounded-2xl p-10 text-center transition bg-white dark:bg-slate-900 shadow-xs">
+              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center mx-auto mb-3.5">
+                <Upload className="w-6 h-6" />
+              </div>
               <label className="cursor-pointer">
-                <span className="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-medium shadow inline-block">
+                <span className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs inline-block transition">
                   Choose File
                 </span>
                 <input
@@ -441,11 +450,11 @@ function MainStudio() {
                   className="hidden"
                 />
               </label>
-              <p className="text-xs text-slate-400 mt-3">Files are stored securely with SHA-256 validation</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 font-mono">Cryptographic SHA-256 validation applied on ingestion</p>
             </div>
 
             {loading && (
-              <div className="p-4 bg-sky-50 text-sky-700 rounded-lg text-sm text-center font-medium animate-pulse">
+              <div className="p-4 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 rounded-xl text-xs text-center font-medium animate-pulse">
                 Uploading and computing cryptographic checksums...
               </div>
             )}
@@ -457,13 +466,13 @@ function MainStudio() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">Dataset Profile: {profile.filename}</h2>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">SHA-256: {currentDataset?.sha256}</p>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Dataset Profile: {profile.filename}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">SHA-256: {currentDataset?.sha256}</p>
               </div>
               <button
                 onClick={handleRunConsensus}
                 disabled={loading}
-                className="px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold shadow transition flex items-center space-x-2"
+                className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center space-x-2"
               >
                 <span>Run ConsensusGate</span>
                 <ArrowRight className="w-4 h-4" />
@@ -471,13 +480,13 @@ function MainStudio() {
             </div>
 
             {/* Column Profiling Table */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="px-6 py-4 border-b border-slate-100 font-semibold text-sm text-slate-800">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 font-semibold text-xs text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                 Column Schema & Data Hygiene
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="px-6 py-3 font-semibold">Column Name</th>
                       <th className="px-6 py-3 font-semibold">Data Type</th>
@@ -486,20 +495,22 @@ function MainStudio() {
                       <th className="px-6 py-3 font-semibold">Distinct Values</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
                     {profile.columns.map((col) => (
-                      <tr key={col.name} className="hover:bg-slate-50/50">
-                        <td className="px-6 py-3 font-medium text-slate-900">{col.name}</td>
-                        <td className="px-6 py-3 font-mono text-xs text-slate-600">{col.dtype}</td>
-                        <td className="px-6 py-3 text-slate-600">{col.null_count}</td>
+                      <tr key={col.name} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                        <td className="px-6 py-3 font-medium text-slate-900 dark:text-white font-sans">{col.name}</td>
+                        <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{col.dtype}</td>
+                        <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{col.null_count}</td>
                         <td className="px-6 py-3">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${
-                            col.null_pct > 20 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
+                          <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-semibold ${
+                            col.null_pct > 20
+                              ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300/40'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                           }`}>
                             {col.null_pct}%
                           </span>
                         </td>
-                        <td className="px-6 py-3 text-slate-600">{col.unique_count}</td>
+                        <td className="px-6 py-3 text-slate-600 dark:text-slate-400">{col.unique_count}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -508,24 +519,24 @@ function MainStudio() {
             </div>
 
             {/* Data Preview */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-              <div className="px-6 py-4 border-b border-slate-100 font-semibold text-sm text-slate-800">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 font-semibold text-xs text-slate-800 dark:text-slate-200 uppercase tracking-wider">
                 Preview (First {profile.preview.length} rows)
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs font-mono">
-                  <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       {profile.columns.map((c) => (
                         <th key={c.name} className="px-4 py-2.5 font-semibold">{c.name}</th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {profile.preview.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50">
+                      <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
                         {profile.columns.map((c) => (
-                          <td key={c.name} className="px-4 py-2 text-slate-700 truncate max-w-[200px]">
+                          <td key={c.name} className="px-4 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
                             {String(row[c.name] ?? '')}
                           </td>
                         ))}
@@ -543,8 +554,8 @@ function MainStudio() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-slate-900">ConsensusGate Transformation Workspace</h2>
-                <p className="text-sm text-slate-500">Multi-plan ensembling and interactive ambiguity resolution</p>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">ConsensusGate Transformation Workspace</h2>
+                <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Multi-plan ensembling and interactive ambiguity resolution</p>
               </div>
 
               {/* Export actions */}
@@ -552,21 +563,21 @@ function MainStudio() {
                 <div className="flex items-center space-x-2">
                   <a
                     href={`${API_BASE}/export/${currentDataset.id}?format=csv`}
-                    className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1"
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>CSV</span>
                   </a>
                   <a
                     href={`${API_BASE}/export/${currentDataset.id}?format=xlsx`}
-                    className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1"
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Excel</span>
                   </a>
                   <a
                     href={`${API_BASE}/export/${currentDataset.id}?format=pdf`}
-                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold shadow-sm flex items-center space-x-1"
+                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>Audit PDF</span>
@@ -576,10 +587,10 @@ function MainStudio() {
             </div>
 
             {/* Consensus Status Banner */}
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <div className={`p-3 rounded-full ${
-                  cleanStatus === 'needs_clarification' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                <div className={`p-3 rounded-2xl ${
+                  cleanStatus === 'needs_clarification' ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
                 }`}>
                   {cleanStatus === 'needs_clarification' ? (
                     <HelpCircle className="w-6 h-6" />
@@ -588,14 +599,14 @@ function MainStudio() {
                   )}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 text-base">
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-base">
                     {cleanStatus === 'needs_clarification'
                       ? 'Semantic Disagreement Detected'
                       : 'Patches Unified & Verified'}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Mean Pairwise Disagreement Score ($d$):{' '}
-                    <span className="font-mono font-bold text-slate-800">
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                       {consensusScore !== null ? consensusScore.toFixed(4) : '0.0000'}
                     </span>
                   </p>
@@ -603,15 +614,15 @@ function MainStudio() {
               </div>
 
               {patchSummary && (
-                <div className="flex space-x-6 text-xs text-slate-600">
+                <div className="flex space-x-6 text-xs text-slate-600 dark:text-slate-400">
                   <div>
-                    <span className="font-bold text-slate-900">{patchSummary.deleted_rows}</span> rows deleted
+                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.deleted_rows}</span> rows deleted
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">{patchSummary.edited_cells}</span> cells modified
+                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.edited_cells}</span> cells modified
                   </div>
                   <div>
-                    <span className="font-bold text-slate-900">{patchSummary.flagged_rows}</span> rows flagged
+                    <span className="font-bold font-mono text-slate-900 dark:text-white">{patchSummary.flagged_rows}</span> rows flagged
                   </div>
                 </div>
               )}
@@ -619,11 +630,11 @@ function MainStudio() {
 
             {/* Clarification Dialog if needed */}
             {clarification && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 shadow-sm space-y-4">
+              <div className="bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 rounded-2xl p-6 shadow-xs space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-amber-700">Interactive Clarification Required</span>
-                    <h3 className="text-base font-bold text-slate-900 mt-1">{clarification.question_text}</h3>
+                    <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">Interactive Clarification Required</span>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white mt-1">{clarification.question_text}</h3>
                   </div>
                 </div>
 
@@ -631,10 +642,10 @@ function MainStudio() {
                   {clarification.options.map((opt) => (
                     <label
                       key={opt.option_id}
-                      className={`flex items-start p-4 rounded-lg border cursor-pointer transition ${
+                      className={`flex items-start p-4 rounded-xl border cursor-pointer transition ${
                         selectedOption === opt.option_id
-                          ? 'border-sky-500 bg-white shadow-sm ring-1 ring-sky-500'
-                          : 'border-slate-200 bg-white hover:border-slate-300'
+                          ? 'border-sky-500 bg-white dark:bg-slate-900 shadow-xs ring-1 ring-sky-500'
+                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
                       <input
@@ -645,9 +656,9 @@ function MainStudio() {
                         className="mt-1 text-sky-600"
                       />
                       <div className="ml-3 text-sm">
-                        <div className="font-semibold text-slate-900">{opt.description}</div>
-                        <div className="text-xs text-slate-500 mt-0.5">
-                          Affected rows: <span className="font-medium text-slate-700">{opt.affected_rows_count}</span>
+                        <div className="font-semibold text-slate-900 dark:text-white">{opt.description}</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Affected rows: <span className="font-medium text-slate-700 dark:text-slate-300 font-mono">{opt.affected_rows_count}</span>
                           {opt.example_rids.length > 0 && ` (Sample IDs: ${opt.example_rids.join(', ')})`}
                         </div>
                       </div>
@@ -659,7 +670,7 @@ function MainStudio() {
                   <button
                     onClick={handleResolveClarification}
                     disabled={loading}
-                    className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-semibold shadow transition"
+                    className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition"
                   >
                     Confirm & Apply Selected Strategy
                   </button>
@@ -670,14 +681,14 @@ function MainStudio() {
             {/* Three Candidate-Plan Columns */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {[0, 1, 2].map((idx) => (
-                <div key={idx} className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <span className="font-bold text-sm text-slate-900">Candidate Plan {idx + 1}</span>
-                    <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-600 rounded font-mono">
+                <div key={idx} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                    <span className="font-bold text-sm text-slate-900 dark:text-white">Candidate Plan {idx + 1}</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded font-mono">
                       Conf: {(0.88 - idx * 0.05).toFixed(2)}
                     </span>
                   </div>
-                  <div className="text-xs space-y-2 text-slate-600 font-mono bg-slate-50 p-3 rounded-lg border border-slate-100">
+                  <div className="text-xs space-y-2 text-slate-700 dark:text-slate-300 font-mono bg-slate-50 dark:bg-slate-950/60 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800">
                     <div>1. Deduplicate(by=['product_name'], keep='{idx === 1 ? 'last' : 'first'}')</div>
                     <div>2. HandleMissing(col='price', strategy='{idx === 0 ? 'drop' : 'fill_mean'}')</div>
                     <div>3. NormalizeCategory(col='category')</div>
