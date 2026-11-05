@@ -10,7 +10,8 @@ build/
 .vite/
 *.pdf
 !paper/*.pdf
-results/parts/
+results/browser_screenshots/
+results/test_retail_sample.csv
 .pytest_cache/
 backend/storage/
 firebase-debug.log
