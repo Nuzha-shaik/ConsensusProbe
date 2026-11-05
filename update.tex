@@ -1,0 +1,198 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\usepackage{geometry}
+\geometry{margin=2.2cm}
+
+\definecolor{primaryblue}{RGB}{2,132,199}
+\definecolor{darkslate}{RGB}{15,23,42}
+\definecolor{emeraldgreen}{RGB}{5,150,105}
+\definecolor{amberorange}{RGB}{217,119,6}
+\definecolor{codebg}{RGB}{248,250,252}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primaryblue,
+    urlcolor=primaryblue,
+    citecolor=primaryblue
+}
+
+\title{\textbf{\LARGE ConsensusProbe 2.0: Next-Generation Multi-Agent Data Governance}\\[0.4em]
+\Large Architectural Blueprint, Visual Intelligence Upgrades, and Master Execution Prompt}
+\author{\textbf{ConsensusProbe Engineering \& Research Team}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+While the foundational mathematical engine of \textbf{ConsensusProbe} provably mitigates silent destructive errors in LLM data cleaning (reducing them by $94.2\%$), the current user-facing interface presents an abstraction barrier: external evaluators cannot immediately discern the multi-agent nature of the system, nor can they visually audit what specific transformations have occurred between the raw dataset and the cleaned output. 
+This specification document outlines the comprehensive upgrade of ConsensusProbe into a tier-1 interactive showcase. 
+We detail four structural enhancements requested by the user---(1) an interactive before/after comparative diff matrix, (2) an animated visual multi-agent swarm demonstration (Cleaner Bot, Supervisor Bot, Gatekeeper Bot), (3) a dedicated Analysis \& Hygiene Dashboard tab, and (4) an accessible drag-and-drop ingestion canvas---along with architectural extensions for model engine selection, agent reasoning logs, and a turnkey master prompt to guide execution.
+\end{abstract}
+
+\tableofcontents
+\bigskip
+\hrule
+\bigskip
+
+% ============================================================
+\section{Problem Diagnosis: The Visual Understanding Gap}
+\label{sec:problem}
+
+When first-time visitors, enterprise evaluators, or academic reviewers open the ConsensusProbe web interface, they are confronted with a paradoxical challenge:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{The Invisible Transformation Problem}: Users upload a file and run the consensus gate, but they cannot see the literal data mutations. Results are presented as summary numbers (e.g., ``2 rows deleted, 14 cells modified''), but the human eye requires visual diff verification (red highlight for dropped anomalies, green highlight for normalized strings, yellow for imputed nulls).
+    \item \textbf{The Hidden Agent Ensemble Problem}: Although ConsensusProbe internally spawns an ensemble of $K=3$ independent LLM candidate planners, calculates mean pairwise disagreement $d$, and runs supervised canary checks, this entire multi-agent symphony happens inside a black box. Users do not see the \textit{bots} communicating, auditing, or disagreeing.
+    \item \textbf{Missing Analytical Exploration}: The profile tab presents column types, but there is no dedicated analytical dashboard providing visual statistical distributions, data hygiene scores, or before/after quality comparisons.
+    \item \textbf{Frictional Ingestion}: The upload form relies on a basic file picker button rather than a tactile, responsive drag-and-drop dropzone.
+\end{enumerate}
+
+To elevate ConsensusProbe into a globally compelling product where anyone immediately grasps the novel research value, the system must transform from a static form into an **interactive multi-agent command center**.
+
+% ============================================================
+\section{Core Functional Specifications (User Changes)}
+\label{sec:changes}
+
+\subsection{Change 1: Interactive Comparative Results \& Cell-Level Diff View}
+\textbf{Objective}: Provide complete visual clarity on what changed between the uploaded document and the final cleaned output.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Side-by-Side / Diff Toggle}: An interactive table viewing mode allowing users to switch between:
+    \begin{itemize}
+        \item \textit{Side-by-Side Comparison}: Raw original dataset on the left; cleaned dataset on the right, synchronized in vertical scroll.
+        \item \textit{Unified Mutation Diff}: A single dense grid where modified cells are highlighted in subtle emerald green with a tooltip showing the original raw value, deleted rows are displayed with strike-through styling and a red tag, and imputed missing values are marked with an amber badge.
+    \end{itemize}
+    \item \textbf{Cell Audit Inspector}: Clicking any modified cell opens a slide-over panel displaying:
+    \begin{enumerate}
+        \item Original Raw Value vs. Cleaned Consensus Value.
+        \item Which candidate plan proposed the change.
+        \item The specific transformation rule applied (e.g., \texttt{NormalizeCategory}, \texttt{Deduplicate}, \texttt{ImputeMean}).
+    \end{enumerate}
+\end{itemize}
+
+\subsection{Change 2: Visual Multi-Agent Swarm Pipeline (``The Bots'')}
+\textbf{Objective}: Visually demonstrate the internal division of labor across AI agents so visitors immediately understand the architecture of the project.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Bot 1: The Cleaner Agent (Hypothesis Generator)}:
+    \begin{itemize}
+        \item \textit{Visual Avatar}: \texttt{Agent-Alpha} (Cyan theme with data-wrench icon).
+        \item \textit{Role Displayed}: Analyzes data anomalies, generates $K=3$ competing candidate transformation plans, and proposes independent repair patches.
+    \end{itemize}
+    \item \textbf{Bot 2: The Supervisor Agent (Consensus \& Canary Auditor)}:
+    \begin{itemize}
+        \item \textit{Visual Avatar}: \texttt{Agent-Beta} (Indigo theme with shield and radar icon).
+        \item \textit{Role Displayed}: Calculates pairwise semantic distance $d$ across all candidate plans, injects hidden canary records to verify model integrity, and determines whether inter-agent disagreement exceeds the calibrated ambiguity threshold $\tau_d$.
+    \end{itemize}
+    \item \textbf{Bot 3: The Gatekeeper Agent (Human-in-the-Loop Orchestrator)}:
+    \begin{itemize}
+        \item \textit{Visual Avatar}: \texttt{Agent-Gamma} (Emerald theme with balance-scale icon).
+        \item \textit{Role Displayed}: When Bot~2 flags high disagreement ($d > \tau_d$), Bot~3 halts execution, isolates the contested rows, translates the mathematical ambiguity into plain human language, and submits the clarification card to the human analyst.
+    \end{itemize}
+    \item \textbf{Animated Process Stream}: An animated sequence showing real-time states:
+    $$\text{Raw Data} \longrightarrow \fbox{\textbf{Bot 1} (3 Plans)} \longrightarrow \fbox{\textbf{Bot 2} (Disagreement Audit: $d=0.38$)} \longrightarrow \fbox{\textbf{Bot 3} (Human Gate)} \longrightarrow \text{Clean Data}$$
+\end{itemize}
+
+\subsection{Change 3: Dedicated Analysis Dashboard Tab}
+\textbf{Objective}: Provide high-impact analytical charts and metrics that demonstrate the measurable value of cleaning.
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Data Hygiene Health Index}: A radial gauge showing overall data quality improvement (e.g., from $58\%$ hygiene to $98.4\%$).
+    \item \textbf{Quality Breakdown Dimensions}:
+    \begin{itemize}
+        \item \textit{Completeness}: Percentage of missing values successfully resolved.
+        \item \textit{Uniqueness}: Duplicate entities resolved without dropping valid records.
+        \item \textit{Consistency}: Casing, date formats, and category strings standardized.
+        \item \textit{Integrity / Canary Score}: $100\%$ validation that no valid data was silently erased.
+    \end{itemize}
+    \item \textbf{Column Distribution Comparison}: Interactive histograms showing numerical column distribution before vs. after cleaning (e.g., price distribution before and after outlier removal or imputation).
+\end{itemize}
+
+\subsection{Change 4: Modern Drag-and-Drop Ingestion Canvas}
+\textbf{Objective}: Frictionless, modern upload experience with immediate feedback.
+\begin{itemize}[leftmargin=*]
+    \item Interactive drag-over visual states with glowing sky-blue border and drop animation.
+    \item Instant pre-ingestion file metadata card (Filename, File Size in KB/MB, MIME type, Estimated row count).
+    \item Quick sample dataset picker (``Load Sample Retail Inventory CSV'') for instant 1-click evaluation without requiring the user to have their own CSV on hand.
+\end{itemize}
+
+% ============================================================
+\section{Architectural Recommendations \& Expert Enhancements}
+\label{sec:recommendations}
+
+To make the application truly world-class, we recommend including the following guide-level capabilities:
+
+\subsection{1. Multi-Model Agent Selection Panel}
+Give the user the ability to select which LLM models power the bots:
+\begin{itemize}
+    \item \textbf{Agent 1 Model}: Choose between \texttt{Gemini 1.5 Pro}, \texttt{Claude 3.5 Sonnet}, \texttt{GPT-4o}, or \texttt{Local Deterministic Mock}.
+    \item \textbf{Supervisor Model}: Choose an independent evaluator model (e.g., \texttt{Gemini 1.5 Flash} or \texttt{GPT-4o-mini}) to ensure zero shared blind spots between cleaner and auditor.
+    \item \textbf{Ensemble Size ($K$)}: Allow selecting $K=2, 3, 5$ candidate plans.
+\end{itemize}
+
+\subsection{2. Live Agent Thought Stream \& Audit Log}
+Include an expandable terminal / thought stream displaying:
+\begin{quote}
+\texttt{[00:01.2] Bot 1: Scanned 1,000 rows. Found 14 nulls in column 'price' and 3 potential duplicates.}\\
+\texttt{[00:02.0] Bot 1: Generated Plan A (drop rows) and Plan B (fill median price \$42.50).}\\
+\texttt{[00:02.8] Bot 2: Comparing Plan A vs Plan B. Semantic divergence d = 0.420 > threshold 0.250.}\\
+\texttt{[00:03.1] Bot 3: Genuine ambiguity detected! Halting automated commit. Requesting analyst input.}
+\end{quote}
+This gives users absolute transparency into \textbf{why} the agents made each decision.
+
+\subsection{3. Cryptographic Provenance Certificate}
+Provide a downloadable \textbf{Cleaning Provenance Certificate} with SHA-256 hashes of the raw input, the candidate patches, the human approval log, and the cleaned output, proving the cleaning workflow meets regulatory audit standards.
+
+% ============================================================
+\section{The Master Execution Prompt}
+\label{sec:prompt}
+
+Below is the turnkey prompt that merges the user's requirements, the frozen core architecture, and the visual enhancements:
+
+\begin{tcolorbox}[colback=codebg,colframe=primaryblue,title=\textbf{MASTER IMPLEMENTATION PROMPT: ConsensusProbe 2.0 Showcase Upgrade}]
+\small
+\texttt{\#\# MISSION}\\
+Upgrade the ConsensusProbe frontend interface into a world-class visual multi-agent showcase without altering frozen core backend logic or algorithmic endpoints.\\
+\\
+\texttt{\#\# KEY DELIVERABLES}\\
+\texttt{1. COMPARATIVE RESULTS \& DIFF VIEW}:\\
+- In the ConsensusGate workspace, render an interactive Before vs. After comparative diff table.\\
+- Highlight modified cells in subtle green with a tooltip showing the original value.\\
+- Highlight dropped rows with strike-through styling and red badges.\\
+- Highlight imputed values with amber badges.\\
+- Add a toggle: [Unified Diff View] | [Side-by-Side Comparison].\\
+\\
+\texttt{2. VISUAL MULTI-AGENT PIPELINE (THE BOTS)}:\\
+- Render an animated multi-agent workflow card demonstrating the project's architecture:\\
+  * \textbf{Bot 1 (Cleaner / Proposer)}: Discovers anomalies and proposes 3 candidate plans.\\
+  * \textbf{Bot 2 (Supervisor / Auditor)}: Measures pairwise plan disagreement (\$d\$) and monitors canaries.\\
+  * \textbf{Bot 3 (Gatekeeper / Orchestrator)}: Engages human clarification only when \$d > \textbackslash tau\_d\$.\\
+- Show real-time status pulses, bot avatars, and an expandable ``Agent Reasoning Log''.\\
+\\
+\texttt{3. ANALYSIS \& QUALITY DASHBOARD TAB}:\\
+- Add a new top-level tab: ``Analysis''.\\
+- Display Data Hygiene Health Score radial gauge (Before vs. After).\\
+- Display metrics: Completeness recovery rate, duplicate resolution count, distribution stability.\\
+- Render visual frequency histograms for key numerical and categorical columns.\\
+\\
+\texttt{4. MODERN DRAG-AND-DROP UPLOAD PANEL}:\\
+- Enhance the Upload view with native HTML5 drag-and-drop events (\texttt{onDragEnter}, \texttt{onDragLeave}, \texttt{onDrop}).\\
+- Add glowing drag-active visual states, file format validation pills, and a 1-click ``Load Demo Retail Inventory'' button.\\
+\\
+\texttt{\#\# NON-NEGOTIABLE SAFETY CONSTRAINTS}:\\
+- Do not modify backend API contracts, database schemas, or frozen research files.\\
+- Use design tokens from \texttt{frontend/src/styles/tokens.css}.\\
+- Maintain WCAG AA contrast and ensure all automated tests (\texttt{make ui\_gate} and \texttt{test\_ui\_e2e.py}) pass.\\
+\end{tcolorbox}
+
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+Implementing these visual upgrades addresses the fundamental communication barrier of ConsensusProbe: it transforms invisible mathematical consensus into an intuitive, visually stunning experience that any evaluator, client, or researcher can understand in five seconds.
+
+\end{document}
