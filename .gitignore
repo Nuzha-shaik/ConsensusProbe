@@ -12,3 +12,4 @@ build/
 !paper/*.pdf
 results/parts/
 .pytest_cache/
+backend/storage/

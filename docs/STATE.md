@@ -1,10 +1,10 @@
-phase: P7
-task: P7.5
+phase: P8
+task: P8.5
 status: done
 last_green_commit: pending
-next_action: Start P8 frontend application
+next_action: Start P9 statistics, figures, and research manuscript
 mode: DEGRADED
-iteration: 7
+iteration: 8
 blockers:
   - latexmk not installed (paper compilation)
   - cr (CodeRabbit) not installed (code review)
@@ -16,4 +16,5 @@ decisions:
   - "2026-11-05: P5 pre-registration PREREG.md locked into lock.json with sha256 digests"
   - "2026-11-05: P6 completed 7,200 runs across 100 TEST tasks; H1, H3, H4 supported, H2 not supported"
   - "2026-11-05: P7 implemented FastAPI backend, SQLAlchemy models, PDF/Excel/CSV exports with formula injection neutralization"
+  - "2026-11-05: P8 implemented Vite + React + TypeScript + Tailwind frontend with 4 core views"
 handoff:

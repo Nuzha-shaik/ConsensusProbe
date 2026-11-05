@@ -1,0 +1,99 @@
+"""Generate LaTeX macros in results/numbers.tex from results/*.json."""
+from __future__ import annotations
+import json
+import os
+import sys
+import numpy as np
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+RESULTS_DIR = os.path.join(ROOT, "results")
+
+def compute_macros() -> dict[str, str]:
+    metrics_path = os.path.join(RESULTS_DIR, "metrics.json")
+    hypo_path = os.path.join(RESULTS_DIR, "hypotheses.json")
+    ablat_path = os.path.join(RESULTS_DIR, "ablations.json")
+
+    with open(metrics_path, "r", encoding="utf-8") as f:
+        metrics = json.load(f)
+    with open(hypo_path, "r", encoding="utf-8") as f:
+        hypo = json.load(f)
+    with open(ablat_path, "r", encoding="utf-8") as f:
+        ablat = json.load(f)
+
+    macros = {}
+
+    # Total test tasks and evaluations
+    tasks_count = len({r["task_seed"] for r in metrics})
+    macros["testTasksCount"] = str(tasks_count)
+    macros["totalEvaluations"] = str(len(metrics))
+
+    # Aggregate by system
+    systems = sorted(list({r["system"] for r in metrics}))
+    for sys_name in systems:
+        sys_records = [r for r in metrics if r["system"] == sys_name]
+        macros[f"sys{sys_name}Success"] = f"{np.mean([r['task_success'] for r in sys_records]) * 100:.1f}\\%"
+        macros[f"sys{sys_name}SilentError"] = f"{np.mean([r['silent_error'] for r in sys_records]) * 100:.1f}\\%"
+        macros[f"sys{sys_name}Questions"] = f"{np.mean([r['questions_asked'] for r in sys_records]):.2f}"
+        asked_records = [r for r in sys_records if r["questions_asked"] > 0]
+        q_prec = np.mean([r["question_precision"] for r in asked_records]) if asked_records else 1.0
+        macros[f"sys{sys_name}Precision"] = f"{q_prec * 100:.1f}\\%"
+        macros[f"sys{sys_name}Tokens"] = f"{int(round(np.mean([r['tokens'] for r in sys_records]))):,}"
+        macros[f"sys{sys_name}Latency"] = f"{np.mean([r['simulated_latency'] for r in sys_records]):.2f}"
+
+        # By mode
+        for mode in ["oracle", "noisy", "unsure"]:
+            mode_records = [r for r in sys_records if r["mode"] == mode]
+            macros[f"sys{sys_name}{mode.capitalize()}Success"] = f"{np.mean([r['task_success'] for r in mode_records]) * 100:.1f}\\%"
+            macros[f"sys{sys_name}{mode.capitalize()}SilentError"] = f"{np.mean([r['silent_error'] for r in mode_records]) * 100:.1f}\\%"
+            macros[f"sys{sys_name}{mode.capitalize()}Questions"] = f"{np.mean([r['questions_asked'] for r in mode_records]):.2f}"
+
+    # Hypotheses macros
+    macros["hOneNoisyDiff"] = f"{hypo['H1']['noisy_mean_diff'] * 100:.1f}\\%"
+    macros["hOneNoisyCiLower"] = f"{hypo['H1']['noisy_ci'][0] * 100:.1f}\\%"
+    macros["hOneNoisyCiUpper"] = f"{hypo['H1']['noisy_ci'][1] * 100:.1f}\\%"
+    macros["hOneStatus"] = "Supported" if hypo["H1"]["supported"] else "Not Supported"
+
+    macros["hTwoSuccessDiff"] = f"{hypo['H2']['success_diff'] * 100:.1f}\\%"
+    macros["hTwoSuccessCiLower"] = f"{hypo['H2']['success_ci'][0] * 100:.1f}\\%"
+    macros["hTwoSuccessCiUpper"] = f"{hypo['H2']['success_ci'][1] * 100:.1f}\\%"
+    macros["hTwoQuestionsDiff"] = f"{hypo['H2']['questions_diff']:.2f}"
+    macros["hTwoStatus"] = "Supported" if hypo["H2"]["supported"] else "Not Supported"
+
+    macros["hThreeSuccessDiff"] = f"{hypo['H3']['success_diff'] * 100:.1f}\\%"
+    macros["hThreeSuccessCiLower"] = f"{hypo['H3']['success_ci'][0] * 100:.1f}\\%"
+    macros["hThreeSuccessCiUpper"] = f"{hypo['H3']['success_ci'][1] * 100:.1f}\\%"
+    macros["hThreeQuestionsDiff"] = f"{hypo['H3']['questions_diff']:.2f}"
+    macros["hThreeStatus"] = "Supported" if hypo["H3"]["supported"] else "Not Supported"
+
+    macros["hFourErrorDiff"] = f"{hypo['H4']['silent_error_diff'] * 100:.1f}\\%"
+    macros["hFourErrorCiLower"] = f"{hypo['H4']['silent_error_ci'][0] * 100:.1f}\\%"
+    macros["hFourErrorCiUpper"] = f"{hypo['H4']['silent_error_ci'][1] * 100:.1f}\\%"
+    macros["hFourQuestionsDiff"] = f"{hypo['H4']['questions_diff']:.2f}"
+    macros["hFourStatus"] = "Supported" if hypo["H4"]["supported"] else "Not Supported"
+
+    # Ablations
+    for k_val in [2, 3, 4, 5]:
+        item = ablat["k_ablation"][f"K_{k_val}"]
+        macros[f"ablationK{k_val}Success"] = f"{item['task_success_rate'] * 100:.1f}\\%"
+        macros[f"ablationK{k_val}SilentError"] = f"{item['silent_error_rate'] * 100:.1f}\\%"
+        macros[f"ablationK{k_val}Questions"] = f"{item['avg_questions']:.2f}"
+        macros[f"ablationK{k_val}Tokens"] = f"{int(round(item['avg_tokens'])):,}"
+
+    macros["canaryInterceptionRate"] = f"{ablat['canary_detection']['interception_rate'] * 100:.1f}\\%"
+    macros["canaryTotalEvaluations"] = str(ablat["canary_detection"]["total_canary_evaluations"])
+    macros["canaryInterceptedCount"] = str(ablat["canary_detection"]["unsafe_plans_intercepted"])
+
+    return macros
+
+def write_numbers_tex():
+    macros = compute_macros()
+    tex_path = os.path.join(RESULTS_DIR, "numbers.tex")
+    lines = ["% Auto-generated by scripts/make_numbers.py. Do not edit manually."]
+    for name, val in sorted(macros.items()):
+        lines.append(f"\\newcommand{{\\{name}}}{{{val}}}")
+    with open(tex_path, "w", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+    print(f"Wrote {len(macros)} macros to {tex_path}")
+
+if __name__ == "__main__":
+    write_numbers_tex()
