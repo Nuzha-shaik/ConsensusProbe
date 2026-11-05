@@ -1,0 +1,14 @@
+.env
+*.db
+node_modules/
+.logs/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.vite/
+*.pdf
+!paper/*.pdf
+results/parts/
+.pytest_cache/
