@@ -71,28 +71,22 @@ def main():
     wait = WebDriverWait(driver, 15)
 
     try:
-        # Step 1: Load Dashboard
-        print("[3/6] Navigating to http://127.0.0.1:5173...")
+        # Step 1: Load Login Page (Unauthenticated users land directly on LoginPage)
+        print("[3/6] Navigating to http://127.0.0.1:5173 (Verifying Landing on LoginPage)...")
         driver.get("http://127.0.0.1:5173")
         time.sleep(2)
-        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "01_dashboard.png"))
-        print("  ✓ Captured: 01_dashboard.png")
+        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "01_login_page.png"))
+        print("  ✓ Captured: 01_login_page.png (Dedicated Split-Screen Login Page)")
 
-        # Test Firebase Sign In Modal
-        print("  --> Testing Firebase Sign In Modal...")
-        sign_in_btn = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Sign In')]"))
+        # Authenticate via user account
+        print("  --> Authenticating via user account...")
+        continue_btn = wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Continue as')]"))
         )
-        sign_in_btn.click()
-        time.sleep(1)
-        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sign In to ConsensusProbe')]")))
-        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "01_b_login_modal.png"))
-        print("  ✓ Captured: 01_b_login_modal.png (Firebase Auth Modal verified)")
-
-        # Close Login Modal to continue flow
-        close_btn = driver.find_element(By.XPATH, "//button[contains(., 'Continue as Guest')]")
-        close_btn.click()
-        time.sleep(1)
+        continue_btn.click()
+        time.sleep(2)
+        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "02_dashboard_authenticated.png"))
+        print("  ✓ Captured: 02_dashboard_authenticated.png (Logged in into Workspace)")
 
         # Step 2: Navigate to Upload
         print("[4/6] Navigating to Upload view & uploading dataset...")
@@ -171,6 +165,17 @@ def main():
             with open(out_file, "wb") as f:
                 f.write(res.content)
             print(f"  ✓ Export {fmt} verified: {content_len} bytes written to {os.path.basename(out_file)}")
+
+        # Step 6: Test Sign Out -> returns to LoginPage
+        print("[6/6] Testing Sign Out navigation back to LoginPage...")
+        sign_out_btn = wait.until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Sign Out')]"))
+        )
+        sign_out_btn.click()
+        time.sleep(2)
+        wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sign In to Your Workspace')]")))
+        driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "07_signed_out_login_page.png"))
+        print("  ✓ Captured: 07_signed_out_login_page.png (Returned directly to LoginPage on Sign Out)")
 
         driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "06_final_verified.png"))
         print("  ✓ Captured: 06_final_verified.png")

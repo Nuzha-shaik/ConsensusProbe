@@ -6,7 +6,7 @@
 - [x] **P1: Design System & Tokens** (Impeccable teach context, design tokens in Tailwind, base components normalized)
 - [x] **P2: Auth Plumbing** (`@react-oauth/google`, `AuthProvider`, `ProtectedRoute`, router guards, bearer headers)
 - [x] **P3: Login Page** (desktop split layout, Google button, loading/error states, AA contrast)
-- [ ] **P4: App Shell** (header wordmark, clear active nav states, theme toggle, user menu)
+- [x] **P4: App Shell** (header wordmark, clear active nav states, theme toggle, user menu)
 - [ ] **P5: Per-Page Restyle**
   - [ ] P5.1 Dashboard Overview
   - [ ] P5.2 Dataset Upload
@@ -25,4 +25,5 @@
 ## Log of Reviews & Notes
 - `2026-11-05`: P0 completed. Baseline recorded in `docs/ui/baseline.md`. Mechanical core-freeze enforcement via `.ui-frozen-paths` and `.ui-allowlist`. CodeRabbit CLI unavailable on host; self-reviewed against security, core logic freeze, and determinism.
 - `2026-11-05`: P2 & P3 completed. Auth context with atob JWT decoding, automatic 401 signout, Bearer token injection, and dedicated split-screen login page. Self-reviewed against security, auth bypass, determinism, and WCAG AA contrast. (coderabbit-unavailable).
+- `2026-11-05`: P4 completed. Restyled App Shell with crisp ConsensusProbe wordmark, active navigation pill indicator, dark/light theme toggle, and user menu with initials circle and explicit Sign Out button. (coderabbit-unavailable).
 

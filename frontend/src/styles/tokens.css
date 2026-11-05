@@ -43,7 +43,8 @@
   --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
 }
 
-[data-theme='dark'] {
+[data-theme='dark'],
+.dark {
   --bg-app: #090d16;
   --bg-surface: #0f172a;
   --bg-surface-elevated: #1e293b;

@@ -16,7 +16,10 @@ import {
   ArrowRight,
   LogIn,
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Sun,
+  Moon,
+  Shield
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -73,6 +76,25 @@ function MainStudio() {
   const [clarification, setClarification] = useState<ClarificationQuestion | null>(null);
   const [selectedOption, setSelectedOption] = useState<number>(0);
   const [patchSummary, setPatchSummary] = useState<any | null>(null);
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('cp_theme');
+      if (stored === 'light' || stored === 'dark') return stored;
+    }
+    return 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+    localStorage.setItem('cp_theme', theme);
+  }, [theme]);
 
   if (status === 'loading') {
     return (
@@ -223,102 +245,122 @@ function MainStudio() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Top Header */}
-      <header className="bg-slate-900 border-b border-slate-800 text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <div className="flex items-center space-x-3">
-          <div className="p-2 bg-sky-500 rounded-lg text-white font-bold">
+    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-[#090d16] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      {/* Top Header Shell */}
+      <header className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white px-6 py-3.5 flex items-center justify-between sticky top-0 z-50 shadow-xs">
+        {/* Brand / Logo */}
+        <div className="flex items-center space-x-3.5">
+          <div className="w-9 h-9 rounded-xl bg-sky-500/10 dark:bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-600 dark:text-sky-400 shadow-xs">
             <Layers className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-lg leading-tight tracking-wide">ConsensusProbe</h1>
-            <p className="text-xs text-slate-400">Multi-Plan Disagreement Profiling & Safe AI Transformation</p>
+            <div className="flex items-center space-x-2">
+              <h1 className="font-mono font-bold text-base tracking-tight text-slate-900 dark:text-white">ConsensusProbe</h1>
+              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>PROVABLE</span>
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Multi-Plan Disagreement Profiling & Governance</p>
           </div>
         </div>
 
         {/* Navigation Tabs */}
-        <nav className="flex space-x-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700">
+        <nav className="flex space-x-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700/80">
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center space-x-2 ${
-              activeTab === 'dashboard' ? 'bg-sky-600 text-white shadow' : 'text-slate-300 hover:text-white'
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-2 ${
+              activeTab === 'dashboard'
+                ? 'bg-white dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-slate-200 dark:border-sky-400/40 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
             }`}
           >
-            <BarChart3 className="w-4 h-4" />
+            <BarChart3 className="w-3.5 h-3.5" />
             <span>Overview</span>
           </button>
           <button
             onClick={() => setActiveTab('upload')}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center space-x-2 ${
-              activeTab === 'upload' ? 'bg-sky-600 text-white shadow' : 'text-slate-300 hover:text-white'
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-2 ${
+              activeTab === 'upload'
+                ? 'bg-white dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-slate-200 dark:border-sky-400/40 shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
             }`}
           >
-            <Upload className="w-4 h-4" />
+            <Upload className="w-3.5 h-3.5" />
             <span>Upload</span>
           </button>
           <button
             onClick={() => setActiveTab('profile')}
             disabled={!currentDataset}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center space-x-2 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-2 ${
               activeTab === 'profile'
-                ? 'bg-sky-600 text-white shadow'
+                ? 'bg-white dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-slate-200 dark:border-sky-400/40 shadow-xs'
                 : currentDataset
-                ? 'text-slate-300 hover:text-white'
-                : 'text-slate-500 cursor-not-allowed'
+                ? 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                : 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
             }`}
           >
-            <Database className="w-4 h-4" />
+            <Database className="w-3.5 h-3.5" />
             <span>Profile</span>
           </button>
           <button
             onClick={() => setActiveTab('workspace')}
             disabled={!currentDataset}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition flex items-center space-x-2 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-2 ${
               activeTab === 'workspace'
-                ? 'bg-sky-600 text-white shadow'
+                ? 'bg-white dark:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-slate-200 dark:border-sky-400/40 shadow-xs'
                 : currentDataset
-                ? 'text-slate-300 hover:text-white'
-                : 'text-slate-500 cursor-not-allowed'
+                ? 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                : 'text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60'
             }`}
           >
-            <GitBranch className="w-4 h-4" />
+            <GitBranch className="w-3.5 h-3.5" />
             <span>ConsensusGate</span>
           </button>
         </nav>
 
-        <div className="flex items-center space-x-3">
+        {/* Right Shell Controls: Theme Toggle, Firebase Status, Active Dataset, and User Menu */}
+        <div className="flex items-center space-x-2.5">
+          {/* Theme Toggle */}
+          <button
+            onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+            className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition shadow-xs"
+            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-500" />}
+          </button>
+
+          {/* Active Dataset Pill */}
+          {currentDataset && (
+            <div className="hidden lg:flex items-center space-x-1.5 text-xs bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="font-mono truncate max-w-[120px]">{currentDataset.filename}</span>
+              <span className="text-slate-400 dark:text-slate-500">({currentDataset.rows}r)</span>
+            </div>
+          )}
+
           {/* User Profile & Sign Out Button */}
-          <div className="flex items-center space-x-2 bg-slate-800 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-full text-xs">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span className="font-mono truncate max-w-[130px]" title={user.email}>
+          <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 pl-2 pr-1 py-1 rounded-full text-xs shadow-xs">
+            {user.picture ? (
+              <img src={user.picture} alt={user.name || user.email} className="w-6 h-6 rounded-full object-cover" />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 font-bold flex items-center justify-center text-[10px] font-mono border border-sky-400/30">
+                {(user.name || user.email || 'U').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <span className="font-mono truncate max-w-[110px] text-xs" title={user.email}>
               {user.name || user.email}
             </span>
             <button
               onClick={() => signOut()}
               title="Sign Out to Login Page"
-              className="text-slate-400 hover:text-rose-400 transition ml-1 flex items-center space-x-1"
+              className="px-2.5 py-1 rounded-full bg-slate-200/80 hover:bg-rose-100 dark:bg-slate-700/80 dark:hover:bg-rose-950/50 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition flex items-center space-x-1.5 text-[11px] font-medium"
             >
               <LogOut className="w-3.5 h-3.5" />
-              <span className="text-[10px] uppercase font-bold">Exit</span>
+              <span>Sign Out</span>
             </button>
           </div>
-
-          {/* Firebase Status Pill */}
-          <div className="hidden sm:flex items-center space-x-1.5 text-xs bg-amber-950/40 text-amber-300 border border-amber-600/30 px-2.5 py-1 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-            <span className="font-medium">Firebase: ai-powered-multi-agents</span>
-          </div>
-
-          {/* Dataset Status Badge */}
-          {currentDataset ? (
-            <div className="flex items-center space-x-2 text-xs bg-slate-800 px-3 py-1.5 rounded-full border border-slate-700 text-slate-300">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span className="font-mono truncate max-w-[150px]">{currentDataset.filename}</span>
-              <span className="text-slate-500">({currentDataset.rows} rows)</span>
-            </div>
-          ) : (
-            <span className="text-xs text-slate-500">No active dataset</span>
-          )}
         </div>
       </header>
 
