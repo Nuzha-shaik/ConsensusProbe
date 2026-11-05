@@ -48,6 +48,8 @@ def normalize_category(df: pd.DataFrame, col: str, mapping: dict[str, str]) -> t
         raise OperationError(f"normalize_category: column '{col}' not found")
 
     result = df.copy()
+    if col in result.columns:
+        result[col] = result[col].astype(object)
     cell_edits = {}
     for idx, row in result.iterrows():
         old_val = row[col]
@@ -67,6 +69,8 @@ def recalculate(df: pd.DataFrame, target: str, formula: str, source_cols: list[s
             raise OperationError(f"recalculate: source column '{c}' not found")
 
     result = df.copy()
+    if target in result.columns:
+        result[target] = result[target].astype(object)
     cell_edits = {}
     for idx, row in result.iterrows():
         local_vars = {c: row[c] for c in source_cols}
@@ -178,6 +182,8 @@ def convert_type(df: pd.DataFrame, col: str, dtype: str) -> tuple[pd.DataFrame, 
         raise OperationError(f"convert_type: unknown dtype '{dtype}'")
 
     result = df.copy()
+    if col in result.columns:
+        result[col] = result[col].astype(object)
     cell_edits = {}
     for idx, row in result.iterrows():
         old_val = row[col]
