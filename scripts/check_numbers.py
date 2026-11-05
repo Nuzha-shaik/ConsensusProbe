@@ -3,9 +3,12 @@
 import os
 import re
 import sys
-from scripts.make_numbers import compute_macros
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+from scripts.make_numbers import compute_macros
 NUMBERS_TEX = os.path.join(ROOT, "results", "numbers.tex")
 
 MACRO_REGEX = re.compile(r"\\newcommand\{\\([a-zA-Z0-9]+)\}\{(.*)\}")
