@@ -13,7 +13,7 @@
   - [x] P5.3 Data Profiler
   - [x] P5.4 ConsensusGate Workspace
 - [x] **P6: Cross-Cutting Polish** (responsive 360-1920px, accessibility WCAG AA, smooth transitions)
-- [ ] **P7: Optional Backend Verification** (flagged `AUTH_ENFORCE=false` by default, token validation dependency)
+- [x] **P7: Optional Backend Verification** (flagged `AUTH_ENFORCE=false` by default, token validation dependency)
 - [ ] **P8: Final Verification & Release** (Section 9 checklist, README OAuth setup, UI_FINAL_REPORT.md)
 
 ## Blocked Items
@@ -28,4 +28,5 @@
 - `2026-11-05`: P4 completed. Restyled App Shell with crisp ConsensusProbe wordmark, active navigation pill indicator, dark/light theme toggle, and user menu with initials circle and explicit Sign Out button. (coderabbit-unavailable).
 - `2026-11-05`: P5 completed. Restyled Dashboard Overview, Dataset Upload, Data Profiler, and ConsensusGate Workspace with high-contrast design tokens, dark/light modes, tabular mono numerals, and accessible form elements. (coderabbit-unavailable).
 - `2026-11-05`: P6 completed. Cross-cutting polish: prefers-reduced-motion media query, visible focus-visible outline rings, touch targets >= 44px, and responsive layouts across viewports. (coderabbit-unavailable).
+- `2026-11-05`: P7 completed. Optional backend Google token verification in backend/app/auth.py with AUTH_ENFORCE=false by default, lazy import of google.oauth2, and unit tests in backend/tests/test_auth.py. (coderabbit-unavailable).
 
