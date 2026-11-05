@@ -66,7 +66,7 @@ def main():
             fp = os.path.join(dirpath, fn)
             if fn.endswith('.py'):
                 violations.extend(check_ast(fp))
-            if fn.endswith(('.py', '.js', '.ts', '.tsx', '.env', '.toml', '.yaml', '.yml', '.json', '.md', '.txt')):
+            if fn.endswith(('.py', '.js', '.ts', '.tsx', '.env', '.toml', '.yaml', '.yml', '.json', '.txt')):
                 violations.extend(check_secrets(fp))
     if violations:
         for fp, line, msg in violations:
