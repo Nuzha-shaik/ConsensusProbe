@@ -15,3 +15,4 @@ results/parts/
 backend/storage/
 firebase-debug.log
 .firebase/
+*.exe
