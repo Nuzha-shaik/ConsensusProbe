@@ -177,6 +177,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         msg = 'Sign-in cancelled. Popup was closed before completion.';
       } else if (err.code === 'auth/popup-blocked') {
         msg = 'Popup blocked by browser. Please enable popups for this site.';
+      } else if (err.code === 'auth/unauthorized-domain') {
+        const host = typeof window !== 'undefined' ? window.location.hostname : 'current domain';
+        msg = `Domain "${host}" is not authorized in Firebase. Add "${host}" in Firebase Console -> Authentication -> Settings -> Authorized domains. (If running locally, open http://localhost:5173 instead of 127.0.0.1)`;
       } else if (err.message) {
         msg = err.message;
       }
