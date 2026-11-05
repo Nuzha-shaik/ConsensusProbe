@@ -1,0 +1,93 @@
+{
+  "record_count": 822,
+  "total_sales": 391721.91,
+  "total_sales_raw": 391721.905,
+  "rows_kept": 822,
+  "rows_dropped": 1,
+  "cells_imputed": 0,
+  "ship_mode_breakdown": {
+    "First Class": {
+      "orders": 124,
+      "sales": 49332.57
+    },
+    "Same Day": {
+      "orders": 39,
+      "sales": 21017.17
+    },
+    "Second Class": {
+      "orders": 164,
+      "sales": 93758.61
+    },
+    "Standard Class": {
+      "orders": 495,
+      "sales": 227613.55
+    }
+  },
+  "segment_breakdown": {
+    "Consumer": {
+      "orders": 444,
+      "sales": 195580.97
+    },
+    "Corporate": {
+      "orders": 247,
+      "sales": 121885.93
+    },
+    "Home Office": {
+      "orders": 131,
+      "sales": 74255.0
+    }
+  },
+  "group_12_breakdown": {
+    "First Class x Consumer": {
+      "orders": 72,
+      "sales": 20802.17
+    },
+    "First Class x Corporate": {
+      "orders": 40,
+      "sales": 20792.61
+    },
+    "First Class x Home Office": {
+      "orders": 12,
+      "sales": 7737.79
+    },
+    "Same Day x Consumer": {
+      "orders": 28,
+      "sales": 8132.41
+    },
+    "Same Day x Corporate": {
+      "orders": 5,
+      "sales": 9907.31
+    },
+    "Same Day x Home Office": {
+      "orders": 6,
+      "sales": 2977.46
+    },
+    "Second Class x Consumer": {
+      "orders": 91,
+      "sales": 49724.25
+    },
+    "Second Class x Corporate": {
+      "orders": 50,
+      "sales": 35243.23
+    },
+    "Second Class x Home Office": {
+      "orders": 23,
+      "sales": 8791.13
+    },
+    "Standard Class x Consumer": {
+      "orders": 253,
+      "sales": 116922.13
+    },
+    "Standard Class x Corporate": {
+      "orders": 152,
+      "sales": 55942.79
+    },
+    "Standard Class x Home Office": {
+      "orders": 90,
+      "sales": 54748.63
+    }
+  },
+  "completeness_before": 0.2143,
+  "completeness_after": 1.0,
+  "mismatches_vs_truth": 0
+}

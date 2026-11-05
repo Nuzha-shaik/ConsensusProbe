@@ -1,0 +1,4 @@
+f8efa3c30630ca1bcdea0bd6b48b878e7224fb46998ee325ba1a5bae2d320a1f  docs/golden/input/3_-Badly-Structured-Sales-Data-3.xlsx
+85d56cb86f9e5c0d65eb6ca55b93d3be7e7bfd4ba9dcf6fe3740ee3f3729b0d8  docs/golden/golden_truth.csv
+bb40dc02ad8663f20ee7db9c1c834e19bc6977369335b73588c148228b54882e  docs/golden/golden_metrics.json
+71dbfbf7558dff7343dd6e3f844748fc30e630b63c4ffc44c8d8ec25d0f6f92d  docs/golden/dirty3.csv
