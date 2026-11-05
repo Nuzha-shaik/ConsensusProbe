@@ -12,6 +12,7 @@ build/
 !paper/*.pdf
 results/browser_screenshots/
 results/test_retail_sample.csv
+results/parts/
 .pytest_cache/
 backend/storage/
 firebase-debug.log
