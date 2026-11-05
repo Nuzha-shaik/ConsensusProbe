@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { auth, googleProvider, logoutUser } from '../firebase';
+import { signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 
 export interface UserProfile {
   name: string;
@@ -14,8 +16,9 @@ interface AuthContextType {
   status: AuthStatus;
   token: string | null;
   signIn: (credentialToken: string) => boolean;
+  signInWithGoogleAuth: () => Promise<{ success: boolean; error: string | null }>;
   signInAsDemo: (customEmail?: string) => void;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,60 +66,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Check stored token and setup expiry timer on mount
+  // Sync with Firebase Auth state on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
-    const storedUser = localStorage.getItem(STORAGE_KEY_USER);
-
-    if (storedToken && storedUser) {
-      try {
-        const payload = decodeJwtPayload(storedToken);
-        const parsedUser: UserProfile = JSON.parse(storedUser);
-
-        if (payload && payload.exp) {
-          const nowSeconds = Math.floor(Date.now() / 1000);
-          if (payload.exp <= nowSeconds) {
-            console.log('[Auth] Token expired on boot, clearing session.');
-            performSignOut();
-            return;
-          }
-          // Schedule auto-signout when expired
-          const remainingMs = (payload.exp - nowSeconds) * 1000;
-          const timer = setTimeout(() => {
-            console.log('[Auth] Token expired during active session, auto signing out.');
-            performSignOut();
-          }, remainingMs);
-
-          setToken(storedToken);
-          setUser(parsedUser);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        try {
+          const idToken = await fbUser.getIdToken();
+          const userProfile: UserProfile = {
+            name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+            email: fbUser.email || '',
+            picture: fbUser.photoURL || '',
+            sub: fbUser.uid,
+          };
+          localStorage.setItem(STORAGE_KEY_TOKEN, idToken);
+          localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userProfile));
+          setToken(idToken);
+          setUser(userProfile);
           setStatus('authenticated');
-          return () => clearTimeout(timer);
-        } else {
-          // Valid demo/mock session without standard exp
-          setToken(storedToken);
-          setUser(parsedUser);
-          setStatus('authenticated');
-          return;
+        } catch (e) {
+          console.warn('[Auth] Failed to get Firebase token:', e);
+          performSignOut();
         }
-      } catch (e) {
-        performSignOut();
+      } else {
+        // Fallback: check stored local session (e.g. guest or standard JWT)
+        const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+        const storedUser = localStorage.getItem(STORAGE_KEY_USER);
+
+        if (storedToken && storedUser) {
+          try {
+            const payload = decodeJwtPayload(storedToken);
+            const parsedUser: UserProfile = JSON.parse(storedUser);
+
+            if (payload && payload.exp) {
+              const nowSeconds = Math.floor(Date.now() / 1000);
+              if (payload.exp <= nowSeconds) {
+                performSignOut();
+                return;
+              }
+              const remainingMs = (payload.exp - nowSeconds) * 1000;
+              const timer = setTimeout(() => {
+                performSignOut();
+              }, remainingMs);
+
+              setToken(storedToken);
+              setUser(parsedUser);
+              setStatus('authenticated');
+              return () => clearTimeout(timer);
+            } else {
+              setToken(storedToken);
+              setUser(parsedUser);
+              setStatus('authenticated');
+              return;
+            }
+          } catch (e) {
+            performSignOut();
+          }
+        } else {
+          setStatus('unauthenticated');
+        }
       }
-    } else {
-      setStatus('unauthenticated');
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const signIn = (credentialToken: string): boolean => {
     const payload = decodeJwtPayload(credentialToken);
     if (!payload || !payload.email) {
       console.error('[Auth] Invalid token payload');
-      return false;
-    }
-
-    // Optional domain restriction
-    const allowedDomain = import.meta.env.VITE_ALLOWED_EMAIL_DOMAIN;
-    if (allowedDomain && !payload.email.endsWith(`@${allowedDomain}`)) {
-      console.warn(`[Auth] Email ${payload.email} does not match allowed domain: ${allowedDomain}`);
       return false;
     }
 
@@ -135,9 +152,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return true;
   };
 
+  const signInWithGoogleAuth = async (): Promise<{ success: boolean; error: string | null }> => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const fbUser = result.user;
+      const idToken = await fbUser.getIdToken();
+      const userProfile: UserProfile = {
+        name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Google User',
+        email: fbUser.email || '',
+        picture: fbUser.photoURL || '',
+        sub: fbUser.uid,
+      };
+
+      localStorage.setItem(STORAGE_KEY_TOKEN, idToken);
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(userProfile));
+      setToken(idToken);
+      setUser(userProfile);
+      setStatus('authenticated');
+      return { success: true, error: null };
+    } catch (err: any) {
+      console.error('[Auth] Google sign in error:', err);
+      let msg = 'Google Sign-In failed.';
+      if (err.code === 'auth/popup-closed-by-user') {
+        msg = 'Sign-in cancelled. Popup was closed before completion.';
+      } else if (err.code === 'auth/popup-blocked') {
+        msg = 'Popup blocked by browser. Please enable popups for this site.';
+      } else if (err.message) {
+        msg = err.message;
+      }
+      return { success: false, error: msg };
+    }
+  };
+
   const signInAsDemo = (customEmail: string = 'analyst@consensusprobe.internal') => {
     const demoUser: UserProfile = {
-      name: customEmail.split('@')[0].toUpperCase(),
+      name: customEmail.includes('@') ? customEmail.split('@')[0].toUpperCase() : 'Guest Analyst',
       email: customEmail,
       picture: '',
       sub: 'demo-local-analyst',
@@ -150,7 +199,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStatus('authenticated');
   };
 
-  const signOut = () => {
+  const signOut = async () => {
+    try {
+      await logoutUser();
+    } catch (e) {
+      console.warn('[Auth] Firebase logout warning:', e);
+    }
     performSignOut();
   };
 
@@ -161,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         status,
         token,
         signIn,
+        signInWithGoogleAuth,
         signInAsDemo,
         signOut,
       }}
