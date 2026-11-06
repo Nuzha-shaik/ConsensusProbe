@@ -60,6 +60,7 @@ def export_pdf(
     audit_log: list[str] | None = None,
     df_before: pd.DataFrame | None = None,
     df_after: pd.DataFrame | None = None,
+    active_patch: Any = None,
 ) -> bytes:
     """Export cleaning summary, BEFORE vs AFTER difference tables with red box outlines, and audit report as PDF."""
     bio = io.BytesIO()
@@ -107,9 +108,12 @@ def export_pdf(
     if (df_after is None or df_after.empty) and (df_before is not None and not df_before.empty):
         df_after = df_before.copy()
 
-    max_preview_rows = 10
+    max_preview_rows = 15
     max_preview_cols = 6
-    diff_cells: set[tuple[int, int]] = set()
+
+    # Extract patch information for robust difference highlighting
+    deleted_rids = set(active_patch.deleted_rids) if (active_patch and hasattr(active_patch, "deleted_rids")) else set()
+    edits_dict = active_patch.cell_edits_dict() if (active_patch and hasattr(active_patch, "cell_edits_dict")) else {}
 
     is_reshaped = (
         df_before is not None
@@ -119,22 +123,11 @@ def export_pdf(
         and (set(df_before.columns) != set(df_after.columns) or "Sales" in df_after.columns)
     )
 
-    if not is_reshaped and df_before is not None and df_after is not None and not df_before.empty and not df_after.empty:
-        common_cols = [c for c in df_before.columns if c in df_after.columns][:max_preview_cols]
-        if not common_cols:
-            common_cols = list(df_before.columns)[:max_preview_cols]
-        min_rows = min(max_preview_rows, len(df_before), len(df_after))
-        for r_idx in range(min_rows):
-            for c_idx, c_name in enumerate(common_cols):
-                b_val = str(df_before.iloc[r_idx][c_name]) if c_name in df_before.columns and pd.notna(df_before.iloc[r_idx][c_name]) else ""
-                a_val = str(df_after.iloc[r_idx][c_name]) if c_name in df_after.columns and pd.notna(df_after.iloc[r_idx][c_name]) else ""
-                if b_val.strip() != a_val.strip():
-                    diff_cells.add((r_idx, c_idx))
-
     # Helper to build preview table with difference highlighting
     def build_diff_table(df: pd.DataFrame, is_after: bool = False):
-        cols = list(df.columns)[:max_preview_cols]
-        sub_df = df[cols].head(max_preview_rows)
+        display_df = df.drop(columns=["_rid"]) if "_rid" in df.columns else df
+        cols = list(display_df.columns)[:max_preview_cols]
+        sub_df = display_df[cols].head(max_preview_rows)
         headers = ["#"] + [str(c) for c in cols]
         data = [headers]
 
@@ -151,13 +144,27 @@ def export_pdf(
 
         sales_c_idx = (cols.index("Sales") if "Sales" in cols else -1)
 
-        for r_idx, row in enumerate(sub_df.itertuples(index=False)):
+        for r_idx in range(len(sub_df)):
+            row_rid = df["_rid"].iloc[r_idx] if "_rid" in df.columns else r_idx
             row_cells = [str(r_idx + 1)]
-            for c_idx, val in enumerate(row):
-                str_val = str(val) if pd.notna(val) else ""
+
+            for c_idx, c_name in enumerate(cols):
+                val = sub_df.iloc[r_idx][c_name]
+                is_blank = pd.isna(val) or str(val).strip() in ("", "(blank)", "None", "nan", "NaN")
+                str_val = "" if is_blank else str(val).strip()
+
                 if is_after:
-                    is_highlight = (c_idx == sales_c_idx) if is_reshaped else ((r_idx, c_idx) in diff_cells)
-                    if is_highlight:
+                    # Cell was modified or filled during cleaning
+                    is_modified = is_reshaped if (c_idx == sales_c_idx) else (
+                        (row_rid, c_name) in edits_dict or (
+                            df_before is not None and not df_before.empty and (
+                                str_val == "Unknown" or
+                                (r_idx < len(df_before) and str(df_before.iloc[r_idx].get(c_name, "")).strip() != str_val and str(df_before.iloc[r_idx].get(c_name, "")).strip() in ("", "None", "nan", "NaN", "(blank)"))
+                            )
+                        )
+                    )
+
+                    if is_modified:
                         cell_text = f"-> {str_val}" if str_val else "-> [Empty]"
                         row_cells.append(cell_text)
                         # RED RECTANGULAR BOX BORDER LINE + Yellow Fill
@@ -170,16 +177,26 @@ def export_pdf(
                     else:
                         row_cells.append(str_val)
                 else:
-                    if not is_reshaped and (r_idx, c_idx) in diff_cells:
-                        cell_text = f"{str_val} [!]" if str_val else "[Missing] [!]"
+                    # Ingested table: clearly highlight missing or deleted rows
+                    is_row_deleted = (row_rid in deleted_rids) or (df_after is not None and len(df_after) < len(df_before) and row_rid not in (df_after["_rid"].values if "_rid" in df_after.columns else []))
+                    if is_blank:
+                        cell_text = "(blank) [!]"
                         table_styles.extend([
                             ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.2, colors.HexColor("#ef4444")),
                             ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
                             ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
                         ])
                         row_cells.append(cell_text)
+                    elif is_row_deleted and c_idx == 0:
+                        cell_text = f"{str_val} [DELETED]"
+                        table_styles.extend([
+                            ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
+                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
+                        ])
+                        row_cells.append(cell_text)
                     else:
                         row_cells.append(str_val if str_val else "[Empty]")
+
             data.append(row_cells)
 
         col_w = 540 / len(headers)

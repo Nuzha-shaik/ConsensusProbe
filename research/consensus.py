@@ -120,6 +120,17 @@ def generate_clarification_question(
     if len(unique_candidates) <= 1:
         return None
 
+    # Deterministic sorting: transformative/cleaning actions first (higher impact first), status-quo last
+    unique_candidates.sort(
+        key=lambda item: (
+            len(item[0].deleted_rids) + len(item[0].cell_edits) > 0,
+            len(item[0].deleted_rids),
+            len(item[0].cell_edits),
+            len(item[1]),
+        ),
+        reverse=True,
+    )
+
     # Limit to 2-4 options
     options = []
     # Identify parameter difference if possible
@@ -138,11 +149,13 @@ def generate_clarification_question(
         example_rids = [int(x) for x in affected_rids[:3]]
 
         desc = f"Strategy {opt_id + 1} (supported by {len(plan_indices)} plans): "
-        if cand_patch.deleted_rids:
-            desc += f"delete {len(cand_patch.deleted_rids)} rows; "
-        if cand_patch.cell_edits:
+        if cand_patch.deleted_rids and cand_patch.cell_edits:
+            desc += f"delete {len(cand_patch.deleted_rids)} rows; edit {len(cand_patch.cell_edits)} cells."
+        elif cand_patch.deleted_rids:
+            desc += f"delete {len(cand_patch.deleted_rids)} rows."
+        elif cand_patch.cell_edits:
             desc += f"edit {len(cand_patch.cell_edits)} cells."
-        if not cand_patch.deleted_rids and not cand_patch.cell_edits:
+        else:
             desc += "no modifications."
 
         options.append(QuestionOption(
@@ -153,8 +166,13 @@ def generate_clarification_question(
             patch=cand_patch,
         ))
 
+    if param_name in ("by", "cleaning_strategy") or "by" in differing:
+        q_text = "Multiple conflicting cleaning plans detected regarding duplicate handling and missing values. Which strategy should be applied?"
+    else:
+        q_text = f"Multiple conflicting cleaning plans detected regarding '{param_name}'. Which strategy should be applied?"
+
     return ClarificationQuestion(
-        question_text=f"Multiple conflicting cleaning plans detected regarding '{param_name}'. Which strategy should be applied?",
+        question_text=q_text,
         parameter_name=param_name,
         options=options,
     )

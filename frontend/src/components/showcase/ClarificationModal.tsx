@@ -34,6 +34,13 @@ export const ClarificationModal: React.FC<ClarificationModalProps> = ({
   const [applyToSimilar, setApplyToSimilar] = useState<boolean>(true);
   const modalRef = useRef<HTMLDivElement>(null);
 
+  // Always reset to the primary cleaning strategy when modal opens or question updates
+  useEffect(() => {
+    if (isOpen && question?.options && question.options.length > 0) {
+      setSelectedOptionId(question.options[0].optionId);
+    }
+  }, [isOpen, question]);
+
   // Keyboard navigation & number-key shortcuts (1, 2)
   useEffect(() => {
     if (!isOpen) return;

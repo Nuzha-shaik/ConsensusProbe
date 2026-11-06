@@ -354,7 +354,7 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
         if is_num:
             ambiguous_params[op_idx] = {"strategy": ["fill_mean", "drop"]}
         else:
-            ambiguous_params[op_idx] = {"strategy": ["fill:Unknown"]}
+            ambiguous_params[op_idx] = {"strategy": ["drop", "fill:Unknown"]}
 
     provider = MockProvider(gold_ops, ambiguous_params=ambiguous_params, p_amb=0.4, eps=0.0)
     seed = int(hashlib.sha256(dataset_id.encode()).hexdigest()[:8], 16)
@@ -457,10 +457,19 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
     consensus = calculate_consensus(patches)
     question = generate_clarification_question(df, plans, patches, consensus)
 
-    if not question or req.selected_option >= len(question.options):
-        raise HTTPException(status_code=400, detail="Invalid option selected")
+    if not question:
+        raise HTTPException(status_code=400, detail="No clarification question found")
 
-    selected_patch = question.options[req.selected_option].patch
+    selected_opt = next((o for o in question.options if o.option_id == req.selected_option), None)
+    if selected_opt is None:
+        if 0 <= req.selected_option < len(question.options):
+            selected_opt = question.options[req.selected_option]
+        elif 0 <= req.selected_option - 1 < len(question.options):
+            selected_opt = question.options[req.selected_option - 1]
+        else:
+            raise HTTPException(status_code=400, detail="Invalid option selected")
+
+    selected_patch = selected_opt.patch
     set_active_patch(dataset_id, selected_patch)
 
     # Persist the reconciled clean DataFrame so profile and exports show cleaned values
@@ -588,7 +597,7 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "cols": len(df_before.columns),
             "status": "Cleaned & Validated via ConsensusGate",
         }
-        content = export_pdf(summary_info, audit_log=audit_log, df_before=df_before, df_after=export_df)
+        content = export_pdf(summary_info, audit_log=audit_log, df_before=df_before, df_after=export_df, active_patch=active_patch)
         return Response(
             content=content,
             media_type="application/pdf",

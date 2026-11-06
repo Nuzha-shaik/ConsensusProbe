@@ -396,19 +396,19 @@ export function clientRunConsensus(datasetId: string): ClientCleanResponse {
       options: [
         {
           option_id: 0,
-          description: 'Strategy 1 (Recommended): Merge duplicate records (retaining highest completeness), impute missing fields with canonical values',
+          description: 'Strategy 1 (Recommended): Remove duplicate rows & drop incomplete records with missing contact data',
           affected_rows_count: affectedCount,
           example_rids: exampleRids,
         },
         {
           option_id: 1,
-          description: 'Strategy 2 (Strict Baseline): Drop duplicate rows, fill missing cells with default 0 / N/A',
+          description: 'Strategy 2 (Impute All): Remove duplicate rows & impute missing fields with canonical values',
           affected_rows_count: affectedCount,
           example_rids: exampleRids,
         },
         {
           option_id: 2,
-          description: 'Strategy 3 (Conservative Guard): Retain all records, flag conflicting and blank entries for manual audit',
+          description: 'Strategy 3 (Conservative Audit): Retain all records (no row deletion), flag missing entries for manual review',
           affected_rows_count: affectedCount,
           example_rids: exampleRids,
         },
@@ -473,6 +473,20 @@ export function clientClarify(datasetId: string, optionId: number): ClientCleanR
 
   let processedRecords: Record<string, string>[] = [];
 
+  // Helper to detect rows that have zero usable contact information (e.g. blank phone AND email)
+  const isAllContactsMissing = (rec: Record<string, string>) => {
+    const contactCols = ds.headers.filter((h) => /phone|email|contact/i.test(h));
+    if (contactCols.length > 0) {
+      return contactCols.every((c) => isBlankValue(rec[c]));
+    }
+    // General check: if more than 50% of non-name columns are blank
+    const nonNameCols = ds.headers.filter((h) => !/name|id|code/i.test(h));
+    if (nonNameCols.length > 0) {
+      return nonNameCols.every((c) => isBlankValue(rec[c]));
+    }
+    return false;
+  };
+
   if (optionId === 0) {
     // Strategy 0: Merge duplicates, keeping most complete values, and impute blanks
     const seenMap = new Map<string, Record<string, string>>();
@@ -518,11 +532,15 @@ export function clientClarify(datasetId: string, optionId: number): ClientCleanR
     }
     processedRecords = keptList;
   } else if (optionId === 1) {
-    // Strategy 1: Drop duplicates, fill blanks with 0 or N/A
+    // Strategy 1: Drop duplicate rows AND drop incomplete records with missing contact data
     const seenMap = new Set<string>();
     const keptList: Record<string, string>[] = [];
 
     for (const rec of ds.records) {
+      if (isAllContactsMissing(rec)) {
+        deletedCount++;
+        continue;
+      }
       const keyVal = keyCols.map((k) => String(rec[k] ?? '').trim().toLowerCase()).filter(Boolean).join('||');
       if (keyVal && seenMap.has(keyVal)) {
         deletedCount++;
@@ -631,8 +649,9 @@ export function clientExportPdf(
 
   const headers = ds?.headers && ds.headers.length > 0 ? ds.headers : ['Column 1'];
   const afterRows = ds?.records ?? [];
-  const beforeRows = origRecords ?? afterRows;
-  const previewCount = Math.min(20, afterRows.length);
+  const beforeRows = (origRecords && origRecords.length > 0) ? origRecords : afterRows;
+  const beforePreviewCount = Math.min(20, beforeRows.length);
+  const afterPreviewCount = Math.min(20, afterRows.length);
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
 
@@ -675,9 +694,13 @@ export function clientExportPdf(
   const displayCols = headers.slice(0, 6);
   const tableHeaders = ['#', ...displayCols];
   const beforeBody = [];
-  for (let i = 0; i < previewCount; i++) {
+  for (let i = 0; i < beforePreviewCount; i++) {
     const row = beforeRows[i] ?? {};
-    beforeBody.push([String(i + 1), ...displayCols.map((h) => String(row[h] ?? ''))]);
+    const cells = displayCols.map((h) => {
+      const v = row[h];
+      return isBlankValue(v) ? '(blank)' : String(v ?? '');
+    });
+    beforeBody.push([String(i + 1), ...cells]);
   }
 
   autoTable(doc, {
@@ -720,7 +743,7 @@ export function clientExportPdf(
   const afterTableHeaders = ['#', ...afterCols];
 
   const afterBody = [];
-  for (let i = 0; i < previewCount; i++) {
+  for (let i = 0; i < afterPreviewCount; i++) {
     const row = afterRows[i] ?? {};
     afterBody.push([String(i + 1), ...afterCols.map((h) => String(row[h] ?? ''))]);
   }
