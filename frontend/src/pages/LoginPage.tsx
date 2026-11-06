@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Layers, AlertCircle, Loader2 } from 'lucide-react';
+import { Shield, Layers, AlertCircle, Loader2, CheckCircle2, Cpu, GitCompare } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { signInWithGoogleAuth, signInAsDemo } = useAuth();
@@ -58,19 +58,37 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom Feature Metric Badge */}
-        <div className="relative z-10 mt-8 pt-6 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <div>
-            <span className="block font-bold text-slate-200 text-sm">0.0%</span>
-            <span>Silent Errors</span>
+        {/* Impeccable Multi-Agent Consensus & Security Widgets */}
+        <div className="relative z-10 mt-8 pt-6 border-t border-slate-800/80 space-y-3">
+          {/* Live Swarm Engine Status Widget */}
+          <div className="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 backdrop-blur-xs flex items-center justify-between">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+              <div>
+                <div className="text-xs font-bold text-slate-200 flex items-center space-x-1.5">
+                  <Cpu className="w-3.5 h-3.5 text-sky-400" />
+                  <span>Multi-Agent Swarm (K=3)</span>
+                </div>
+                <div className="text-[11px] text-slate-400 font-mono">
+                  Autonomous Plan Ensemble • Disagreement Gate d ≤ τ_d
+                </div>
+              </div>
+            </div>
+            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-400/30">
+              Active
+            </span>
           </div>
-          <div>
-            <span className="block font-bold text-slate-200 text-sm">0.38</span>
-            <span>Questions/Task</span>
-          </div>
-          <div>
-            <span className="block font-bold text-slate-200 text-sm">100</span>
-            <span>Test Sets Evaluated</span>
+
+          {/* Cryptographic Provenance & Canary Integrity Widget */}
+          <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 font-mono">
+            <div className="flex items-center space-x-1.5 text-slate-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Canary Sentinel Ground-Truth</span>
+            </div>
+            <div className="flex items-center space-x-1.5 text-sky-400">
+              <Shield className="w-3.5 h-3.5" />
+              <span>SHA-256 Verified</span>
+            </div>
           </div>
         </div>
       </div>
