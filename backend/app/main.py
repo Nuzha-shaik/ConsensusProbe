@@ -9,6 +9,7 @@ import uuid
 from typing import Literal
 
 import pandas as pd
+import numpy as np
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -261,10 +262,15 @@ def _normalize_crosstab_if_present(path: str) -> tuple[bool, pd.DataFrame | None
 
 def _load_dataset_df(dataset: Dataset) -> pd.DataFrame:
     ext = os.path.splitext(dataset.path)[1].lower()
+    na_vals = ['(blank)', '(blank) ', 'blank', 'BLANK', '(Blank)', '(BLANK)', 'None', 'none', 'NULL', 'null', 'NaN', 'nan', 'N/A', 'n/a', '-', '']
     if ext == ".csv":
-        df = pd.read_csv(dataset.path)
+        df = pd.read_csv(dataset.path, na_values=na_vals)
     else:
-        df = pd.read_excel(dataset.path)
+        df = pd.read_excel(dataset.path, na_values=na_vals)
+    for col in df.columns:
+        if df[col].dtype == object:
+            df[col] = df[col].replace(r'^\s*\(?blank\)?\s*$', np.nan, regex=True)
+            df[col] = df[col].replace(r'^\s*$', np.nan, regex=True)
     return _inject_rid(df)
 
 @app.get("/profile/{dataset_id}", response_model=DatasetProfile)
@@ -456,6 +462,11 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
 
     selected_patch = question.options[req.selected_option].patch
     set_active_patch(dataset_id, selected_patch)
+
+    # Persist the reconciled clean DataFrame so profile and exports show cleaned values
+    clean_df = _drop_rid(selected_patch.apply(df))
+    clean_path = os.path.join(STORAGE_DIR, f"{dataset_id}_clean.csv")
+    clean_df.to_csv(clean_path, index=False)
 
     clarification.status = "resolved"
     clarification.answer = f"Option {req.selected_option}: {req.notes}"

@@ -263,6 +263,9 @@ function MainStudio() {
         } else {
           setClarification(null);
           setPatchSummary(clientRes.patch_summary as any);
+          const updatedProf = clientGetProfile(ds.id);
+          setProfile(updatedProf as any);
+          setCurrentDataset((prev) => (prev ? { ...prev, rows: updatedProf.rows } : null));
         }
         setActiveTab('workspace');
         recordCleaningRun({
@@ -408,6 +411,11 @@ function MainStudio() {
         setClarification(null);
         setConsensusScore(clientRes.consensus_score);
         setIsClarifyModalOpen(false);
+
+        const updatedProf = clientGetProfile(currentDataset.id);
+        setProfile(updatedProf as any);
+        setCurrentDataset((prev) => (prev ? { ...prev, rows: updatedProf.rows } : null));
+
         recordCleaningRun({
           datasetId: currentDataset.id,
           filename: currentDataset.filename,
@@ -447,7 +455,11 @@ function MainStudio() {
       setIsClarifyModalOpen(false);
 
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
-      if (profRes.ok) setProfile(await profRes.json());
+      if (profRes.ok) {
+        const updatedProf = await profRes.json();
+        setProfile(updatedProf);
+        setCurrentDataset((prev) => (prev ? { ...prev, rows: updatedProf.rows } : null));
+      }
 
       recordCleaningRun({
         datasetId: currentDataset.id,
