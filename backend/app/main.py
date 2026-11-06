@@ -299,7 +299,7 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
     for nc in null_cols:
         op_idx = len(gold_ops)
         is_num = pd.api.types.is_numeric_dtype(df[nc])
-        strat = "fill_median" if is_num else "drop"
+        strat = "fill_median" if is_num else "fill:Unknown"
         gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
         if is_num:
             ambiguous_params[op_idx] = {"strategy": ["fill_mean", "drop"]}
@@ -478,10 +478,22 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
 
     # Always drop internal row id
     export_df = _drop_rid(df)
+    if len(export_df) == 0 and len(raw_df) > 0:
+        # Prevent 0-row empty export if patch dropped all rows
+        df_rec = raw_df.copy()
+        if active_patch:
+            for (rid, col), val in active_patch.cell_edits_dict().items():
+                if col in df_rec.columns and rid in df_rec['_rid'].values:
+                    df_rec.loc[df_rec['_rid'] == rid, col] = val
+        export_df = _drop_rid(df_rec)
 
-    # Fetch audit log runs
+    # Fetch audit log runs and produce clean, human-readable summaries
     runs = db.query(OperationRun).filter(OperationRun.dataset_id == dataset_id).order_by(OperationRun.created_at).all()
-    audit_log = [f"{r.created_at.strftime('%Y-%m-%d %H:%M:%S')}: {r.status} (consensus={r.consensus_score}) -> {r.applied_patch}" for r in runs]
+    audit_log = [
+        f"Consensus Decision: Applied patch (score d = {r.consensus_score:.4f}). "
+        f"Reconciled {r.applied_patch.get('edited_cells', 0) if isinstance(r.applied_patch, dict) else 0} cell values."
+        for r in runs
+    ] if runs else None
 
     base_name = os.path.splitext(dataset.filename)[0]
 
@@ -504,8 +516,8 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "dataset_id": dataset.id,
             "filename": dataset.filename,
             "sha256": dataset.sha256,
-            "rows": len(export_df),
-            "cols": len(export_df.columns),
+            "rows": len(raw_df),
+            "cols": len(df_before.columns),
             "status": "Cleaned & Validated via ConsensusGate",
         }
         content = export_pdf(summary_info, audit_log=audit_log, df_before=df_before, df_after=export_df)

@@ -540,6 +540,20 @@ export function clientExportPdf(
     styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', textColor: [30, 41, 59] },
     headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [248, 250, 252] },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.column.index > 0) {
+        const header = displayCols[data.column.index - 1];
+        const rowIdx = data.row.index;
+        const bVal = beforeRows[rowIdx]?.[header] ?? '';
+        const aVal = afterRows[rowIdx]?.[header] ?? '';
+        if (bVal !== aVal) {
+          data.cell.styles.fillColor = [254, 226, 226]; // light red fill
+          data.cell.styles.textColor = [185, 28, 28];
+          data.cell.styles.lineWidth = 0.4;
+          data.cell.styles.lineColor = [220, 38, 38]; // red box outline
+        }
+      }
+    },
   });
 
   // Table 2: Cleaned & Reconciled Data (After Cleaning - With Modifications Highlighted)
@@ -574,19 +588,22 @@ export function clientExportPdf(
         const bVal = beforeRows[rowIdx]?.[header] ?? '';
         const aVal = afterRows[rowIdx]?.[header] ?? '';
         if (bVal !== aVal) {
-          data.cell.styles.fillColor = [254, 240, 138]; // amber highlight
+          data.cell.styles.fillColor = [254, 240, 138]; // yellow fill
           data.cell.styles.fontStyle = 'bold';
-          data.cell.styles.textColor = [133, 77, 14];
+          data.cell.styles.textColor = [153, 27, 27];
+          data.cell.styles.lineWidth = 0.6;
+          data.cell.styles.lineColor = [220, 38, 38]; // RED RECTANGULAR BOX BORDER LINE
+          data.cell.text = [`-> ${aVal || '[Empty]'}`];
         }
       }
     },
   });
 
   curY = (doc as any).lastAutoTable.finalY + 5;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
-  doc.setTextColor(100, 116, 139);
-  doc.text('* Highlighted yellow cells indicate verified consensus patches (imputation, formula neutralization, or conflict resolution).', 14, curY);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(185, 28, 28);
+  doc.text('* Red rectangular boxes with arrow (->) mark verified cell changes between Before and After cleaning.', 14, curY);
 
   // Table 3: Multi-Agent Transformation & Security Audit Log
   curY += 7;
