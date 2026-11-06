@@ -22,15 +22,19 @@ def plan_to_patch(df: pd.DataFrame, plan: dict) -> Patch:
     """Execute a plan's operations sequentially on df and accumulate Patch."""
     curr_df = df.copy()
     accum_patch = Patch.create()
+    failures = []
     for op_entry in plan.get("ops", []):
         op_name = op_entry["op"]
         params = op_entry.get("params", {})
         try:
             curr_df, p = execute_op(curr_df, op_name, params)
             accum_patch = accum_patch.merge(p)
-        except Exception:
-            # If an op fails to apply, continue or record as-is
-            continue
+        except Exception as exc:
+            failures.append((op_name, params, exc))
+    if failures:
+        import logging
+        for op_name, params, exc in failures:
+            logging.warning("plan_to_patch: op %r params %r failed: %r", op_name, params, exc)
     return accum_patch
 
 def pairwise_disagreement(atoms1: tuple | set, atoms2: tuple | set) -> float:
@@ -119,12 +123,15 @@ def generate_clarification_question(
     # Limit to 2-4 options
     options = []
     # Identify parameter difference if possible
-    diff_params = set()
+    # Identify parameter where values actually differ across plans (H1)
+    diff_params = {}
     for p in plans:
         for op in p.get("ops", []):
-            for k in op.get("params", {}).keys():
-                diff_params.add(k)
-    param_name = list(sorted(diff_params))[0] if diff_params else "cleaning_strategy"
+            for k, v in op.get("params", {}).items():
+                diff_params.setdefault(k, set()).add(repr(v))
+    # Prefer the first param that has >1 distinct value; fall back to first param alphabetically
+    differing = [k for k, vals in sorted(diff_params.items()) if len(vals) > 1]
+    param_name = differing[0] if differing else (sorted(diff_params)[0] if diff_params else "cleaning_strategy")
 
     for opt_id, (cand_patch, plan_indices) in enumerate(unique_candidates[:4]):
         affected_rids = sorted(list({int(r) for r in cand_patch.deleted_rids} | {int(rid) for (rid, col) in cand_patch.cell_edits_dict().keys()}))
@@ -170,17 +177,13 @@ def majority_vote_patch(patches: list[Patch]) -> Patch:
     majority_atoms = {a for a, count in atom_counts.items() if count >= threshold}
 
     del_rids = sorted([a[1] for a in majority_atoms if a[0] == "del"])
-    edits = {}
-    for a in majority_atoms:
-        if a[0] == "edit":
-            rid, col, val_repr = a[1], a[2], a[3]
-            # Safely parse literal value from repr
-            import ast
-            try:
-                val = ast.literal_eval(val_repr)
-            except Exception:
-                val = val_repr
-            edits[(rid, col)] = val
+    # C2: collect actual values from patches directly, avoid repr/literal_eval float corruption
+    edits: dict[tuple, Any] = {}
+    for p in patches:
+        for (rid, col), val in p.cell_edits_dict().items():
+            atom = ("edit", rid, col, repr(val))
+            if atom in majority_atoms:
+                edits[(rid, col)] = val
 
     return Patch.create(deleted_rids=del_rids, cell_edits=edits)
 

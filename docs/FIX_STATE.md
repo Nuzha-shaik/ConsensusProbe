@@ -1,10 +1,10 @@
 # Audit Fix State
 # Format: ID | STATUS | NOTE
 
-C1 | TODO | research/consensus.py:28 silent exception swallow
-C2 | TODO | research/consensus.py:172 repr/literal_eval corrupts floats
+C1 | DONE | plan_to_patch logs failed ops with logging.warning instead of silently swallowing
+C2 | DONE | majority_vote_patch reads actual values from patch.cell_edits_dict() instead of repr/literal_eval roundtrip
 C3 | DONE | README.md lines 77-85 replaced with placeholders; firebase.ts uses VITE_FIREBASE_* env vars; frontend/.env.example created
-H1 | TODO | research/consensus.py:122 clarification picks alphabetically
+H1 | DONE | generate_clarification_question picks param where values actually differ across plans, not first alphabetically
 H2 | TODO | backend/app/main.py:90 _ACTIVE_PATCHES fails multi-worker
 H3 | TODO | research/operations.py:167 numpy NaN fill corruption
 H4 | TODO | research/track_s.py:90 gold edits use hardcoded indices
