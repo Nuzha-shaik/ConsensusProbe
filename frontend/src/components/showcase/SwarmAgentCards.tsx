@@ -7,15 +7,17 @@ interface SwarmAgentCardsProps {
   viewModel: RunViewModel;
   simulatedTauD?: number;
   isRunning?: boolean;
+  onOpenClarification?: () => void;
 }
 
 export const SwarmAgentCards: React.FC<SwarmAgentCardsProps> = ({
   viewModel,
   simulatedTauD,
   isRunning = false,
+  onOpenClarification,
 }) => {
   const effectiveTau = typeof simulatedTauD === 'number' ? simulatedTauD : viewModel.tauD;
-  const isEngaged = viewModel.meanDisagreement > effectiveTau;
+  const isEngaged = viewModel.meanDisagreement > effectiveTau && viewModel.gateDecision === 'needs_human_clarification';
 
   const proposerMeta = resolveModelMetadata(
     viewModel.proposerModel.available ? viewModel.proposerModel.value.modelId : null
@@ -199,6 +201,17 @@ export const SwarmAgentCards: React.FC<SwarmAgentCardsProps> = ({
               {isEngaged ? 'Clarify Pending' : 'Direct Apply'}
             </span>
           </div>
+
+          {isEngaged && onOpenClarification && (
+            <button
+              type="button"
+              onClick={onOpenClarification}
+              className="mt-3 w-full py-2 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold shadow-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer"
+            >
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Review & Resolve Conflicts Now</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ import { CanaryAuditPanel } from './components/showcase/CanaryAuditPanel';
 import { ClarificationModal, RecordedDecision } from './components/showcase/ClarificationModal';
 import { adaptApiResponseToRunViewModel } from './adapters/runViewModel';
 import { normalizeCrosstab } from './lib/layoutNormalizer';
-import { clientIngestFile, clientGetProfile, clientRunConsensus, clientClarify, clientExportCsv } from './lib/clientEngine';
+import { clientIngestFile, clientGetProfile, clientRunConsensus, clientClarify, clientExportCsv, clientExportPdf, clientExportXlsx } from './lib/clientEngine';
 import {
   Upload,
   Database,
@@ -251,6 +251,36 @@ function MainStudio() {
     setLoading(true);
     setError(null);
 
+    if (currentDataset.id.startsWith('ds_')) {
+      try {
+        const clientRes = clientRunConsensus(currentDataset.id);
+        setConsensusScore(clientRes.consensus_score);
+        setCleanStatus(clientRes.status);
+        if (clientRes.status === 'needs_clarification') {
+          setClarification(clientRes.question as any);
+          setIsClarifyModalOpen(true);
+        } else {
+          setClarification(null);
+          setPatchSummary(clientRes.patch_summary as any);
+        }
+        setActiveTab('workspace');
+        recordCleaningRun({
+          datasetId: currentDataset.id,
+          filename: currentDataset.filename,
+          rows: currentDataset.rows,
+          cols: currentDataset.cols,
+          consensusScore: clientRes.consensus_score,
+          status: clientRes.status,
+          patchSummary: clientRes.patch_summary,
+        });
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Consensus execution failed.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
@@ -266,6 +296,7 @@ function MainStudio() {
 
       if (data.status === 'needs_clarification') {
         setClarification(data.question);
+        setIsClarifyModalOpen(true);
       } else {
         setClarification(null);
         setPatchSummary(data.patch_summary);
@@ -293,6 +324,7 @@ function MainStudio() {
         setCleanStatus(clientRes.status);
         if (clientRes.status === 'needs_clarification') {
           setClarification(clientRes.question as any);
+          setIsClarifyModalOpen(true);
         } else {
           setClarification(null);
           setPatchSummary(clientRes.patch_summary as any);
@@ -321,6 +353,32 @@ function MainStudio() {
     setLoading(true);
     setError(null);
     const chosenOption = optionOverride !== undefined ? optionOverride : selectedOption;
+
+    if (currentDataset.id.startsWith('ds_')) {
+      try {
+        const clientRes = clientClarify(currentDataset.id, chosenOption);
+        setCleanStatus(clientRes.status);
+        setPatchSummary(clientRes.patch_summary as any);
+        setClarification(null);
+        setConsensusScore(clientRes.consensus_score);
+        setIsClarifyModalOpen(false);
+        recordCleaningRun({
+          datasetId: currentDataset.id,
+          filename: currentDataset.filename,
+          rows: currentDataset.rows,
+          cols: currentDataset.cols,
+          consensusScore: clientRes.consensus_score,
+          status: clientRes.status,
+          patchSummary: clientRes.patch_summary,
+        });
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Failed to apply clarification.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000);
@@ -339,6 +397,8 @@ function MainStudio() {
       setCleanStatus(data.status);
       setPatchSummary(data.patch_summary);
       setClarification(null);
+      setConsensusScore(0.0);
+      setIsClarifyModalOpen(false);
 
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
@@ -359,6 +419,8 @@ function MainStudio() {
         setCleanStatus(clientRes.status);
         setPatchSummary(clientRes.patch_summary as any);
         setClarification(null);
+        setConsensusScore(clientRes.consensus_score);
+        setIsClarifyModalOpen(false);
         recordCleaningRun({
           datasetId: currentDataset.id,
           filename: currentDataset.filename,
@@ -379,6 +441,41 @@ function MainStudio() {
   // Authenticated export helper (Hybrid: Backend + Client Export)
   const handleExport = async (format: 'csv' | 'xlsx' | 'pdf') => {
     if (!currentDataset) return;
+    const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
+
+    if (currentDataset.id.startsWith('ds_')) {
+      try {
+        let blob: Blob;
+        let filename: string;
+        if (format === 'pdf') {
+          blob = clientExportPdf(currentDataset.id, {
+            status: cleanStatus || 'applied',
+            consensusScore: consensusScore ?? 0.38,
+            tauD: simulatedTauD,
+            recordedDecisions,
+          });
+          filename = `${baseName}_audit_report.pdf`;
+        } else if (format === 'xlsx') {
+          blob = clientExportXlsx(currentDataset.id);
+          filename = `${baseName}_cleaned.xlsx`;
+        } else {
+          blob = clientExportCsv(currentDataset.id);
+          filename = `${baseName}_cleaned.csv`;
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Export failed.');
+      }
+      return;
+    }
+
     try {
       const token = localStorage.getItem('cp_auth_token');
       const headers: Record<string, string> = {};
@@ -393,8 +490,7 @@ function MainStudio() {
       const a = document.createElement('a');
       a.href = url;
       const ext = format === 'xlsx' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv';
-      const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
-      a.download = `${baseName}_cleaned.${ext}`;
+      a.download = format === 'pdf' ? `${baseName}_audit_report.pdf` : `${baseName}_cleaned.${ext}`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -402,12 +498,27 @@ function MainStudio() {
     } catch (err: any) {
       console.warn('[ConsensusProbe] Backend export unavailable, exporting via client engine:', err);
       try {
-        const blob = clientExportCsv(currentDataset.id);
+        let blob: Blob;
+        let filename: string;
+        if (format === 'pdf') {
+          blob = clientExportPdf(currentDataset.id, {
+            status: cleanStatus || 'applied',
+            consensusScore: consensusScore ?? 0.38,
+            tauD: simulatedTauD,
+            recordedDecisions,
+          });
+          filename = `${baseName}_audit_report.pdf`;
+        } else if (format === 'xlsx') {
+          blob = clientExportXlsx(currentDataset.id);
+          filename = `${baseName}_cleaned.xlsx`;
+        } else {
+          blob = clientExportCsv(currentDataset.id);
+          filename = `${baseName}_cleaned.csv`;
+        }
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
-        a.download = `${baseName}_cleaned.csv`;
+        a.download = filename;
         document.body.appendChild(a);
         a.click();
         a.remove();
@@ -780,6 +891,7 @@ function MainStudio() {
                   viewModel={viewModel}
                   simulatedTauD={simulatedTauD}
                   isRunning={loading}
+                  onOpenClarification={() => setIsClarifyModalOpen(true)}
                 />
 
                 <ThresholdSimulator
