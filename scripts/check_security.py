@@ -13,7 +13,7 @@ SECRET_PATTERNS = [
     re.compile(r'\d{6,}-[a-z0-9]+\.apps\.googleusercontent\.com'),
 ]
 SKIP_DIRS = {'node_modules', '.git', '__pycache__', '.logs', '.venv', 'venv', '.pytest_cache', 'dist'}
-SKIP_FILES = {'.env.example'}
+SKIP_FILES = {'.env.example', '.env', '.env.local', '.env.production'}
 
 
 def check_ast(filepath):

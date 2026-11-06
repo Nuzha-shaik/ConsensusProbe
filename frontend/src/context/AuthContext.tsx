@@ -71,6 +71,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync with Firebase Auth state on mount
   useEffect(() => {
+    if (!auth) {
+      const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+      const storedUser = localStorage.getItem(STORAGE_KEY_USER);
+
+      if (storedToken && storedUser) {
+        try {
+          const payload = decodeJwtPayload(storedToken);
+          const parsedUser: UserProfile = JSON.parse(storedUser);
+
+          if (payload && payload.exp) {
+            const nowSeconds = Math.floor(Date.now() / 1000);
+            if (payload.exp <= nowSeconds) {
+              performSignOut();
+              return;
+            }
+            const remainingMs = (payload.exp - nowSeconds) * 1000;
+            const timer = setTimeout(() => {
+              performSignOut();
+            }, remainingMs);
+
+            setToken(storedToken);
+            setUser(parsedUser);
+            setStatus('authenticated');
+            return () => clearTimeout(timer);
+          } else {
+            const demoExp = localStorage.getItem(STORAGE_KEY_DEMO_EXP);
+            if (demoExp && Date.now() > Number(demoExp)) {
+              performSignOut();
+              return;
+            }
+            setToken(storedToken);
+            setUser(parsedUser);
+            setStatus('authenticated');
+            return;
+          }
+        } catch (e) {
+          performSignOut();
+        }
+      } else {
+        setStatus('unauthenticated');
+      }
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
         try {
@@ -161,6 +205,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signInWithGoogleAuth = async (): Promise<{ success: boolean; error: string | null }> => {
+    if (!auth || !googleProvider) {
+      return { success: false, error: 'Firebase Auth is not configured. Please use Demo Login.' };
+    }
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const fbUser = result.user;
