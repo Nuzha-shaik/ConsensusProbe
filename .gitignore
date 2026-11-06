@@ -10,6 +10,8 @@ build/
 .vite/
 *.pdf
 !paper/*.pdf
+!research paper.pdf
+!Research_Paper.pdf
 results/browser_screenshots/
 results/test_retail_sample.csv
 results/parts/
