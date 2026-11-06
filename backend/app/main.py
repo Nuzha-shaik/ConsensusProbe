@@ -392,15 +392,13 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
             ambiguous_params[op_idx] = {"strategy": ["fill_mean", "drop"]}
         else:
             col_lower = nc.lower()
-            if "email" in col_lower:
-                strat = f"fill:inferred@{dataset_domain}"
-                alt_strat = f"fill:contact@{dataset_domain}"
-            elif "phone" in col_lower:
-                strat = f"fill:{phone_prefix}00"
-                alt_strat = f"fill:{phone_prefix}99"
+            # Rule 1: Never synthesize identifying fields (email, phone, SSN, etc.). A blank cell stays blank!
+            if any(k in col_lower for k in ["email", "phone", "ssn", "mobile", "contact", "address", "tax_id"]):
+                strat = "preserve_blank"
+                alt_strat = "drop"
             else:
                 strat = "fill:Active"
-                alt_strat = "fill:Standard"
+                alt_strat = "drop"
             gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
             ambiguous_params[op_idx] = {"strategy": [alt_strat]}
 

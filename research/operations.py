@@ -166,19 +166,11 @@ def handle_missing(df: pd.DataFrame, col: str, strategy: str) -> tuple[pd.DataFr
         if len(mode) == 0:
             raise OperationError(f"handle_missing: column '{col}' is empty; fill_mode yields no value")
         fill_val = mode.iloc[0]
+    elif strategy == 'preserve_blank':
+        # Rule 1: Never synthesize identifying fields. A blank cell stays blank.
+        return result, Patch.create()
     elif strategy.startswith('fill:'):
         fill_val = strategy[5:]
-        if 'inferred@' in fill_val and 'NAME' in result.columns:
-            domain = fill_val.split('@')[-1]
-            cell_edits = {}
-            for idx in result.index[null_mask]:
-                rid = result.at[idx, '_rid']
-                name_val = str(result.at[idx, 'NAME']).strip()
-                name_slug = re.sub(r'[^a-z0-9]+', '.', name_val.lower()).strip('.') if name_val else 'contact'
-                inferred_email = f"{name_slug}@{domain}"
-                cell_edits[(rid, col)] = inferred_email
-                result.at[idx, col] = inferred_email
-            return result, Patch.create(cell_edits=cell_edits)
     else:
         raise OperationError(f"handle_missing: unknown strategy '{strategy}'")
 
