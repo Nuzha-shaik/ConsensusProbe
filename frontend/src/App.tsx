@@ -245,14 +245,6 @@ function MainStudio() {
     return 'audit';
   };
 
-  // File upload handler
-  // File upload handler (delegates to handleIngestFile - L3)
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    await handleIngestFile(file);
-  };
-
   // Run ConsensusGate (Hybrid: Backend + In-Browser Engine)
   const handleRunConsensus = async (overrideDataset?: DatasetInfo | unknown) => {
     const ds = (overrideDataset && typeof overrideDataset === 'object' && 'id' in overrideDataset) ? (overrideDataset as DatasetInfo) : currentDataset;
@@ -1031,29 +1023,6 @@ function MainStudio() {
           <div className="max-w-4xl mx-auto space-y-6">
             <IngestionDropzone onFileConfirmed={handleIngestFile} isLoading={loading} />
             <SampleButtons onLoadSample={handleLoadSample} isLoading={loading} />
-
-            <div className="text-center">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Upload Dataset for Consensus Profiling</h2>
-              <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400 mt-1">Supported formats: CSV, XLSX (maximum 50 MB)</p>
-            </div>
-
-            <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-sky-500 dark:hover:border-sky-400 rounded-2xl p-10 text-center transition bg-white dark:bg-slate-900 shadow-xs">
-              <div className="w-12 h-12 rounded-2xl bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center mx-auto mb-3.5">
-                <Upload className="w-6 h-6" />
-              </div>
-              <label className="cursor-pointer">
-                <span className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs inline-block transition">
-                  Choose File
-                </span>
-                <input
-                  type="file"
-                  accept=".csv,.xlsx"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-3 font-mono">Cryptographic SHA-256 validation applied on ingestion</p>
-            </div>
 
             {loading && (
               <div className="p-4 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 rounded-xl text-xs text-center font-medium animate-pulse">
