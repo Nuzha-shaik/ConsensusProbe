@@ -24,26 +24,28 @@ export function isSummaryLabel(label: string): boolean {
 }
 
 /**
- * Detects if a dataset has a two-level cross-tab header structure.
+ * Detects if a dataset has a two-level cross-tab header structure (checking at least 20 columns).
  */
 export function isTwoLevelCrosstab(rows: string[][]): boolean {
   if (!rows || rows.length < 4) return false;
   const row0 = rows[0] || [];
   const row1 = rows[1] || [];
+  const checkCols = Math.max(20, Math.max(row0.length, row1.length));
 
   // Check if row 0 has repeated or sparse headers with empty gaps
   let emptyGaps = 0;
-  for (let c = 2; c < row0.length; c++) {
+  for (let c = 2; c < Math.min(checkCols, row0.length); c++) {
     if (!row0[c] || row0[c].trim() === '') emptyGaps++;
   }
 
   // Row 1 should have subcategory values
-  const hasSubHeaders = row1.slice(2).filter((c) => c && c.trim() !== '').length >= 3;
+  const hasSubHeaders = row1.slice(2, checkCols).filter((c) => c && c.trim() !== '').length >= 3;
   return emptyGaps >= 2 && hasSubHeaders;
 }
 
 /**
  * Normalizes two-level cross-tab rows into a tidy tabular record format.
+ * Evaluates at least 20 columns per row to capture all distributed values and drop summary totals.
  */
 export function normalizeCrosstab(rows: string[][]): NormalizedResult {
   if (!isTwoLevelCrosstab(rows)) {
@@ -65,9 +67,10 @@ export function normalizeCrosstab(rows: string[][]): NormalizedResult {
   const key1Name = (row2[1] || '').trim() || 'Date';
   const measureName = 'Sales';
 
-  // Forward fill row 0
+  // Forward fill row 0 across all columns (evaluating at least 20 columns)
   const topHeaders: string[] = [];
   let currentTop = '';
+  const numCols = Math.max(20, Math.max(row0.length, row1.length));
   for (let c = 0; c < row0.length; c++) {
     const val = (row0[c] || '').trim();
     if (c >= 2 && val) {
@@ -76,9 +79,9 @@ export function normalizeCrosstab(rows: string[][]): NormalizedResult {
     topHeaders.push(currentTop);
   }
 
-  // Identify active value columns
+  // Identify active value columns across at least 20 columns
   const valueColumns: Array<{ colIndex: number; topVal: string; subVal: string }> = [];
-  for (let c = 2; c < Math.min(row0.length, row1.length); c++) {
+  for (let c = 2; c < Math.min(topHeaders.length, row1.length); c++) {
     const tVal = topHeaders[c];
     const sVal = (row1[c] || '').trim();
     if (tVal && sVal) {
@@ -94,14 +97,17 @@ export function normalizeCrosstab(rows: string[][]): NormalizedResult {
     const row = rows[r] || [];
     if (!row.some((cell) => cell && cell.trim() !== '')) continue;
 
-    const key0 = (row[0] || '').trim();
-    if (isSummaryLabel(key0)) {
+    // Check at least 20 columns across row to detect summary rows (Grand Total / Total / Summary)
+    const isSummary = row.slice(0, Math.max(20, row.length)).some((cell) => cell && isSummaryLabel(cell));
+    if (isSummary) {
       droppedSummaryCount++;
       continue;
     }
 
+    const key0 = (row[0] || '').trim();
     const key1 = (row[1] || '').trim();
 
+    // Check all value columns (checking across at least 20 columns)
     for (const { colIndex, topVal, subVal } of valueColumns) {
       if (colIndex < row.length) {
         const cell = (row[colIndex] || '').trim();

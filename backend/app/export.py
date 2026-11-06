@@ -78,11 +78,17 @@ def export_pdf(
     story.append(Spacer(1, 10))
 
     # Summary Table
+    raw_r = summary_info.get("raw_rows", summary_info.get("rows", 0))
+    raw_c = summary_info.get("raw_cols", summary_info.get("cols", 0))
+    clean_r = summary_info.get("clean_rows", len(df_after) if df_after is not None else raw_r)
+    clean_c = summary_info.get("clean_cols", len(df_after.columns) if df_after is not None else raw_c)
+
     meta_data = [
         ["Dataset ID", str(summary_info.get("dataset_id", "N/A"))],
         ["Filename", str(summary_info.get("filename", "N/A"))],
         ["Original SHA-256", str(summary_info.get("sha256", "N/A"))[:24] + "..."],
-        ["Initial Dimensions", f"{summary_info.get('rows', 0)} rows x {summary_info.get('cols', 0)} cols"],
+        ["Initial Dimensions", f"{raw_r} rows x {raw_c} cols (Raw Ingested Data)"],
+        ["Reconciled Dimensions", f"{clean_r} rows x {clean_c} cols (Tidy Relational Schema)"],
         ["Consensus Policy Status", str(summary_info.get("status", "Cleaned & Validated via ConsensusGate"))],
     ]
     t_meta = Table(meta_data, colWidths=[140, 400])
@@ -90,23 +96,30 @@ def export_pdf(
         ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#f1f5f9")),
         ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#0f172a")),
         ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
-        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+        ("TOPPADDING", (0, 0), (-1, -1), 3),
         ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
     ]))
     story.append(t_meta)
-    story.append(Spacer(1, 12))
+    story.append(Spacer(1, 10))
 
     # Ensure df_after is not empty if df_before has data
     if (df_after is None or df_after.empty) and (df_before is not None and not df_before.empty):
         df_after = df_before.copy()
 
-    # Determine diffs between df_before and df_after (first 15 rows, 6 columns)
     max_preview_rows = 10
     max_preview_cols = 6
     diff_cells: set[tuple[int, int]] = set()
 
-    if df_before is not None and df_after is not None and not df_before.empty and not df_after.empty:
+    is_reshaped = (
+        df_before is not None
+        and df_after is not None
+        and not df_before.empty
+        and not df_after.empty
+        and (set(df_before.columns) != set(df_after.columns) or "Sales" in df_after.columns)
+    )
+
+    if not is_reshaped and df_before is not None and df_after is not None and not df_before.empty and not df_after.empty:
         common_cols = [c for c in df_before.columns if c in df_after.columns][:max_preview_cols]
         if not common_cols:
             common_cols = list(df_before.columns)[:max_preview_cols]
@@ -130,39 +143,43 @@ def export_pdf(
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#f8fafc")),
             ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
             ("FONTSIZE", (0, 0), (-1, -1), 7),
-            ("TOPPADDING", (0, 0), (-1, -1), 2.5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 2.5),
+            ("TOPPADDING", (0, 0), (-1, -1), 2.2),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#ffffff"), colors.HexColor("#f8fafc")]),
         ]
+
+        sales_c_idx = (cols.index("Sales") if "Sales" in cols else -1)
 
         for r_idx, row in enumerate(sub_df.itertuples(index=False)):
             row_cells = [str(r_idx + 1)]
             for c_idx, val in enumerate(row):
                 str_val = str(val) if pd.notna(val) else ""
-                is_diff = (r_idx, c_idx) in diff_cells
-                if is_after and is_diff:
-                    # Arrow pointing to changed value
-                    cell_text = f"-> {str_val}" if str_val else "-> [Empty]"
-                    row_cells.append(cell_text)
-                    # RED RECTANGULAR BOX BORDER LINE + Yellow Fill
-                    table_styles.extend([
-                        ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.8, colors.HexColor("#dc2626")),
-                        ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fef08a")),
-                        ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#991b1b")),
-                        ("FONTNAME", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), "Helvetica-Bold"),
-                    ])
-                elif not is_after and is_diff:
-                    # Mark original cell targeted for change with light red outline
-                    cell_text = f"{str_val} [!]" if str_val else "[Missing] [!]"
-                    row_cells.append(cell_text)
-                    table_styles.extend([
-                        ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.2, colors.HexColor("#ef4444")),
-                        ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
-                        ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
-                    ])
+                if is_after:
+                    is_highlight = (c_idx == sales_c_idx) if is_reshaped else ((r_idx, c_idx) in diff_cells)
+                    if is_highlight:
+                        cell_text = f"-> {str_val}" if str_val else "-> [Empty]"
+                        row_cells.append(cell_text)
+                        # RED RECTANGULAR BOX BORDER LINE + Yellow Fill
+                        table_styles.extend([
+                            ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.8, colors.HexColor("#dc2626")),
+                            ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fef08a")),
+                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#991b1b")),
+                            ("FONTNAME", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), "Helvetica-Bold"),
+                        ])
+                    else:
+                        row_cells.append(str_val)
                 else:
-                    row_cells.append(str_val)
+                    if not is_reshaped and (r_idx, c_idx) in diff_cells:
+                        cell_text = f"{str_val} [!]" if str_val else "[Missing] [!]"
+                        table_styles.extend([
+                            ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.2, colors.HexColor("#ef4444")),
+                            ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
+                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
+                        ])
+                        row_cells.append(cell_text)
+                    else:
+                        row_cells.append(str_val if str_val else "[Empty]")
             data.append(row_cells)
 
         col_w = 540 / len(headers)
@@ -185,7 +202,7 @@ def export_pdf(
         story.append(Spacer(1, 4))
         # Clear Visual Legend
         legend_style = ParagraphStyle("Legend", parent=styles["Normal"], fontSize=7.5, textColor=colors.HexColor("#b91c1c"))
-        story.append(Paragraph("<b>* Red rectangular boxes with arrow (->) mark verified cell changes between Before and After cleaning.</b>", legend_style))
+        story.append(Paragraph("<b>* Red rectangular boxes with arrow (->) mark verified cell values and reconciled numbers after cleaning.</b>", legend_style))
         story.append(Spacer(1, 10))
 
     story.append(PageBreak())

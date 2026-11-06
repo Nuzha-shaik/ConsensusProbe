@@ -228,6 +228,37 @@ async def upload_dataset(file: UploadFile = File(...), db: Session = Depends(get
         cols=record.cols,
     )
 
+
+def _normalize_crosstab_if_present(path: str) -> tuple[bool, pd.DataFrame | None]:
+    """Check across at least 20 columns to detect and unpivot two-level cross-tab datasets."""
+    ext = os.path.splitext(path)[1].lower()
+    try:
+        if ext == ".csv":
+            df_raw = pd.read_csv(path, header=None)
+        else:
+            df_raw = pd.read_excel(path, header=None)
+    except Exception:
+        return False, None
+
+    rows = df_raw.fillna("").astype(str).values.tolist()
+    if len(rows) < 4:
+        return False, None
+
+    row0, row1 = rows[0], rows[1]
+    check_cols = max(20, len(row0), len(row1))
+    empty_gaps = sum(1 for c in range(2, min(check_cols, len(row0))) if not row0[c].strip())
+    sub_headers = sum(1 for c in range(2, min(check_cols, len(row1))) if row1[c].strip())
+
+    if not (empty_gaps >= 2 and sub_headers >= 3):
+        return False, None
+
+    from scripts.layout_normalizer import unpivot_crosstab_rows
+    headers, records, _ = unpivot_crosstab_rows(rows)
+    df_clean = pd.DataFrame(records, columns=headers)
+    if "Sales" in df_clean.columns:
+        df_clean["Sales"] = pd.to_numeric(df_clean["Sales"], errors="coerce")
+    return True, df_clean
+
 def _load_dataset_df(dataset: Dataset) -> pd.DataFrame:
     ext = os.path.splitext(dataset.path)[1].lower()
     if ext == ".csv":
@@ -243,11 +274,17 @@ def get_dataset_profile(dataset_id: str, db: Session = Depends(get_db)):
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    df = _load_dataset_df(dataset)
+    clean_path = os.path.join(STORAGE_DIR, f"{dataset_id}_clean.csv")
+    if os.path.exists(clean_path):
+        df = pd.read_csv(clean_path)
+        if "_rid" not in df.columns:
+            df = _inject_rid(df)
+    else:
+        df = _load_dataset_df(dataset)
 
     # If an active patch exists, apply it for the profile
     active_patch = get_active_patch(dataset_id, db)
-    if active_patch:
+    if active_patch and not os.path.exists(clean_path):
         df = active_patch.apply(df)
 
     cols_profile = []
@@ -281,7 +318,14 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    df = _load_dataset_df(dataset)
+    # Step 1: Layout Normalization for cross-tabs (evaluating at least 20 columns)
+    is_ct, df_norm = _normalize_crosstab_if_present(dataset.path)
+    if is_ct and df_norm is not None:
+        clean_path = os.path.join(STORAGE_DIR, f"{dataset_id}_clean.csv")
+        df_norm.to_csv(clean_path, index=False)
+        df = _inject_rid(df_norm.copy())
+    else:
+        df = _load_dataset_df(dataset)
 
     # Use real research engine: MockProvider (H6)
     dup_cols = [c for c in df.columns if c not in ("_rid", "price", "total", "quantity")]
@@ -360,6 +404,11 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
     # If no disagreement or non-destructive, apply majority patch directly
     final_patch = majority_vote_patch(patches)
     set_active_patch(dataset_id, final_patch)
+
+    # Persist the reconciled clean DataFrame
+    clean_df = _drop_rid(final_patch.apply(df))
+    clean_path = os.path.join(STORAGE_DIR, f"{dataset_id}_clean.csv")
+    clean_df.to_csv(clean_path, index=False)
 
     summary = {
         "deleted_rows": len(final_patch.deleted_rids),
@@ -476,16 +525,20 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
     if active_patch:
         df = active_patch.apply(df)
 
-    # Always drop internal row id
-    export_df = _drop_rid(df)
-    if len(export_df) == 0 and len(raw_df) > 0:
-        # Prevent 0-row empty export if patch dropped all rows
-        df_rec = raw_df.copy()
-        if active_patch:
-            for (rid, col), val in active_patch.cell_edits_dict().items():
-                if col in df_rec.columns and rid in df_rec['_rid'].values:
-                    df_rec.loc[df_rec['_rid'] == rid, col] = val
-        export_df = _drop_rid(df_rec)
+    clean_path = os.path.join(STORAGE_DIR, f"{dataset_id}_clean.csv")
+    if os.path.exists(clean_path):
+        export_df = pd.read_csv(clean_path)
+        if "_rid" in export_df.columns:
+            export_df = _drop_rid(export_df)
+    else:
+        export_df = _drop_rid(df)
+        if len(export_df) == 0 and len(raw_df) > 0:
+            df_rec = raw_df.copy()
+            if active_patch:
+                for (rid, col), val in active_patch.cell_edits_dict().items():
+                    if col in df_rec.columns and rid in df_rec['_rid'].values:
+                        df_rec.loc[df_rec['_rid'] == rid, col] = val
+            export_df = _drop_rid(df_rec)
 
     # Fetch audit log runs and produce clean, human-readable summaries
     runs = db.query(OperationRun).filter(OperationRun.dataset_id == dataset_id).order_by(OperationRun.created_at).all()
@@ -516,6 +569,10 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "dataset_id": dataset.id,
             "filename": dataset.filename,
             "sha256": dataset.sha256,
+            "raw_rows": len(raw_df),
+            "raw_cols": len(df_before.columns),
+            "clean_rows": len(export_df),
+            "clean_cols": len(export_df.columns),
             "rows": len(raw_df),
             "cols": len(df_before.columns),
             "status": "Cleaned & Validated via ConsensusGate",

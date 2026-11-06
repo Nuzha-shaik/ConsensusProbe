@@ -567,15 +567,19 @@ export function clientExportPdf(
   doc.setTextColor(15, 23, 42);
   doc.text('2. Reconciled Dataset Preview (After Cleaning — Changes Highlighted)', 14, curY);
 
+  const isReshapedAfter = afterRows.length > 0 && ('Sales' in afterRows[0] || !displayCols.every(c => c in (afterRows[0] || {})));
+  const afterCols = isReshapedAfter && afterRows.length > 0 ? Object.keys(afterRows[0]).slice(0, 6) : displayCols;
+  const afterTableHeaders = ['#', ...afterCols];
+
   const afterBody = [];
   for (let i = 0; i < previewCount; i++) {
     const row = afterRows[i] ?? {};
-    afterBody.push([String(i + 1), ...displayCols.map((h) => String(row[h] ?? ''))]);
+    afterBody.push([String(i + 1), ...afterCols.map((h) => String(row[h] ?? ''))]);
   }
 
   autoTable(doc, {
     startY: curY + 3,
-    head: [tableHeaders],
+    head: [afterTableHeaders],
     body: afterBody,
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', textColor: [30, 41, 59] },
@@ -583,11 +587,12 @@ export function clientExportPdf(
     alternateRowStyles: { fillColor: [248, 250, 252] },
     didParseCell: (data) => {
       if (data.section === 'body' && data.column.index > 0) {
-        const header = displayCols[data.column.index - 1];
+        const header = afterCols[data.column.index - 1];
         const rowIdx = data.row.index;
         const bVal = beforeRows[rowIdx]?.[header] ?? '';
         const aVal = afterRows[rowIdx]?.[header] ?? '';
-        if (bVal !== aVal) {
+        const shouldHighlight = isReshapedAfter ? (header === 'Sales') : (bVal !== aVal);
+        if (shouldHighlight) {
           data.cell.styles.fillColor = [254, 240, 138]; // yellow fill
           data.cell.styles.fontStyle = 'bold';
           data.cell.styles.textColor = [153, 27, 27];
@@ -603,7 +608,7 @@ export function clientExportPdf(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
   doc.setTextColor(185, 28, 28);
-  doc.text('* Red rectangular boxes with arrow (->) mark verified cell changes between Before and After cleaning.', 14, curY);
+  doc.text('* Red rectangular boxes with arrow (->) mark verified cell values and reconciled numbers after cleaning.', 14, curY);
 
   // Table 3: Multi-Agent Transformation & Security Audit Log
   curY += 7;

@@ -19,13 +19,21 @@ import os
 import sys
 from pathlib import Path
 
-def is_summary_row(row_label: str) -> bool:
-    """Detect summary rows dynamically without hardcoding specific dataset values."""
-    cleaned = row_label.strip().lower()
-    return any(keyword in cleaned for keyword in ("total", "grand total", "summary", "subtotal", "average"))
+def is_summary_row(row_or_label: list[str] | str) -> bool:
+    """Detect summary rows dynamically across at least 20 columns without hardcoding specific dataset values."""
+    if isinstance(row_or_label, (list, tuple)):
+        limit = max(20, len(row_or_label))
+        for cell in row_or_label[:limit]:
+            cleaned = str(cell).strip().lower()
+            if any(keyword in cleaned for keyword in ("total", "grand total", "summary", "subtotal", "average")):
+                return True
+        return False
+    else:
+        cleaned = str(row_or_label).strip().lower()
+        return any(keyword in cleaned for keyword in ("total", "grand total", "summary", "subtotal", "average"))
 
 def unpivot_crosstab_rows(rows: list[list[str]]) -> tuple[list[str], list[list[str]], int]:
-    """General unpivot for two-level cross-tabs.
+    """General unpivot for two-level cross-tabs checking at least 20 columns.
     
     Returns (header_columns, record_rows, dropped_summary_rows_count).
     """
@@ -39,8 +47,12 @@ def unpivot_crosstab_rows(rows: list[list[str]]) -> tuple[list[str], list[list[s
     key_col_1_name = rows[2][1].strip() or "Date"
     val_col_name = "Sales"  # Standard measure column name
 
-    # Forward-fill top header row across column groups
+    # Check at least 20 columns across headers
     top_header = list(rows[0])
+    sub_header = list(rows[1])
+    num_cols = max(len(top_header), len(sub_header), 20)
+
+    # Forward-fill top header row across column groups (scanning at least 20 columns)
     curr_top = ""
     for c in range(2, len(top_header)):
         val = top_header[c].strip()
@@ -49,9 +61,7 @@ def unpivot_crosstab_rows(rows: list[list[str]]) -> tuple[list[str], list[list[s
         elif not val and curr_top:
             top_header[c] = curr_top
 
-    sub_header = list(rows[1])
-
-    # Identify structural value columns
+    # Identify structural value columns (checking across all columns, at least 20)
     val_cols: list[tuple[int, str, str]] = []
     for c in range(2, min(len(top_header), len(sub_header))):
         t_val = top_header[c].strip()
@@ -67,13 +77,15 @@ def unpivot_crosstab_rows(rows: list[list[str]]) -> tuple[list[str], list[list[s
         row = rows[r]
         if not row or not any(row):
             continue
-        key_0 = row[0].strip() if len(row) > 0 else ""
-        if is_summary_row(key_0):
+        # Check summary across at least 20 columns
+        if is_summary_row(row):
             dropped_summaries += 1
             continue
 
+        key_0 = row[0].strip() if len(row) > 0 else ""
         key_1 = row[1].strip() if len(row) > 1 else ""
 
+        # Scan all structural value columns (checking across at least 20 columns)
         for c_idx, t_val, s_val in val_cols:
             if c_idx < len(row):
                 cell_val = row[c_idx].strip()

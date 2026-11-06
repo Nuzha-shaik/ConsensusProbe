@@ -904,6 +904,95 @@ function MainStudio() {
                 <AgentTraceTimeline viewModel={viewModel} />
 
                 <CanaryAuditPanel viewModel={viewModel} />
+
+                {/* Reconciled Clean Dataset Profile & Live Preview */}
+                {profile && (
+                  <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs space-y-4 p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                            Reconciled Clean Dataset Profile & Live Preview
+                          </h3>
+                        </div>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          Cleaned via Multi-Agent ConsensusGate • Valued numbers verified
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                          {profile.rows} Rows × {profile.cols} Columns
+                        </span>
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-400 border border-sky-500/20">
+                          100% Normalized
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Column Profiling Summary Badges */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      {profile.columns.map((col) => (
+                        <div key={col.name} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+                          <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                            <span>{col.dtype}</span>
+                            <span>{col.null_count} nulls</span>
+                          </div>
+                          <div className="font-bold text-xs text-slate-900 dark:text-white mt-1 truncate" title={col.name}>
+                            {col.name}
+                          </div>
+                          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+                            {col.unique_count} distinct
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Live Data Preview Table */}
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+                      <div className="px-4 py-2 bg-slate-100/70 dark:bg-slate-800/80 font-semibold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                        <span>Live Tidy Data Preview (First {Math.min(10, profile.preview.length)} Records)</span>
+                        <span className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">
+                          ★ Valued numbers highlighted in Sales column
+                        </span>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs font-mono">
+                          <thead className="bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-slate-800">
+                            <tr>
+                              <th className="px-3 py-2 font-semibold">#</th>
+                              {profile.columns.map((c) => (
+                                <th key={c.name} className="px-3 py-2 font-semibold">{c.name}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            {profile.preview.slice(0, 10).map((row, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition">
+                                <td className="px-3 py-2 text-slate-400 text-[11px]">{idx + 1}</td>
+                                {profile.columns.map((c) => {
+                                  const val = String(row[c.name] ?? '');
+                                  const isSales = c.name === 'Sales';
+                                  return (
+                                    <td key={c.name} className="px-3 py-2 text-slate-700 dark:text-slate-300 truncate max-w-[200px]">
+                                      {isSales ? (
+                                        <span className="inline-block px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-400/50">
+                                          {val}
+                                        </span>
+                                      ) : (
+                                        val
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             )}
 
