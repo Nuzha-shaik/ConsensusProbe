@@ -128,7 +128,9 @@ This threshold means ConsensusGate asks a question whenever \emph{any} destructi
 System~F augments ConsensusGate with a canary verification step.
 Before consensus resolution, synthetic canary edits (known-incorrect operations on randomly selected rows) are injected into one of the $K$ plans.
 If the consensus mechanism fails to filter these canaries, the system raises an alert and falls back to the most conservative (fewest destructive edits) plan.
-Across \canaryTotalEvaluations{} canary-augmented evaluations, the interception rate was \canaryInterceptionRate{} with \canaryInterceptedCount{} canaries passing undetected.
+Across \canaryTotalEvaluations{} canary-augmented evaluations, \canaryInterceptedCount{} unsafe plans were intercepted (interception rate: \canaryInterceptionRate{}).
+Under the mock noise model, canary edits were not distinguishable from normal disagreements, so all \canaryTotalEvaluations{} canaries passed through the consensus filter.
+This is a known limitation of the mock provider: a live LLM ensemble would produce qualitatively different disagreement patterns, and canary detection effectiveness must be re-evaluated with real API calls.
 
 Figure~\ref{fig:pipeline} shows the overall pipeline, and Figure~\ref{fig:consensus_flow} details the ConsensusGate decision logic.
 
@@ -316,7 +318,9 @@ The key advantage is that disagreement among plans is a more reliable indicator 
 
 \paragraph{H4 (Supported).}
 ProbeGate (F) achieves silent-error and question rates identical to E within the measured precision (\hFourErrorDiff{} error difference, \hFourQuestionsDiff{} question difference).
-The canary verification layer adds no measurable overhead in this experimental configuration.
+The canary verification layer adds no measurable overhead under the mock provider.
+However, the canary interception rate was \canaryInterceptionRate{} (\canaryInterceptedCount{} out of \canaryTotalEvaluations{} injected canaries detected), confirming that the mock noise model does not produce canary-distinguishable signal.
+H4 is therefore supported on the overhead criterion but the canary detection sub-criterion is not evaluable under mock conditions.
 
 \subsection{Results by User Simulation Mode}
 
@@ -424,6 +428,10 @@ The optimal threshold $\tau_d = 0.0$ indicates that, in this noise regime, askin
 \label{sec:additional}
 
 For completeness, we include the remaining pre-registered figures.
+Figure~\ref{fig:ambiguity_dist} shows the distribution of ambiguity types across the \testTasksCount{} TEST tasks.
+Figure~\ref{fig:canary} shows canary detection performance.
+Figure~\ref{fig:cost} shows the token and simulated-latency cost comparison across systems.
+Figure~\ref{fig:precision} shows question precision by system.
 
 \begin{figure}[ht]
 \centering
@@ -480,6 +488,11 @@ Optimal $K$ may differ with real LLMs due to differences in output diversity and
 The failure of H2 (non-inferiority to always-ask) warrants further investigation.
 One possible explanation is that $\tau_d = 0.0$ does not capture all beneficial clarification opportunities---particularly on tasks where plans agree but the agreed-upon action is suboptimal.
 A hybrid policy combining disagreement detection with occasional random probing could address this gap.
+
+\paragraph{Canary Detection.}
+The canary interception rate under mock conditions was \canaryInterceptionRate{} (\canaryInterceptedCount{} out of \canaryTotalEvaluations{} injected canaries detected).
+The mock provider's noise model does not produce plan disagreements that allow the consensus filter to distinguish injected canary edits from genuine plan variation.
+Canary detection effectiveness is therefore an open question that requires evaluation with live LLM calls.
 
 \paragraph{Deviations and Limitations (M1, M8, M9).}
 In accordance with research integrity standards, we record three technical refinements:
