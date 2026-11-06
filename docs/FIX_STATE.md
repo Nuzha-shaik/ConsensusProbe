@@ -6,7 +6,7 @@ C2 | DONE | majority_vote_patch reads actual values from patch.cell_edits_dict()
 C3 | DONE | README.md lines 77-85 replaced with placeholders; firebase.ts uses VITE_FIREBASE_* env vars; frontend/.env.example created
 H1 | DONE | generate_clarification_question picks param where values actually differ across plans, not first alphabetically
 H2 | TODO | backend/app/main.py:90 _ACTIVE_PATCHES fails multi-worker
-H3 | TODO | research/operations.py:167 numpy NaN fill corruption
+H3 | DONE | fill_mean/fill_median/fill_mode on empty column raises OperationError
 H4 | TODO | research/track_s.py:90 gold edits use hardcoded indices
 H5 | TODO | research/canary.py:25 canary injects hardcoded schema
 H6 | TODO | backend/app/main.py:208 /clean bypasses research engine
@@ -16,13 +16,13 @@ H9 | DONE | Added Firebase/OAuth patterns to SECRET_PATTERNS; .env.example in SK
 M1 | TODO | research/calibrate_dev.py:57 calibration category error
 M2 | TODO | research/simulators.py:38 shared RNG bleeds across tasks
 M3 | TODO | research/run_experiments.py:36 block cache validated by length only
-M4 | TODO | research/operations.py:194 repr-based change detection wrong for numpy int
+M4 | DONE | convert_type uses direct value comparison instead of repr strings
 M5 | TODO | frontend/src/App.tsx:662 export links bypass apiClient
 M6 | TODO | frontend/src/context/AuthContext.tsx:197 demo token no expiry
 M7 | DONE | shell=True check no longer requires exact 'subprocess' module name; catches aliased imports
 M8 | TODO | research/run_experiments.py:197 H1 asymmetric CI criteria
 M9 | TODO | research/run_experiments.py:189 bootstrap p-value double-counts zero
 M10 | TODO | backend/app/main.py:90 _ACTIVE_PATCHES never evicted
-L1 | TODO | research/operations.py:160 fill_mode on empty column inconsistent
-L2 | TODO | research/operations.py:206 deduplicate schema omits keep=False
+L1 | DONE | fill_mode on empty column raises OperationError with clear message
+L2 | DONE | deduplicate schema includes keep=False in enum
 L3 | TODO | frontend/src/App.tsx:140 two identical upload handlers

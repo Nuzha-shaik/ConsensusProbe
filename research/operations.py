@@ -154,11 +154,17 @@ def handle_missing(df: pd.DataFrame, col: str, strategy: str) -> tuple[pd.DataFr
 
     if strategy == 'fill_mean':
         fill_val = result[col].mean()
+        if pd.isna(fill_val):
+            raise OperationError(f"handle_missing: column '{col}' is empty; fill_mean yields NaN")
     elif strategy == 'fill_median':
         fill_val = result[col].median()
+        if pd.isna(fill_val):
+            raise OperationError(f"handle_missing: column '{col}' is empty; fill_median yields NaN")
     elif strategy == 'fill_mode':
         mode = result[col].mode()
-        fill_val = mode.iloc[0] if len(mode) > 0 else None
+        if len(mode) == 0:
+            raise OperationError(f"handle_missing: column '{col}' is empty; fill_mode yields no value")
+        fill_val = mode.iloc[0]
     elif strategy.startswith('fill:'):
         fill_val = strategy[5:]
     else:
@@ -191,7 +197,8 @@ def convert_type(df: pd.DataFrame, col: str, dtype: str) -> tuple[pd.DataFrame, 
             new_val = type_map[dtype](old_val) if pd.notna(old_val) else old_val
         except (ValueError, TypeError):
             new_val = old_val  # can't convert, leave as-is
-        if repr(old_val) != repr(new_val):
+        # M4: compare actual values, not repr strings (numpy int repr can differ from int repr)
+        if type(old_val) is not type(new_val) or old_val != new_val:
             cell_edits[(row['_rid'], col)] = new_val
             result.at[idx, col] = new_val
     return result, Patch.create(cell_edits=cell_edits)
@@ -203,7 +210,7 @@ OPERATIONS: dict[str, dict] = {
         'fn': deduplicate,
         'params_schema': {
             'by': {'type': 'array', 'items': {'type': 'string'}},
-            'keep': {'type': 'string', 'enum': ['first', 'last'], 'default': 'first'},
+            'keep': {'type': 'string', 'enum': ['first', 'last', False], 'default': 'first'},
         },
     },
     'normalize_category': {
