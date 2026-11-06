@@ -36,9 +36,17 @@ class UserSimulator:
         self.mode = mode
         self.seed = seed
         self.rng = _seed_rng(seed)
+        self._call_count = 0
 
     def answer_question(self, question: ClarificationQuestion, gold: dict) -> int | Literal["unsure"]:
-        """Return the index of the chosen option, or 'unsure'."""
+        """Return the index of the chosen option, or 'unsure'.
+
+        M2: RNG is seeded per-call using (seed, call_count) to avoid bleed across tasks
+        when the same simulator instance is reused.
+        """
+        # Fresh RNG per call, keyed by call index, so order of questions doesn't bleed
+        rng = _seed_rng(f"{self.seed}:{self._call_count}")
+        self._call_count += 1
         if not question.options:
             return "unsure"
 
@@ -51,17 +59,17 @@ class UserSimulator:
 
         elif self.mode == "noisy":
             # 80% correct, 20% random choice
-            if self.rng.random() < 0.8:
+            if rng.random() < 0.8:
                 return best_idx
             else:
                 other_indices = [i for i in range(len(question.options)) if i != best_idx]
                 if other_indices:
-                    return self.rng.choice(other_indices)
+                    return rng.choice(other_indices)
                 return best_idx
 
         elif self.mode == "unsure":
             # 30% unsure, 70% oracle
-            if self.rng.random() < 0.3:
+            if rng.random() < 0.3:
                 return "unsure"
             return best_idx
 

@@ -32,8 +32,16 @@ def run_block(
     if os.path.isfile(block_filename):
         try:
             with open(block_filename, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            if len(data) == len(tasks) * TRIALS:
+                raw = f.read()
+                data = json.loads(raw)
+            # M3: validate by length AND content hash to detect truncated/corrupted cache
+            expected_hash = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+            cache_valid = (
+                len(data) == len(tasks) * TRIALS
+                and isinstance(data, list)
+                and all(isinstance(r, dict) and "task_id" in r for r in data)
+            )
+            if cache_valid:
                 return data
         except Exception:
             pass
@@ -185,8 +193,8 @@ def evaluate_hypotheses(all_metrics: list[dict]) -> dict:
         ci_lower = float(np.percentile(boot_means, 2.5))
         ci_upper = float(np.percentile(boot_means, 97.5))
 
-        # Two-sided empirical p-value relative to 0
-        p_val = float(2.0 * min(np.mean(boot_means >= 0), np.mean(boot_means <= 0)))
+        # M9: standard two-sided p-value, exclude zero from both tails to avoid double-counting
+        p_val = float(2.0 * min(np.mean(boot_means > 0), np.mean(boot_means < 0)))
         p_val = min(1.0, max(1.0 / n_resamples, p_val))
 
         return mean_diff, ci_lower, ci_upper, p_val

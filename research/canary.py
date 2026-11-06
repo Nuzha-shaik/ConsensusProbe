@@ -21,43 +21,32 @@ def inject_canaries(df: pd.DataFrame, seed: int) -> tuple[pd.DataFrame, set[int]
         temp_df["_canary"] = False
 
     canary_rows = []
-    # Canary 1 & 2: Known fake duplicates
-    canary_sku = f"CANARY-SKU-{rng.randint(100, 999)}"
-    canary_rows.append({
-        "_rid": CANARY_RID_OFFSET,
-        "sku": canary_sku,
-        "product_name": "Canary Sensor Pod",
-        "category": "Electronics",
-        "price": 49.99,
-        "quantity": 2,
-        "total": 99.98,
-        "tax_rate": 0.10,
-        "_canary": True,
-    })
-    canary_rows.append({
-        "_rid": CANARY_RID_OFFSET + 1,
-        "sku": canary_sku,
-        "product_name": "Canary Sensor Pod",
-        "category": "Electronics",
-        "price": 49.99,
-        "quantity": 2,
-        "total": 99.98,
-        "tax_rate": 0.10,
-        "_canary": True,
-    })
+    # H5: clone an existing row to avoid hardcoded schema assumptions
+    if len(temp_df) == 0:
+        return temp_df, set()
+    base_row = temp_df.iloc[rng.randint(0, len(temp_df) - 1)].to_dict()
 
-    # Canary 3: Legitimate canary row with misspelt city/category that should NOT be deleted
-    canary_rows.append({
-        "_rid": CANARY_RID_OFFSET + 2,
-        "sku": f"CANARY-SKU-SAFE",
-        "product_name": "Unique Calibration Probe",
-        "category": "Electronics",
-        "price": 199.99,
-        "quantity": 1,
-        "total": 199.99,
-        "tax_rate": 0.10,
-        "_canary": True,
-    })
+    # Canary 1 & 2: Known fake duplicates — same content, same RID range
+    canary_sku = f"CANARY-SKU-{rng.randint(100, 999)}"
+    for i in range(2):
+        row = dict(base_row)
+        row["_rid"] = CANARY_RID_OFFSET + i
+        row["_canary"] = True
+        if "sku" in row:
+            row["sku"] = canary_sku
+        if "product_name" in row:
+            row["product_name"] = "Canary Sensor Pod"
+        canary_rows.append(row)
+
+    # Canary 3: Unique probe row that should NOT be deleted
+    safe_row = dict(base_row)
+    safe_row["_rid"] = CANARY_RID_OFFSET + 2
+    safe_row["_canary"] = True
+    if "sku" in safe_row:
+        safe_row["sku"] = "CANARY-SKU-SAFE"
+    if "product_name" in safe_row:
+        safe_row["product_name"] = "Unique Calibration Probe"
+    canary_rows.append(safe_row)
 
     canary_df = pd.DataFrame(canary_rows)
     combined = pd.concat([temp_df, canary_df], ignore_index=True)

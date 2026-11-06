@@ -85,12 +85,20 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
     gold_plan = []
     ambiguous_params = {}
 
+    def _set(rid, col, val):
+        """Set value by _rid (H4: stable identifier, not positional index)."""
+        df.loc[df['_rid'] == rid, col] = val
+
+    def _get(rid, col):
+        """Get value by _rid."""
+        return df.loc[df['_rid'] == rid, col].values[0]
+
     if is_ambiguous and ambiguity_type == "duplicate_id_vs_name":
         # Two rows have identical product_name but different SKU, or identical SKU but different product_name
-        df.at[0, "product_name"] = "Laptop Pro"
-        df.at[0, "sku"] = "SKU-9999"
-        df.at[1, "product_name"] = "Laptop Pro"
-        df.at[1, "sku"] = "SKU-8888"
+        _set(0, "product_name", "Laptop Pro")
+        _set(0, "sku", "SKU-9999")
+        _set(1, "product_name", "Laptop Pro")
+        _set(1, "sku", "SKU-8888")
         # Gold: deduplicate by product_name
         gold_plan.append({"op": "deduplicate", "params": {"by": ["product_name"], "keep": "first"}})
         ambiguous_params[0] = {"by": [["sku"], ["product_name", "sku"]]}
@@ -101,7 +109,7 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
 
     elif is_ambiguous and ambiguity_type == "category_granularity":
         # Broad vs fine categorization
-        df.at[2, "category"] = "elec"
+        _set(2, "category", "elec")
         mapping_broad = {"elec": "Electronics"}
         mapping_fine = {"elec": "Accessories"}
         gold_plan.append({"op": "normalize_category", "params": {"col": "category", "mapping": mapping_broad}})
@@ -111,7 +119,7 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
 
     elif is_ambiguous and ambiguity_type == "missing_strategy":
         # Missing values in price
-        df.at[3, "price"] = None
+        _set(3, "price", None)
         gold_plan.append({"op": "handle_missing", "params": {"col": "price", "strategy": "fill_median"}})
         ambiguous_params[0] = {"strategy": ["drop", "fill_mean", "fill:0.0"]}
         # Median fill
@@ -121,7 +129,7 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
 
     elif is_ambiguous and ambiguity_type == "recalculate_basis":
         # Total recalculation: pre-tax (price * qty) vs post-tax (price * qty * (1 + tax_rate))
-        df.at[4, "total"] = 0.0
+        _set(4, "total", 0.0)
         gold_plan.append({
             "op": "recalculate",
             "params": {"target": "total", "formula": "price * quantity", "source_cols": ["price", "quantity"]}
@@ -129,14 +137,14 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
         ambiguous_params[0] = {
             "formula": ["price * quantity * (1 + tax_rate)", "price * quantity * 0.9"]
         }
-        val = round(df.at[4, "price"] * df.at[4, "quantity"], 2)
+        val = round(_get(4, "price") * _get(4, "quantity"), 2)
         required_edits.append(("edit", 4, "total", repr(val)))
         val_tax = round(val * 1.10, 2)
         forbidden_edits.append(("edit", 4, "total", repr(val_tax)))
 
     elif is_ambiguous and ambiguity_type == "type_coercion":
         # Quantity stored as float or string
-        df.at[5, "quantity"] = 5.0
+        _set(5, "quantity", 5.0)
         gold_plan.append({"op": "convert_type", "params": {"col": "quantity", "dtype": "int"}})
         ambiguous_params[0] = {"dtype": ["str", "float"]}
         required_edits.append(("edit", 5, "quantity", repr(5)))
@@ -145,7 +153,7 @@ def generate_track_s_task(seed: int, mode: Literal["DEV", "TEST"] = "DEV") -> Tr
     else:
         # Unambiguous task
         ambiguity_type = "unambiguous"
-        df.at[0, "category"] = "elec"
+        _set(0, "category", "elec")
         gold_plan.append({"op": "normalize_category", "params": {"col": "category", "mapping": {"elec": "Electronics"}}})
         required_edits.append(("edit", 0, "category", repr("Electronics")))
         forbidden_edits.append(("del", 0))

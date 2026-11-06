@@ -1,4 +1,11 @@
-"""Pilot calibration on DEV dataset: calibrate tau_d and freeze parameters."""
+"""Pilot calibration on DEV dataset: calibrate tau_d and freeze parameters.
+
+M1 LIMITATION: The calibration objective uses `is_ambiguous` (a task-level label) as a proxy
+for disagreement-worthy cases, but disagreement (consensus score) and ambiguity are not
+equivalent: a task can have high disagreement for non-ambiguous reasons. A correct objective
+would use a disagreement-specific label per (task, plan-subset) pair.
+Architectural fix deferred; this calibration is best-effort for MVP.
+"""
 from __future__ import annotations
 import hashlib
 import itertools
