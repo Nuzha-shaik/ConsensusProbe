@@ -25,6 +25,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY_TOKEN = 'cp_auth_token';
 const STORAGE_KEY_USER = 'cp_auth_user';
+const STORAGE_KEY_DEMO_EXP = 'cp_demo_exp';
+const DEMO_TTL_MS = 60 * 60 * 1000; // 1 hour TTL
 
 // Decode standard JWT payload using native atob (Rule: no external JWT library)
 function decodeJwtPayload(jwt: string): any | null {
@@ -54,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const performSignOut = () => {
     localStorage.removeItem(STORAGE_KEY_TOKEN);
     localStorage.removeItem(STORAGE_KEY_USER);
+    localStorage.removeItem(STORAGE_KEY_DEMO_EXP);
     setToken(null);
     setUser(null);
     setStatus('unauthenticated');
@@ -113,6 +116,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setStatus('authenticated');
               return () => clearTimeout(timer);
             } else {
+              const demoExp = localStorage.getItem(STORAGE_KEY_DEMO_EXP);
+              if (demoExp && Date.now() > Number(demoExp)) {
+                performSignOut();
+                return;
+              }
               setToken(storedToken);
               setUser(parsedUser);
               setStatus('authenticated');
@@ -195,8 +203,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sub: 'demo-local-analyst',
     };
     const demoToken = 'demo-session-token-' + Date.now();
+    const demoExp = Date.now() + DEMO_TTL_MS;
     localStorage.setItem(STORAGE_KEY_TOKEN, demoToken);
     localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(demoUser));
+    localStorage.setItem(STORAGE_KEY_DEMO_EXP, String(demoExp));
     setToken(demoToken);
     setUser(demoUser);
     setStatus('authenticated');

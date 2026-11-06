@@ -218,39 +218,11 @@ function MainStudio() {
   };
 
   // File upload handler
+  // File upload handler (delegates to handleIngestFile - L3)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setLoading(true);
-    setError(null);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const res = await fetch(`${API_BASE}/upload`, {
-        method: 'POST',
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.detail || 'Upload failed');
-      }
-      const data: DatasetInfo = await res.json();
-      setCurrentDataset(data);
-
-      // Fetch profile
-      const profRes = await fetch(`${API_BASE}/profile/${data.id}`);
-      if (profRes.ok) {
-        const profData: DatasetProfile = await profRes.json();
-        setProfile(profData);
-      }
-      setActiveTab('profile');
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    await handleIngestFile(file);
   };
 
   // Run ConsensusGate
@@ -279,16 +251,6 @@ function MainStudio() {
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
 
-      // Sync resolved state to Firebase Firestore
-      recordCleaningRun({
-        datasetId: currentDataset.id,
-        filename: currentDataset.filename,
-        rows: currentDataset.rows,
-        cols: currentDataset.cols,
-        consensusScore: consensusScore,
-        status: data.status,
-        patchSummary: data.patch_summary,
-      });
       setActiveTab('workspace');
 
       // Sync run metadata to Firebase Firestore
@@ -309,18 +271,19 @@ function MainStudio() {
   };
 
   // Submit clarification answer
-  const handleResolveClarification = async () => {
+  // Submit clarification answer (H8: wire applyToSimilar)
+  const handleResolveClarification = async (optionOverride?: number, applyToSimilar?: boolean) => {
     if (!currentDataset) return;
     setLoading(true);
     setError(null);
-
+    const chosenOption = optionOverride !== undefined ? optionOverride : selectedOption;
     try {
       const res = await fetch(`${API_BASE}/clarify/${currentDataset.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          selected_option: selectedOption,
-          notes: 'User selected resolution',
+          selected_option: chosenOption,
+          notes: applyToSimilar ? 'User selected resolution (apply to similar)' : 'User selected resolution',
         }),
       });
       if (!res.ok) throw new Error('Failed to resolve clarification');
@@ -333,7 +296,6 @@ function MainStudio() {
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
 
-      // Sync resolved state to Firebase Firestore
       recordCleaningRun({
         datasetId: currentDataset.id,
         filename: currentDataset.filename,
@@ -347,6 +309,34 @@ function MainStudio() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Authenticated export helper (M5)
+  const handleExport = async (format: 'csv' | 'xlsx' | 'pdf') => {
+    if (!currentDataset) return;
+    try {
+      const token = localStorage.getItem('cp_auth_token');
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE}/export/${currentDataset.id}?format=${format}`, {
+        headers,
+      });
+      if (!res.ok) throw new Error(`Export failed (${res.status})`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const ext = format === 'xlsx' ? 'xlsx' : format === 'pdf' ? 'pdf' : 'csv';
+      const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
+      a.download = `${baseName}_cleaned.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -677,30 +667,30 @@ function MainStudio() {
                 <p className="text-xs lg:text-sm text-slate-500 dark:text-slate-400">Multi-plan ensembling and interactive ambiguity resolution</p>
               </div>
 
-              {/* Export actions */}
+              {/* Export actions (M5) */}
               {currentDataset && (
                 <div className="flex items-center space-x-2">
-                  <a
-                    href={`${API_BASE}/export/${currentDataset.id}?format=csv`}
-                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
+                  <button
+                    onClick={() => handleExport('csv')}
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>CSV</span>
-                  </a>
-                  <a
-                    href={`${API_BASE}/export/${currentDataset.id}?format=xlsx`}
-                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
+                  </button>
+                  <button
+                    onClick={() => handleExport('xlsx')}
+                    className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 cursor-pointer"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>Excel</span>
-                  </a>
-                  <a
-                    href={`${API_BASE}/export/${currentDataset.id}?format=pdf`}
-                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1"
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 cursor-pointer"
                   >
                     <FileText className="w-3.5 h-3.5" />
                     <span>Audit PDF</span>
-                  </a>
+                  </button>
                 </div>
               )}
             </div>
@@ -771,7 +761,7 @@ function MainStudio() {
                 onClose={() => setIsClarifyModalOpen(false)}
                 onConfirm={(optId, applyToSimilar) => {
                   setSelectedOption(optId);
-                  handleResolveClarification();
+                  handleResolveClarification(optId, applyToSimilar);
                   setIsClarifyModalOpen(false);
                 }}
                 onRecordDecision={(dec) => {
