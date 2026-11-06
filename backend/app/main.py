@@ -144,7 +144,7 @@ def get_active_patch(dataset_id: str, db: Session) -> Patch | None:
     run = (
         db.query(OperationRun)
         .filter(OperationRun.dataset_id == dataset_id, OperationRun.status == "applied")
-        .order_by(OperationRun.created_at.desc())
+        .order_by(OperationRun.id.desc())
         .first()
     )
     if run and run.applied_patch and isinstance(run.applied_patch, dict) and "full_patch" in run.applied_patch:

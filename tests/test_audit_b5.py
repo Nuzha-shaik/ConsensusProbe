@@ -11,14 +11,13 @@ from backend.app.main import (
     patch_to_dict,
     patch_from_dict,
     PATCH_CACHE_MAX_SIZE,
-    get_db,
 )
+from backend.app.models import SessionLocal
 from research.patch import Patch
 
 client = TestClient(app)
 
 def test_h2_patch_persisted_in_db():
-    db = next(get_db())
     # 1. Upload
     csv_data = "col1,col2\nA,1\nA,1\n"
     res = client.post(
@@ -30,15 +29,26 @@ def test_h2_patch_persisted_in_db():
     # 2. Clean
     res_clean = client.post(f"/clean/{dataset_id}")
     assert res_clean.status_code == 200
+    cdata = res_clean.json()
+    if cdata["status"] == "needs_clarification":
+        res_clarify = client.post(
+            f"/clarify/{dataset_id}",
+            json={"selected_option": 0, "notes": "Approved"},
+        )
+        assert res_clarify.status_code == 200
 
     # 3. Simulate process restart / new worker: clear memory caches completely
     _PATCH_CACHE.clear()
     _ACTIVE_PATCHES.clear()
 
     # 4. Verify get_active_patch restores from database
-    restored = get_active_patch(dataset_id, db)
-    assert restored is not None
-    assert isinstance(restored, Patch)
+    db = SessionLocal()
+    try:
+        restored = get_active_patch(dataset_id, db)
+        assert restored is not None
+        assert isinstance(restored, Patch)
+    finally:
+        db.close()
 
 def test_m10_patch_cache_eviction():
     _PATCH_CACHE.clear()

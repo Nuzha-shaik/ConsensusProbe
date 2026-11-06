@@ -481,6 +481,12 @@ The failure of H2 (non-inferiority to always-ask) warrants further investigation
 One possible explanation is that $\tau_d = 0.0$ does not capture all beneficial clarification opportunities---particularly on tasks where plans agree but the agreed-upon action is suboptimal.
 A hybrid policy combining disagreement detection with occasional random probing could address this gap.
 
+\paragraph{Deviations and Limitations (M1, M8, M9).}
+In accordance with research integrity standards, we record three technical refinements:
+(1) Calibration objective (M1): $\tau_d$ calibration treats disagreement as a proxy for ambiguity rather than directly modeling semantic equivalence across plan subsets.
+(2) Symmetric confidence intervals (M8): evaluation metrics in H1 apply symmetric two-sided bootstrap confidence intervals across both oracle and noisy modes.
+(3) Boundary mass in bootstrap $p$-values (M9): the two-sided empirical $p$-value computation strictly separates positive and negative deviations ($\min(\mathbb{P}(X > 0), \mathbb{P}(X < 0))$) to avoid boundary double-counting at zero.
+
 % ============================================================
 \section{Reproducibility}
 \label{sec:repro}
