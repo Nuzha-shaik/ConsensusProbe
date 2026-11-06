@@ -954,7 +954,10 @@ export function clientExportPdf(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7);
   doc.setTextColor(30, 41, 59);
-  doc.text('* Reconciled Modifications: Purple boxes with (->) mark values merged from duplicate rows for the same entity ("merged from row N"); Yellow boxes with (->) mark deterministic normalizations; Red boxes mark flagged invalid values; Unprovided fields remain clean blanks without fabrication.', 14, curY);
+  const legendText = '* Reconciled Modifications: Purple boxes with (->) mark values merged from duplicate rows for the same entity ("merged from row N"); Yellow boxes with (->) mark deterministic normalizations; Red boxes mark flagged invalid values; Unprovided fields remain clean blanks without fabrication.';
+  const legendLines = doc.splitTextToSize(legendText, 182);
+  doc.text(legendLines, 14, curY);
+  curY += legendLines.length * 3.2 - 2;
 
   // Table 3: Multi-Agent Transformation & Security Audit Log
   curY += 7;
@@ -999,7 +1002,7 @@ export function clientExportPdf(
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(71, 85, 105);
-  doc.text('Benchmark evaluation executed with deterministic research mock (Rule R7). Generalization to live LLMs requires empirical testing.', 18, curY + 11);
+  doc.text('Benchmark evaluation executed with deterministic research mock (Rule R7). Generalization to live LLMs requires empirical testing.', 18, curY + 11, { maxWidth: 174 });
 
   return doc.output('blob');
 }
