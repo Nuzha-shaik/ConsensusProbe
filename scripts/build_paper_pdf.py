@@ -3,42 +3,45 @@ import os, re, json, shutil, zipfile, subprocess
 from pathlib import Path
 
 def build_paper():
-    # 1. Load numbers.tex macros
+    # 1. Load macros from results/numbers.tex and paper/main.tex
     macros = {}
-    with open('results/numbers.tex', encoding='utf-8') as f:
-        for line in f:
-            m = re.match(r'\\newcommand\{\\(\w+)\}\{([^}]+)\}', line.strip())
-            if m:
-                macros[m.group(1)] = m.group(2)
-    print(f"Loaded {len(macros)} macros from results/numbers.tex")
+    if os.path.exists('results/numbers.tex'):
+        with open('results/numbers.tex', encoding='utf-8') as f:
+            for line in f:
+                m = re.match(r'\\newcommand\{\\(\w+)\}\{([^}]+)\}', line.strip())
+                if m:
+                    macros[m.group(1)] = m.group(2)
 
-    # 2. Read paper/main.tex
     with open('paper/main.tex', encoding='utf-8') as f:
         tex = f.read()
 
-    # Substitute macros
+    for line in tex.splitlines():
+        m = re.match(r'\\newcommand\{\\(\w+)\}\{([^}]+)\}', line.strip())
+        if m:
+            macros[m.group(1)] = m.group(2)
+
+    print(f"Loaded {len(macros)} macros")
+
+    # Substitute macros in tex
     for name, val in macros.items():
         tex = re.sub(rf'\\{name}(\{{}})?', val, tex)
 
-    # 3. Read bibtex
-    bib_entries = {}
-    with open('paper/refs.bib', encoding='utf-8') as f:
-        bib_raw = f.read()
-        for b in re.finditer(r'@(\w+)\{([^,]+),\s*([\s\S]*?)\n\}', bib_raw):
-            key = b.group(2).strip()
-            body = b.group(3)
-            title = re.search(r'title\s*=\s*\{([^}]+)\}', body)
-            author = re.search(r'author\s*=\s*\{([^}]+)\}', body)
-            year = re.search(r'year\s*=\s*\{([^}]+)\}', body)
-            booktitle = re.search(r'(?:booktitle|journal)\s*=\s*\{([^}]+)\}', body)
-            bib_entries[key] = {
-                'title': title.group(1) if title else '',
-                'author': author.group(1) if author else '',
-                'year': year.group(1) if year else '',
-                'venue': booktitle.group(1) if booktitle else ''
-            }
+    # 2. Extract references from \begin{thebibliography}
+    bib_items = []
+    bib_m = re.search(r'\\begin\{thebibliography\}[^}]*\}([\s\S]*?)\\end\{thebibliography\}', tex)
+    if bib_m:
+        raw_items = bib_m.group(1)
+        for itm in re.finditer(r'\\bibitem\{([^}]+)\}([\s\S]*?)(?=\\bibitem\{|$)', raw_items):
+            key = itm.group(1).strip()
+            desc = itm.group(2).strip()
+            # Clean latex markup in desc
+            desc = desc.replace('\\emph{', '<em>').replace('}', '</em>')
+            desc = desc.replace('``', '"').replace("''", '"')
+            desc = desc.replace('~', ' ')
+            desc = re.sub(r'\\doi\{([^}]+)\}', r'doi: \1', desc)
+            bib_items.append((key, desc))
 
-    # 4. Extract abstract
+    # 3. Extract abstract
     abstract_m = re.search(r'\\begin\{abstract\}([\s\S]*?)\\end\{abstract\}', tex)
     abstract_text = abstract_m.group(1).strip() if abstract_m else ''
 
@@ -46,13 +49,20 @@ def build_paper():
     abstract_html = abstract_text.replace('\\textbf{', '<strong>').replace('}', '</strong>')
     abstract_html = abstract_html.replace('\\emph{', '<em>')
     abstract_html = abstract_html.replace('\\texttt{', '<code>').replace('}', '</code>')
-    abstract_html = re.sub(r'\\citep?\{([^}]+)\}', r'[\1]', abstract_html)
+    abstract_html = re.sub(r'\\cite\{([^}]+)\}', r'[\1]', abstract_html)
     abstract_html = re.sub(r'\$([^\$]+)\$', r'<i>\1</i>', abstract_html)
     abstract_html = abstract_html.replace('\n\n', '</p><p>').replace('\\medskip\\noindent', '<br/><br/>')
 
-    # 5. Extract body sections
-    body_part = tex.split('\\end{abstract}')[1] if '\\end{abstract}' in tex else tex
-    body_part = body_part.split('\\end{document}')[0] if '\\end{document}' in body_part else body_part
+    # Extract keywords
+    kw_m = re.search(r'\\begin\{IEEEkeywords\}([\s\S]*?)\\end\{IEEEkeywords\}', tex)
+    kw_html = ''
+    if kw_m:
+        kw_text = kw_m.group(1).strip()
+        kw_html = f'<p class="keywords"><strong><em>Index Terms</em>&mdash;</strong>{kw_text}</p>'
+
+    # 4. Extract body sections
+    body_part = tex.split('\\end{IEEEkeywords}')[1] if '\\end{IEEEkeywords}' in tex else (tex.split('\\end{abstract}')[1] if '\\end{abstract}' in tex else tex)
+    body_part = body_part.split('\\begin{thebibliography}')[0] if '\\begin{thebibliography}' in body_part else (body_part.split('\\end{document}')[0] if '\\end{document}' in body_part else body_part)
 
     # Convert sections and subsections
     roman_numerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
@@ -82,15 +92,13 @@ def build_paper():
         fig_body = m.group(1)
         inc = re.search(r'\\includegraphics\[[^\]]*\]\{([^}]+)\}', fig_body)
         cap = re.search(r'\\caption\{([^}]+)\}', fig_body)
-        lbl = re.search(r'\\label\{([^}]+)\}', fig_body)
         if not inc: return ''
         fig_path = inc.group(1).replace('.pdf', '.png')
         caption_text = cap.group(1) if cap else ''
-        # Clean caption
         caption_text = caption_text.replace('\\textbf{', '<strong>').replace('}', '</strong>')
         caption_text = re.sub(r'\$([^\$]+)\$', r'<i>\1</i>', caption_text)
         caption_text = caption_text.replace('\\emph{', '<em>')
-        # Absolute file url for playwright
+        caption_text = caption_text.replace('\\cite{', '[').replace('}', ']')
         abs_fig = Path('paper/' + fig_path).resolve().as_uri()
         return f'''
         <div class="figure-container">
@@ -104,7 +112,7 @@ def build_paper():
     # Remove labels
     html_body = re.sub(r'\\label\{[^}]+\}', '', html_body)
     # Convert citations
-    html_body = re.sub(r'\\citep?\{([^}]+)\}', r'[\1]', html_body)
+    html_body = re.sub(r'\\cite\{([^}]+)\}', r'[\1]', html_body)
     # Convert refs
     html_body = re.sub(r'\\ref\{([^}]+)\}', r'<span class="ref-cite">\1</span>', html_body)
 
@@ -119,7 +127,7 @@ def build_paper():
     html_body = html_body.replace('\\begin{itemize}', '<ul>').replace('\\end{itemize}', '</ul>')
     html_body = re.sub(r'\\item\s+', '<li>', html_body)
 
-    # Remove remaining latex commands
+    # Clean remaining TeX commands
     html_body = re.sub(r'\\(?:input|bibliographystyle|bibliography)\{[^}]+\}', '', html_body)
     html_body = re.sub(r'\\(?:maketitle|noindent|medskip|bigskip)', '', html_body)
 
@@ -129,7 +137,7 @@ def build_paper():
     for p in paragraphs:
         p = p.strip()
         if not p: continue
-        if p.startswith('<h') or p.startswith('<div') or p.startswith('<ol') or p.startswith('<ul'):
+        if p.startswith('<h') or p.startswith('<div') or p.startswith('<ol') or p.startswith('<ul') or p.startswith('<table'):
             formatted_paras.append(p)
         else:
             formatted_paras.append(f'<p>{p}</p>')
@@ -137,8 +145,8 @@ def build_paper():
 
     # Generate Bibliography list
     bib_html = '<h2 class="sec-title">REFERENCES</h2><ol class="bib-list">'
-    for k, b in bib_entries.items():
-        bib_html += f'<li id="{k}">[{k}] {b["author"]}, "{b["title"]}", <em>{b["venue"]}</em>, {b["year"]}.</li>'
+    for idx, (k, desc) in enumerate(bib_items, 1):
+        bib_html += f'<li id="{k}">[{idx}] {desc}</li>'
     bib_html += '</ol>'
 
     # Construct complete IEEE HTML
@@ -149,8 +157,8 @@ def build_paper():
 <title>ConsensusProbe: Disagreement-Driven Interactive Gates for Reliable LLM-Based Data Cleaning</title>
 <style>
   @page {{
-    size: letter;
-    margin: 0.75in;
+    size: a4;
+    margin: 0.65in;
     @bottom-center {{
       content: counter(page);
       font-size: 9pt;
@@ -161,40 +169,40 @@ def build_paper():
   body {{
     font-family: 'Times New Roman', Times, serif;
     font-size: 10pt;
-    line-height: 1.25;
+    line-height: 1.22;
     color: #111;
     margin: 0;
     padding: 0;
   }}
   .paper-header {{
     text-align: center;
-    margin-bottom: 18pt;
+    margin-bottom: 14pt;
   }}
   .paper-title {{
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: bold;
-    margin-bottom: 8pt;
+    margin-bottom: 6pt;
     line-height: 1.2;
   }}
   .paper-authors {{
-    font-size: 11pt;
-    margin-bottom: 4pt;
+    font-size: 10.5pt;
+    margin-bottom: 2pt;
     font-style: italic;
   }}
   .paper-affil {{
     font-size: 9pt;
     color: #444;
-    margin-bottom: 12pt;
+    margin-bottom: 10pt;
   }}
   .abstract-container {{
-    margin: 0 auto 16pt auto;
-    width: 92%;
+    margin: 0 auto 12pt auto;
+    width: 95%;
     font-size: 9pt;
     text-align: justify;
-    padding: 8pt 12pt;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    background: #fafafa;
+    padding: 6pt 10pt;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    background: #fdfdfd;
   }}
   .abstract-title {{
     font-weight: bold;
@@ -202,36 +210,42 @@ def build_paper():
     font-size: 9pt;
     margin-right: 4pt;
   }}
+  .keywords {{
+    font-size: 8.5pt;
+    margin-top: 4pt;
+    margin-bottom: 0;
+    text-indent: 0;
+  }}
   .two-column {{
     column-count: 2;
     column-gap: 0.28in;
     text-align: justify;
   }}
   p {{
-    text-indent: 14pt;
+    text-indent: 12pt;
     margin-top: 0;
-    margin-bottom: 4pt;
+    margin-bottom: 3.5pt;
   }}
   h2.sec-title {{
-    font-size: 10pt;
+    font-size: 9.5pt;
     font-weight: bold;
     text-align: center;
-    margin-top: 12pt;
-    margin-bottom: 4pt;
+    margin-top: 11pt;
+    margin-bottom: 3pt;
     text-transform: uppercase;
     letter-spacing: 0.5pt;
     break-after: avoid;
   }}
   h3.subsec-title {{
-    font-size: 10pt;
+    font-size: 9.5pt;
     font-weight: normal;
     font-style: italic;
-    margin-top: 8pt;
+    margin-top: 7pt;
     margin-bottom: 2pt;
     break-after: avoid;
   }}
   .figure-container {{
-    margin: 10pt 0;
+    margin: 8pt 0;
     text-align: center;
     break-inside: avoid;
   }}
@@ -246,14 +260,14 @@ def build_paper():
     font-size: 8pt;
     text-indent: 0;
     text-align: justify;
-    margin-top: 4pt;
+    margin-top: 3pt;
     color: #333;
-    line-height: 1.2;
+    line-height: 1.15;
   }}
   ol, ul {{
     margin-top: 2pt;
-    margin-bottom: 4pt;
-    padding-left: 18pt;
+    margin-bottom: 3pt;
+    padding-left: 16pt;
   }}
   li {{
     font-size: 9.5pt;
@@ -265,7 +279,7 @@ def build_paper():
     line-height: 1.2;
   }}
   .bib-list li {{
-    margin-bottom: 4pt;
+    margin-bottom: 3pt;
   }}
   code {{
     font-family: monospace;
@@ -276,12 +290,13 @@ def build_paper():
 <body>
 <div class="paper-header">
   <div class="paper-title">ConsensusProbe: Disagreement-Driven Interactive Gates<br/>for Reliable LLM-Based Data Cleaning</div>
-  <div class="paper-authors">ConsensusProbe Research Team</div>
-  <div class="paper-affil">Autonomous Agent Systems Laboratory &bull; Multi-Agent Consensus Governance Initiative</div>
+  <div class="paper-authors">Anonymous Authors</div>
+  <div class="paper-affil">Anonymous Institution</div>
 </div>
 
 <div class="abstract-container">
   <span class="abstract-title">Abstract&mdash;</span>{abstract_html}
+  {kw_html}
 </div>
 
 <div class="two-column">
@@ -295,7 +310,7 @@ def build_paper():
     out_html.write_text(html_doc, encoding='utf-8')
     print("Generated paper/main.html")
 
-    # 6. Render PDF with Playwright Chromium
+    # 5. Render PDF with Playwright Chromium
     node_script = '''
     const { chromium } = require('playwright');
     const path = require('path');
@@ -307,7 +322,7 @@ def build_paper():
       await page.waitForTimeout(1000);
       await page.pdf({
         path: '../paper/main.pdf',
-        format: 'Letter',
+        format: 'A4',
         margin: { top: '0.6in', bottom: '0.6in', left: '0.6in', right: '0.6in' },
         printBackground: true,
         displayHeaderFooter: true,
@@ -316,43 +331,43 @@ def build_paper():
       });
       console.log('PDF saved to paper/main.pdf');
 
-      // Screenshot previews
       const fs = require('fs');
       if (!fs.existsSync('../docs/preview')) fs.mkdirSync('../docs/preview', { recursive: true });
       await page.screenshot({ path: '../docs/preview/paper-1.png', fullPage: false });
-      console.log('Saved page preview to ../docs/preview/paper-1.png');
+      console.log('Saved page preview to docs/preview/paper-1.png');
 
       await browser.close();
     })().catch(e => { console.error('Playwright error:', e); process.exit(1); });
     '''
     subprocess.run(['node', '-e', node_script], cwd='frontend', check=True)
 
-    # 7. Copy to public directory for frontend web app download
-    public_dir = Path('frontend/public')
-    public_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy('paper/main.pdf', public_dir / 'ConsensusProbe_Research_Paper.pdf')
-    print("Copied paper/main.pdf to frontend/public/ConsensusProbe_Research_Paper.pdf")
+    # 6. Copy to root as requested
+    shutil.copy('paper/main.pdf', 'research paper.pdf')
+    shutil.copy('paper/main.pdf', 'Research_Paper.pdf')
+    print("Copied paper/main.pdf to 'research paper.pdf' and 'Research_Paper.pdf' at root!")
 
-    # 8. Create paper_overleaf.zip
+    # 7. Create paper_overleaf.zip
     zip_path = Path('paper_overleaf.zip')
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write('paper/main.tex', 'main.tex')
-        zf.write('paper/refs.bib', 'refs.bib')
-        zf.write('results/numbers.tex', 'numbers.tex')
+        if os.path.exists('paper/refs.bib'):
+            zf.write('paper/refs.bib', 'refs.bib')
+        if os.path.exists('results/numbers.tex'):
+            zf.write('results/numbers.tex', 'numbers.tex')
         for f in os.listdir('paper/figures'):
             zf.write(os.path.join('paper/figures', f), os.path.join('figures', f))
     print(f"Created {zip_path} ({zip_path.stat().st_size} bytes)")
 
-    # 9. Write paper/FORMAT.md
+    # 8. Write paper/FORMAT.md
     format_md = f"""# ConsensusProbe Paper Format Specification
 
-- **Document Style**: IEEE Computer Society Conference (Letter, 2 columns, 10pt)
+- **Document Style**: IEEE Conference (IEEEtran, A4, 2 columns, 10pt)
 - **Title**: ConsensusProbe: Disagreement-Driven Interactive Gates for Reliable LLM-Based Data Cleaning
-- **Source Files**: `paper/main.tex`, `paper/refs.bib`, `results/numbers.tex`
-- **Compiled PDF**: `paper/main.pdf`
-- **Web App Asset**: `frontend/public/ConsensusProbe_Research_Paper.pdf`
+- **Authors**: Anonymous Authors, Anonymous Institution
+- **Source Files**: `paper/main.tex` (Single-File Self-Contained Source), `research paper latexcode.txt`
+- **Compiled PDF**: `paper/main.pdf`, `research paper.pdf`, `Research_Paper.pdf`
 - **Overleaf Archive**: `paper_overleaf.zip`
-- **Page Previews**: `../docs/preview/paper-1.png`
+- **Page Previews**: `docs/preview/paper-1.png`
 - **Total Macros**: {len(macros)}
 - **Figures**: 13 figures (F1 through F13)
 - **Mock Honesty Disclosure**: Included under Rule R7 (LLM_PROVIDER=mock, BUDGET_USD=0)

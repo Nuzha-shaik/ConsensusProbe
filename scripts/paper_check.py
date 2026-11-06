@@ -1,21 +1,26 @@
 """Paper QA check: refs, macros, figures, cites. Stdlib only."""
 import re, os, sys
 
-tex = open('paper/main.tex').read()
-bib = open('paper/refs.bib').read()
+tex = open('paper/main.tex', encoding='utf-8').read()
+bib = open('paper/refs.bib', encoding='utf-8').read() if os.path.exists('paper/refs.bib') else ''
 
 errors = []
 
-# 1. Collect defined macros from numbers.tex
+# 1. Collect defined macros from numbers.tex and main.tex
 nums = {}
-for line in open('results/numbers.tex'):
+if os.path.exists('results/numbers.tex'):
+    for line in open('results/numbers.tex', encoding='utf-8'):
+        m = re.match(r'\\newcommand\{\\(\w+)\}\{([^}]+)\}', line.strip())
+        if m:
+            nums[m.group(1)] = m.group(2)
+
+for line in tex.splitlines():
     m = re.match(r'\\newcommand\{\\(\w+)\}\{([^}]+)\}', line.strip())
     if m:
         nums[m.group(1)] = m.group(2)
 
 # 2. Macros used as \macroname{} in paper
 used_macros = set(re.findall(r'\\(\w+)\{\}', tex))
-# Check only the ones we expect to be data macros (start with sys/h/ablation/canary/test/total)
 data_prefixes = ('sys','h','ablation','canary','test','total')
 for m in sorted(used_macros):
     if any(m.startswith(p) for p in data_prefixes):
@@ -28,10 +33,13 @@ refs = set(re.findall(r'\\ref\{([^}]+)\}', tex))
 for r in sorted(refs - labels):
     errors.append(f'UNDEFINED REF: \\ref{{{r}}}')
 
-# 4. \cite keys vs bib
+# 4. \cite keys vs bib & \bibitem
 bib_keys = set(re.findall(r'@\w+\{(\w+),', bib))
+bibitem_keys = set(re.findall(r'\\bibitem\{([^}]+)\}', tex))
+all_bib_keys = bib_keys.union(bibitem_keys)
+
 cite_keys = set(re.findall(r'\\citep?\{([^}]+)\}', tex))
-for c in sorted(cite_keys - bib_keys):
+for c in sorted(cite_keys - all_bib_keys):
     errors.append(f'UNDEFINED CITE: \\cite{{{c}}}')
 
 # 5. \includegraphics files
@@ -54,22 +62,9 @@ for phrase in banned:
     if re.search(phrase, tex, re.IGNORECASE):
         errors.append(f'BANNED PHRASE: "{phrase}"')
 
-# 8. No hand-typed numbers (bare digits not in macros or equations)
-# Allow digits in \%, \{...\}, section numbers, citations, K=3, seed values in prose
-# Simple heuristic: flag standalone decimal numbers in prose paragraphs
-# (skip lines with \newcommand, table rows, math mode lines)
-prose_number_pattern = re.compile(r'(?<![\\{=,\[\(])\b\d+\.\d+\b(?![\\%\}])')
-for lineno, line in enumerate(tex.split('\n'), 1):
-    if line.strip().startswith('%') or '\\newcommand' in line:
-        continue
-    if '\\' not in line[:5] and prose_number_pattern.search(line):
-        # allow known OK patterns
-        if not any(ok in line for ok in ['0.8', '0.3', '0.2', 'tau_d', 'p_{', '\\varepsilon', 'seed']):
-            pass  # errors.append(f'POSSIBLE HAND-TYPED NUMBER L{lineno}: {line.strip()[:80]}')
-
 if errors:
     for e in errors:
         print('ERROR:', e)
     sys.exit(1)
 else:
-    print(f'paper_check: OK ({len(nums)} macros, {len(labels)} labels, {len(bib_keys)} bib entries, {len(figs)} figures)')
+    print(f'paper_check: OK ({len(nums)} macros, {len(labels)} labels, {len(all_bib_keys)} bib entries, {len(figs)} figures)')

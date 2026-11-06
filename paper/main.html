@@ -5,8 +5,8 @@
 <title>ConsensusProbe: Disagreement-Driven Interactive Gates for Reliable LLM-Based Data Cleaning</title>
 <style>
   @page {
-    size: letter;
-    margin: 0.75in;
+    size: a4;
+    margin: 0.65in;
     @bottom-center {
       content: counter(page);
       font-size: 9pt;
@@ -17,40 +17,40 @@
   body {
     font-family: 'Times New Roman', Times, serif;
     font-size: 10pt;
-    line-height: 1.25;
+    line-height: 1.22;
     color: #111;
     margin: 0;
     padding: 0;
   }
   .paper-header {
     text-align: center;
-    margin-bottom: 18pt;
+    margin-bottom: 14pt;
   }
   .paper-title {
-    font-size: 18pt;
+    font-size: 17pt;
     font-weight: bold;
-    margin-bottom: 8pt;
+    margin-bottom: 6pt;
     line-height: 1.2;
   }
   .paper-authors {
-    font-size: 11pt;
-    margin-bottom: 4pt;
+    font-size: 10.5pt;
+    margin-bottom: 2pt;
     font-style: italic;
   }
   .paper-affil {
     font-size: 9pt;
     color: #444;
-    margin-bottom: 12pt;
+    margin-bottom: 10pt;
   }
   .abstract-container {
-    margin: 0 auto 16pt auto;
-    width: 92%;
+    margin: 0 auto 12pt auto;
+    width: 95%;
     font-size: 9pt;
     text-align: justify;
-    padding: 8pt 12pt;
-    border-top: 1px solid #ddd;
-    border-bottom: 1px solid #ddd;
-    background: #fafafa;
+    padding: 6pt 10pt;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    background: #fdfdfd;
   }
   .abstract-title {
     font-weight: bold;
@@ -58,36 +58,42 @@
     font-size: 9pt;
     margin-right: 4pt;
   }
+  .keywords {
+    font-size: 8.5pt;
+    margin-top: 4pt;
+    margin-bottom: 0;
+    text-indent: 0;
+  }
   .two-column {
     column-count: 2;
     column-gap: 0.28in;
     text-align: justify;
   }
   p {
-    text-indent: 14pt;
+    text-indent: 12pt;
     margin-top: 0;
-    margin-bottom: 4pt;
+    margin-bottom: 3.5pt;
   }
   h2.sec-title {
-    font-size: 10pt;
+    font-size: 9.5pt;
     font-weight: bold;
     text-align: center;
-    margin-top: 12pt;
-    margin-bottom: 4pt;
+    margin-top: 11pt;
+    margin-bottom: 3pt;
     text-transform: uppercase;
     letter-spacing: 0.5pt;
     break-after: avoid;
   }
   h3.subsec-title {
-    font-size: 10pt;
+    font-size: 9.5pt;
     font-weight: normal;
     font-style: italic;
-    margin-top: 8pt;
+    margin-top: 7pt;
     margin-bottom: 2pt;
     break-after: avoid;
   }
   .figure-container {
-    margin: 10pt 0;
+    margin: 8pt 0;
     text-align: center;
     break-inside: avoid;
   }
@@ -102,14 +108,14 @@
     font-size: 8pt;
     text-indent: 0;
     text-align: justify;
-    margin-top: 4pt;
+    margin-top: 3pt;
     color: #333;
-    line-height: 1.2;
+    line-height: 1.15;
   }
   ol, ul {
     margin-top: 2pt;
-    margin-bottom: 4pt;
-    padding-left: 18pt;
+    margin-bottom: 3pt;
+    padding-left: 16pt;
   }
   li {
     font-size: 9.5pt;
@@ -121,7 +127,7 @@
     line-height: 1.2;
   }
   .bib-list li {
-    margin-bottom: 4pt;
+    margin-bottom: 3pt;
   }
   code {
     font-family: monospace;
@@ -132,28 +138,26 @@
 <body>
 <div class="paper-header">
   <div class="paper-title">ConsensusProbe: Disagreement-Driven Interactive Gates<br/>for Reliable LLM-Based Data Cleaning</div>
-  <div class="paper-authors">ConsensusProbe Research Team</div>
-  <div class="paper-affil">Autonomous Agent Systems Laboratory &bull; Multi-Agent Consensus Governance Initiative</div>
+  <div class="paper-authors">Anonymous Authors</div>
+  <div class="paper-affil">Anonymous Institution</div>
 </div>
 
 <div class="abstract-container">
   <span class="abstract-title">Abstract&mdash;</span>When multiple large language model (LLM) plans disagree on how to clean a dataset, which plan should be trusted?
-We introduce <strong>ConsensusGate</strong>, an interactive policy that detects inter-plan disagreement among an ensemble of <i>K</i> cleaning proposals and routes only the ambiguous decisions to a human operator for clarification.
+We introduce ConsensusGate, an interactive policy that detects inter-plan disagreement among an ensemble of <i>K</i> cleaning proposals and routes only the ambiguous decisions to a human operator for clarification.
 We evaluate ConsensusGate and six baseline policies on a controlled benchmark of 100 synthetic retail and inventory cleaning tasks spanning five categories of real-world data ambiguity.
 Across 7200 evaluations under three user-simulation modes, ConsensusGate (System~E) reduces silent errors to 0.0\% (versus 5.0\% for single-plan execution) while asking only 0.38 questions per task on average, compared with 1.00 for an always-ask baseline.
-We pre-registered four hypotheses and report all results, including one hypothesis (H2) that was <em>not</strong> supported.</p><p><br/><br/>
-<strong>Reproducibility and mock-honesty disclosure (Rule R7).</strong>
-All experiments in this paper were conducted with <code>LLM\_PROVIDER=mock</strong> and <code>BUDGET\_USD=0</strong>.
-The mock provider produces deterministic cleaning plans via a seeded noise model, not calls to a proprietary language model API\@.
-Consequently, all reported metrics reflect the <em>policy logic and consensus mechanisms</strong> under controlled stochastic conditions and do not constitute evidence of performance with any specific commercial LLM\@.
-Generalization to production models requires further empirical validation with live API calls.
+We pre-registered four hypotheses and report all results, including one hypothesis (H2) that was not supported.
+Reproducibility and mock-honesty disclosure (Rule~R7): all experiments use a deterministic mock LLM provider (<code>LLM\_PROVIDER=mock</strong>, <code>BUDGET\_USD=0</strong>) driven by a seeded noise model, not calls to a proprietary language model API.
+Consequently, all reported metrics reflect the policy logic and consensus mechanisms under controlled stochastic conditions and do not constitute evidence of performance with any specific commercial LLM; generalization to production models requires further empirical validation with live API calls.
+  <p class="keywords"><strong><em>Index Terms</em>&mdash;</strong>data cleaning, large language models, ensemble disagreement, human-in-the-loop, interactive clarification, reproducibility</p>
 </div>
 
 <div class="two-column">
   <p>% ============================================================
 <h2 class="sec-title">I. INTRODUCTION</h2></p>
 <p>Automated data cleaning with large language models promises to reduce the manual effort of profiling, deduplication, type coercion, and missing-value imputation.
-Recent systems such as LAMBDA [lambda2025], AutoDCWorkflow [autodcworkflow], and PrepBench [prepbench] demonstrate that LLMs can generate plausible cleaning plans from natural-language descriptions of data quality issues.
+Recent systems such as LAMBDA~[lambda2025], AutoDCWorkflow~[autodcworkflow], and PrepBench~[prepbench] demonstrate that LLMs can generate plausible cleaning plans from natural-language descriptions of data quality issues.
 However, a single LLM-generated plan may silently apply destructive edits---merging categories that should remain distinct, dropping rows that contain valid data, or coercing columns into a lossy type---without surfacing the ambiguity to the operator.</p>
 <p>We observe that many data-cleaning decisions are <em>inherently ambiguous</strong>: two domain experts might reasonably disagree on whether product names differing only in case represent duplicates, or whether missing inventory counts should be filled with zero or with the column median.
 When an LLM ensemble is asked for <i>K</i> independent cleaning plans, disagreement among the plans is a reliable signal that the task contains such ambiguity.</p>
@@ -166,26 +170,27 @@ When an LLM ensemble is asked for <i>K</i> independent cleaning plans, disagreem
 <p>% ============================================================
 <h2 class="sec-title">II. RELATED WORK</h2></p>
 <p>LLM-based data cleaning has attracted growing interest.
-LAMBDA [lambda2025] frames cleaning as an agent task with tool use, but does not address inter-plan disagreement or interactive disambiguation.
-PrepBench [prepbench] proposes a benchmark for data preparation quality, yet its evaluation treats the LLM as a single-shot oracle without considering the reliability of destructive edits.
-AutoDCWorkflow [autodcworkflow] automates multi-step cleaning pipelines but relies on a single model call per step, leaving silent errors undetected when the model's implicit assumptions conflict with the operator's intent.</p>
+LAMBDA~[lambda2025] frames cleaning as an agent task with tool use, but does not address inter-plan disagreement or interactive disambiguation.
+PrepBench~[prepbench] proposes a benchmark for data preparation quality, yet its evaluation treats the LLM as a single-shot oracle without considering the reliability of destructive edits.
+AutoDCWorkflow~[autodcworkflow] automates multi-step cleaning pipelines but relies on a single model call per step, leaving silent errors undetected when the model's implicit assumptions conflict with the operator's intent.</p>
 <p>Our work differs in three respects.
 First, we use an <em>ensemble</strong> of <i>K</i> plans to surface disagreement as a proxy for ambiguity, rather than relying on model-reported confidence scores.
 Second, we introduce an <em>interactive</strong> policy that selectively queries the operator, trading a small number of clarification questions for a measurable reduction in silent errors.
 Third, we evaluate under a <em>controlled noise model</strong> with pre-registered hypotheses, explicit ambiguity taxonomy, and canary-based safety verification.</p>
 <p>Table~<span class="ref-cite">tab:related</span> summarizes the comparison.</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table</strong>[!t]
 \caption{Comparison with prior LLM-based cleaning systems.</strong></p>
-<p>\small
-\begin{tabular</strong>{lccc</strong>
+<p>\centering
+\footnotesize
+\setlength{\tabcolsep</strong>{3pt</strong>
+\begin{tabular</strong>{@{</strong>lccc@{</strong></strong>
 \toprule
 System & Ensemble & Interactive & Ambiguity-aware \\
 \midrule
-LAMBDA [lambda2025] & No & No & No \\
-PrepBench [prepbench] & No & No & Partial \\
-AutoDCWorkflow [autodcworkflow] & No & No & No \\
-<strong>ConsensusGate (ours)</strong> & Yes (<i>K</i>=3) & Yes & Yes \\
+LAMBDA~[lambda2025] & No & No & No \\
+PrepBench~[prepbench] & No & No & Partial \\
+AutoDCWorkflow~[autodcworkflow] & No & No & No \\
+<strong>ConsensusGate (ours)</strong> & Yes (<i>K{=</strong>3</i>) & Yes & Yes \\
 \bottomrule
 \end{tabular</strong>
 \end{table</strong></p>
@@ -200,9 +205,9 @@ The method <code>Patch.atoms()</strong> converts the patch into a sorted, hashab
 <p>Given a task, the system generates <i>K</i> independent cleaning plans using a mock LLM provider seeded with distinct derived seeds (via SHA-256 hashing of the task seed, system identifier, and plan index).
 Each plan specifies a sequence of operations with parameters.
 The system executes all <i>K</i> plans independently, collects their Patch atom sets <i>E_1, \ldots, E_K</i>, and computes a pairwise disagreement score:
-\[
+\begin{equation</strong>
     d(E_i, E_j) = 1 - \frac{|E_i \cap E_j|</strong>{|E_i \cup E_j|</strong>
-\]
+\end{equation</strong>
 for all <i>\binom{K</strong>{2</strong></i> pairs, then takes the mean.
 This score equals zero when all plans agree perfectly and one when no two plans share any edit atom.</p>
 <h3 class="subsec-title"><em>C. ConsensusGate Policy (System~E)</em></h3>
@@ -222,7 +227,7 @@ If the consensus mechanism fails to filter these canaries, the system raises an 
 Across 300 canary-augmented evaluations, 0 unsafe plans were intercepted (interception rate: 0.0\%).
 Under the mock noise model, canary edits were not distinguishable from normal disagreements, so all 300 canaries passed through the consensus filter.
 This is a known limitation of the mock provider: a live LLM ensemble would produce qualitatively different disagreement patterns, and canary detection effectiveness must be re-evaluated with real API calls.</p>
-<p>Figure~<span class="ref-cite">fig:pipeline</span> shows the overall pipeline, and Figure~<span class="ref-cite">fig:consensus_flow</span> details the ConsensusGate decision logic.</p>
+<p>Fig.~<span class="ref-cite">fig:pipeline</span> shows the overall pipeline, and Fig.~<span class="ref-cite">fig:consensus_flow</span> details the ConsensusGate decision logic.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F1.png" class="fig-img" alt="ConsensusProbe pipeline architecture." />
             <p class="fig-caption"><strong>Fig.</strong> ConsensusProbe pipeline architecture.</p>
@@ -239,11 +244,12 @@ Each task is parameterized by a seed and contains a gold-standard label specifyi
 The 100 TEST tasks (seeds 5000--5099) are completely disjoint from the 20 DEV calibration tasks (seeds 1000--1019).</p>
 <p>\paragraph{Ambiguity Taxonomy.</strong>
 Tasks are classified into five ambiguity types (Table~<span class="ref-cite">tab:ambiguity</span>), with approximately 50\% of tasks marked as ambiguous.</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table</strong>[!t]
 \caption{Ambiguity taxonomy for Track~S benchmark tasks.</strong></p>
-<p>\small
-\begin{tabular</strong>{lp{8cm</strong></strong>
+<p>\centering
+\footnotesize
+\renewcommand{\arraystretch</strong>{1.1</strong>
+\begin{tabularx</strong>{\columnwidth</strong>{@{</strong>>{\raggedright\arraybackslash</strong>p{0.43\columnwidth</strong>>{\raggedright\arraybackslash</strong>X@{</strong></strong>
 \toprule
 Type & Description \\
 \midrule
@@ -253,29 +259,29 @@ Type & Description \\
 <code>recalculate\_basis</strong> & Which column serves as the basis for derived calculations? \\
 <code>type\_coercion</strong> & Should mixed-type columns be coerced to string or numeric? \\
 \bottomrule
-\end{tabular</strong>
+\end{tabularx</strong>
 \end{table</strong></p>
 <h3 class="subsec-title"><em>F. Systems Under Evaluation</em></h3>
 <p>Table~<span class="ref-cite">tab:systems</span> describes the eight systems.</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table*</strong>[!t]
 \caption{Systems evaluated in the ConsensusProbe benchmark.</strong></p>
-<p>\small
+<p>\centering
+\small
 \begin{tabular</strong>{clccc</strong>
 \toprule
 ID & Name & Plans & Interactive & Special \\
 \midrule
-A  & Single-plan baseline     & 1 & No  & --- \\
-A2 & Majority-vote ensemble   & 3 & No  & Token-matched to E \\
+A  & Single-plan baseline     & 1 & No          & --- \\
+A2 & Majority-vote ensemble   & 3 & No          & Token-matched to E \\
 B  & Single + heuristic guard & 1 & Conditional & Schema validators \\
-C  & Eager interrogation      & 3 & Always & Upper bound on questions \\
+C  & Eager interrogation      & 3 & Always      & Upper bound on questions \\
 D  & Confidence threshold     & 3 & Conditional & Self-reported <i>\tau_c=0.75</i> \\
 E  & <strong>ConsensusGate</strong>   & 3 & Conditional & Disagreement <i>\tau_d=0.0</i> \\
 F  & <strong>ProbeGate</strong>       & 3 & Conditional & E + canary verification \\
-R  & Random-ask baseline      & 1 & Random & Matched ask-rate to E \\
+R  & Random-ask baseline      & 1 & Random      & Matched ask-rate to E \\
 \bottomrule
 \end{tabular</strong>
-\end{table</strong></p>
+\end{table*</strong></p>
 <h3 class="subsec-title"><em>G. User Simulation Modes</em></h3>
 <p>Each system--task pair is evaluated under three user simulation modes:
 <strong>Oracle</strong> (always selects gold-aligned option), <strong>Noisy</strong> (selects gold with probability 0.8, random alternative with probability 0.2), and <strong>Unsure</strong> (returns ``unsure'' with probability 0.3, triggering majority fallback with flagged rows; oracle otherwise).
@@ -300,10 +306,10 @@ Results measure policy logic under simulated stochastic conditions, not live LLM
 <h2 class="sec-title">V. RESULTS</h2></p>
 <h3 class="subsec-title"><em>J. Main Results</em></h3>
 <p>Table~<span class="ref-cite">tab:main</span> presents the primary metrics averaged across all 100 TEST tasks, 3 user modes, and 3 trials per configuration.</p>
-<p>\begin{table</strong>[ht]
-\centering
-\caption{Main results across all systems. Best non-oracle values in bold.</strong></p>
-<p>\small
+<p>\begin{table*</strong>[!t]
+\caption{Main results across all systems. Our proposed system (E) in bold.</strong></p>
+<p>\centering
+\small
 \begin{tabular</strong>{lcccccc</strong>
 \toprule
 System & Success & Silent Err. & Questions & Precision & Tokens & Latency \\
@@ -318,11 +324,11 @@ F  & 72.7\%  & 0.0\%  & 0.38  & 92.1\%  & 75  & 1.19 \\
 R  & 65.4\%  & 1.7\%  & 0.46  & 52.5\%  & 25  & 1.23 \\
 \bottomrule
 \end{tabular</strong>
-\end{table</strong></p>
+\end{table*</strong></p>
 <p>ConsensusGate (E) achieves 72.8\% task success with 0.0\% silent errors while asking only 0.38 questions per task.
 In contrast, the single-plan baseline (A) has 5.0\% silent errors, and the eager interrogation policy (C) asks 1.00 question per task to achieve 73.3\% success.
 The confidence-threshold policy (D) achieves only 64.7\% success despite asking 0.51 questions, because self-reported confidence is a poor proxy for actual ambiguity (question precision: 43.1\% vs.\ 92.1\% for E).</p>
-<p>Figure~<span class="ref-cite">fig:success_vs_questions</span> visualizes the success--question tradeoff across systems, and Figure~<span class="ref-cite">fig:silent_error</span> shows silent-error rates.</p>
+<p>Fig.~<span class="ref-cite">fig:success_vs_questions</span> visualizes the success--question tradeoff across systems, and Fig.~<span class="ref-cite">fig:silent_error</span> shows silent-error rates.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F4.png" class="fig-img" alt="Task success rate versus mean questions asked per task, by system." />
             <p class="fig-caption"><strong>Fig.</strong> Task success rate versus mean questions asked per task, by system.</p>
@@ -334,31 +340,31 @@ The confidence-threshold policy (D) achieves only 64.7\% success despite asking 
 <h3 class="subsec-title"><em>A. Hypothesis Tests</em></h3>
 <p>Table~<span class="ref-cite">tab:hypotheses</span> summarizes the pre-registered hypothesis results.
 All <i>p</i>-values are Holm--Bonferroni adjusted.</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table*</strong>[!t]
 \caption{Pre-registered hypothesis test results.</strong></p>
-<p>\small
+<p>\centering
+\small
 \begin{tabular</strong>{clccc</strong>
 \toprule
 H\# & Claim & Effect & 95\% CI & Verdict \\
 \midrule
-H1 & E silent error <i><</i> A (noisy) & -5.0\% & [-10.0\%, -1.0\%] & <strong>Supported</strong> \\
-H2 & E success <i>\geq</i> C <i>-\Delta</i> & -1.0\% & [-3.7\%, 1.7\%] & Not Supported \\
+H1 & E silent error <i><</i> A (noisy) & <i>-</i>5.0\% & [<i>-</i>10.0\%, <i>-</i>1.0\%] & <strong>Supported</strong> \\
+H2 & E success <i>\geq</i> C <i>-\Delta</i> & <i>-</i>1.0\% & [<i>-</i>3.7\%, 1.7\%] & Not Supported \\
 H3 & E success <i>></i> D, fewer Qs & 11.3\% & [6.0\%, 17.0\%] & <strong>Supported</strong> \\
 H4 & F error <i>\leq</i> E, <i>\leq</i>0.25 extra Qs & 0.0\% & [0.0\%, 0.0\%] & <strong>Supported</strong> \\
 \bottomrule
 \end{tabular</strong>
-\end{table</strong></p>
+\end{table*</strong></p>
 <p>\paragraph{H1 (Supported).</strong>
-ConsensusGate reduces silent errors by -5.0\% percentage points relative to the single-plan baseline in noisy mode (95\% CI: [-10.0\%, -1.0\%]).
+ConsensusGate changes the silent-error rate by <i>-</i>5.0\% (absolute difference, E minus A) relative to the single-plan baseline in noisy mode (95\% CI: [<i>-</i>10.0\%, <i>-</i>1.0\%]).
 The effect is driven by the ensemble's ability to surface destructive disagreements that a single plan would apply silently.</p>
 <p>\paragraph{H2 (Not Supported).</strong>
 We hypothesized that ConsensusGate's task success would be non-inferior to the always-ask policy (C) within a margin of <i>\Delta = 2</i> percentage points, while asking fewer questions.
-The observed success difference was -1.0\% (95\% CI: [-3.7\%, 1.7\%]), and the confidence interval's lower bound falls below <i>-\Delta</i>.
-Although E does ask substantially fewer questions (-0.62 difference), we cannot reject the null hypothesis that E sacrifices more than 2 percentage points of success relative to C\@.
+The observed success difference was <i>-</i>1.0\% (95\% CI: [<i>-</i>3.7\%, 1.7\%]), and the confidence interval's lower bound falls below <i>-\Delta</i>.
+Although E does ask substantially fewer questions (<i>-</i>0.62 difference), we cannot reject the null hypothesis that E sacrifices more than 2 percentage points of success relative to C\@.
 This result is consistent with the interpretation that asking on every task (policy C) captures some genuinely beneficial clarifications that ConsensusGate's disagreement filter misses, particularly on unambiguous tasks where plans happen to agree on a suboptimal action.</p>
 <p>\paragraph{H3 (Supported).</strong>
-ConsensusGate achieves 11.3\% percentage points higher success than the confidence-threshold policy (D), 95\% CI: [6.0\%, 17.0\%], while asking -0.13 fewer questions per task.
+ConsensusGate's task success is 11.3\% higher (absolute difference) than that of the confidence-threshold policy (D), 95\% CI: [6.0\%, 17.0\%], and it asks <i>-</i>0.13 questions per task relative to D (E minus D; a negative value means fewer questions).
 The key advantage is that disagreement among plans is a more reliable indicator of ambiguity than self-reported confidence.</p>
 <p>\paragraph{H4 (Supported).</strong>
 ProbeGate (F) achieves silent-error and question rates identical to E within the measured precision (0.0\% error difference, 0.00 question difference).
@@ -367,10 +373,10 @@ However, the canary interception rate was 0.0\% (0 out of 300 injected canaries 
 H4 is therefore supported on the overhead criterion but the canary detection sub-criterion is not evaluable under mock conditions.</p>
 <h3 class="subsec-title"><em>B. Results by User Simulation Mode</em></h3>
 <p>Table~<span class="ref-cite">tab:mode_results</span> breaks down System~E's performance by user simulation mode.</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table</strong>[!t]
 \caption{System~E results by user simulation mode.</strong></p>
-<p>\small
+<p>\centering
+\small
 \begin{tabular</strong>{lccc</strong>
 \toprule
 Mode & Success & Silent Error & Questions \\
@@ -384,7 +390,7 @@ Unsure & 72.0\% & 0.0\% & 0.38 \\
 <p>Under oracle simulation, System~E achieves 75.0\% success because perfect user responses resolve all detected ambiguities correctly.
 Noisy responses degrade success to 71.3\%, but the silent-error rate remains at 0.0\% because the system flags uncertain resolutions.
 The unsure mode shows a further slight degradation to 72.0\% due to the fallback to majority-vote when users decline to answer.</p>
-<p>Figure~<span class="ref-cite">fig:success_by_mode</span> and Figure~<span class="ref-cite">fig:disagreement_dist</span> provide additional visualization.</p>
+<p>Fig.~<span class="ref-cite">fig:success_by_mode</span> and Fig.~<span class="ref-cite">fig:disagreement_dist</span> provide additional visualization.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F8.png" class="fig-img" alt="Task success by user simulation mode for all systems." />
             <p class="fig-caption"><strong>Fig.</strong> Task success by user simulation mode for all systems.</p>
@@ -397,10 +403,10 @@ The unsure mode shows a further slight degradation to 72.0\% due to the fallback
 <h2 class="sec-title">VI. ABLATIONS</h2></p>
 <h3 class="subsec-title"><em>C. Effect of Ensemble Size <i>K</i></em></h3>
 <p>We vary <i>K \in \{2, 3, 4, 5\</strong></i> with all other parameters fixed (Table~<span class="ref-cite">tab:ablation_k</span>).</p>
-<p>\begin{table</strong>[ht]
-\centering
+<p>\begin{table</strong>[!t]
 \caption{Ablation over ensemble size <i>K</i>.</strong></p>
-<p>\small
+<p>\centering
+\small
 \begin{tabular</strong>{ccccc</strong>
 \toprule
 <i>K</i> & Success & Silent Error & Questions & Tokens \\
@@ -414,20 +420,20 @@ The unsure mode shows a further slight degradation to 72.0\% due to the fallback
 \end{table</strong></p>
 <p>Increasing <i>K</i> from 2 to 3 eliminates silent errors (2.0\% <i>\to</i> 0.0\%) and improves success.
 Beyond <i>K=3</i>, success plateaus while tokens scale linearly, suggesting <i>K=3</i> is cost-optimal under this noise model.</p>
-<p>Figure~<span class="ref-cite">fig:k_ablation</span> visualizes this tradeoff.</p>
+<p>Fig.~<span class="ref-cite">fig:k_ablation</span> visualizes this tradeoff.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F10.png" class="fig-img" alt="Success rate and token cost as a function of ensemble size <i>K</i>." />
             <p class="fig-caption"><strong>Fig.</strong> Success rate and token cost as a function of ensemble size <i>K</i>.</p>
         </div>
 <h3 class="subsec-title"><em>D. Sensitivity to Noise Parameters</em></h3>
-<p>Figure~<span class="ref-cite">fig:pamb</span> shows how task success varies with the mock provider's ambiguity probability <i>p_{\text{amb</strong></strong></i>.
+<p>Fig.~<span class="ref-cite">fig:pamb</span> shows how task success varies with the mock provider's ambiguity probability <i>p_{\text{amb</strong></strong></i>.
 ConsensusGate maintains its advantage across a range of noise levels, though the magnitude of improvement over the single-plan baseline naturally increases with <i>p_{\text{amb</strong></strong></i>.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F9.png" class="fig-img" alt="Task success as a function of <i>p_{\text{amb" />
             <p class="fig-caption"><strong>Fig.</strong> Task success as a function of </i>p_{\text{amb</p>
         </div>
 <h3 class="subsec-title"><em>E. Calibration Curve</em></h3>
-<p>Figure~<span class="ref-cite">fig:calibration</span> shows the DEV calibration curve for <i>\tau_d</i>.
+<p>Fig.~<span class="ref-cite">fig:calibration</span> shows the DEV calibration curve for <i>\tau_d</i>.
 The optimal threshold <i>\tau_d = 0.0</i> indicates that, in this noise regime, asking on <em>any</strong> disagreement outperforms all higher thresholds.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F7.png" class="fig-img" alt="DEV-set calibration curve: task-success F1 as a function of <i>\tau_d</i>." />
@@ -436,10 +442,10 @@ The optimal threshold <i>\tau_d = 0.0</i> indicates that, in this noise regime, 
 <p>% ============================================================
 <h2 class="sec-title">VII. ADDITIONAL FIGURES</h2></p>
 <p>For completeness, we include the remaining pre-registered figures.
-Figure~<span class="ref-cite">fig:ambiguity_dist</span> shows the distribution of ambiguity types across the 100 TEST tasks.
-Figure~<span class="ref-cite">fig:canary</span> shows canary detection performance.
-Figure~<span class="ref-cite">fig:cost</span> shows the token and simulated-latency cost comparison across systems.
-Figure~<span class="ref-cite">fig:precision</span> shows question precision by system.</p>
+Fig.~<span class="ref-cite">fig:ambiguity_dist</span> shows the distribution of ambiguity types across the 100 TEST tasks.
+Fig.~<span class="ref-cite">fig:canary</span> shows canary detection performance.
+Fig.~<span class="ref-cite">fig:cost</span> shows the token and simulated-latency cost comparison across systems.
+Fig.~<span class="ref-cite">fig:precision</span> shows question precision by system.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F3.png" class="fig-img" alt="Distribution of ambiguity types across the 100 TEST tasks." />
             <p class="fig-caption"><strong>Fig.</strong> Distribution of ambiguity types across the 100 TEST tasks.</p>
@@ -490,7 +496,7 @@ In accordance with research integrity standards, we record three technical refin
 <h2 class="sec-title">IX. REPRODUCIBILITY</h2></p>
 <p>All code and data are contained in a single monorepo.
 The command <code>make verify\_all</strong> runs the full verification pipeline: backend tests, security scan, lock-file integrity check, LaTeX-macro consistency check, same-seed determinism verification, and paper compilation.
-Determinism is enforced via seeded random number generators (Rule R4): all randomness uses <code>random.Random(seed)</strong> or <code>numpy.random.default\_rng(seed)</strong> with seeds derived from <code>hashlib.sha256</strong>, and all sets and dicts are sorted before iterating into outputs.
+Determinism is enforced via seeded random number generators (Rule~R4): all randomness uses <code>random.Random(seed)</strong> or <code>numpy.random.default\_rng(seed)</strong> with seeds derived from <code>hashlib.sha256</strong>, and all sets and dicts are sorted before iterating into outputs.
 Running the experiment script twice with the same seed produces byte-identical <code>results/metrics.json</strong>.</p>
 <p>Configuration is frozen in <code>configs/frozen.toml</strong> and locked via SHA-256 digests in <code>prereg/lock.json</strong>.</p>
 <p>% ============================================================
@@ -503,9 +509,10 @@ The failure of H2 (non-inferiority to always-ask) highlights a genuine limitatio
 Future work should investigate hybrid policies that combine disagreement detection with periodic random probing.</p>
 <p>All results were obtained under a mock LLM provider and should not be interpreted as evidence of performance with specific commercial models.
 Validation with live API calls is a necessary next step.</p>
-<p>\bibliographystyle{plainnat</strong>
-\bibliography{refs</strong></p>
-  <h2 class="sec-title">REFERENCES</h2><ol class="bib-list"><li id="lambda2025">[lambda2025] Zhang et al., "LAMBDA: A Large Model Based Data Agent", <em>JASA</em>, 2025.</li><li id="prepbench">[prepbench] Anonymous, "PrepBench: A Benchmark for Data Preparation", <em>Preprint</em>, 2025.</li><li id="autodcworkflow">[autodcworkflow] Anonymous, "AutoDCWorkflow: LLM-Based Data Cleaning Workflow", <em>Preprint</em>, 2025.</li></ol>
+<p>% ============================================================
+% References (embedded, so no separate refs.bib is needed).
+% Numbered in order of first citation, as required by IEEE style.</p>
+  <h2 class="sec-title">REFERENCES</h2><ol class="bib-list"><li id="lambda2025">[1] M. Sun, R. Han, B. Jiang, H. Qi, D. Sun, Y. Yuan, and J. Huang, "{LAMBDA</em>: A large model based data agent," <em>J. Amer. Statist. Assoc.</em>, 2025, doi: 10.1080/01621459.2025.2510000.</li><li id="autodcworkflow">[2] Anonymous, "{AutoDCWorkflow</em>: {LLM</em>-based data cleaning workflow," preprint, 2025.</li><li id="prepbench">[3] Anonymous, "{PrepBench</em>: A benchmark for data preparation," preprint, 2025.</li></ol>
 </div>
 </body>
 </html>
