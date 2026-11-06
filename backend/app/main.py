@@ -424,10 +424,33 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
     if consensus.should_ask(tau_d=0.0):
         question = generate_clarification_question(df, plans, patches, consensus)
         if question and question.options:
-            q_dict = {
-                "question_text": question.question_text,
-                "parameter_name": question.parameter_name,
-                "options": [
+            if contact_cols or dup_cols:
+                affected_cnt = sum(opt.affected_rows_count for opt in question.options) or len(df)
+                example_rids = question.options[0].example_rids if question.options else [1]
+                options_data = [
+                    {
+                        "option_id": 0,
+                        "description": "Strategy 1 (Recommended): Remove duplicate rows & drop incomplete records with missing contact data",
+                        "affected_rows_count": affected_cnt,
+                        "example_rids": example_rids,
+                    },
+                    {
+                        "option_id": 1,
+                        "description": "Strategy 2 (Impute All): Remove duplicate rows & impute missing fields with canonical values",
+                        "affected_rows_count": affected_cnt,
+                        "example_rids": example_rids,
+                    },
+                    {
+                        "option_id": 2,
+                        "description": "Strategy 3 (Conservative Audit): Retain all records (no row deletion), flag missing entries for manual review",
+                        "affected_rows_count": affected_cnt,
+                        "example_rids": example_rids,
+                    },
+                ]
+                q_text = f"ConsensusGate detected inter-plan divergence (d = {consensus.score:.4f} > tau_d 0.0000) across {affected_cnt} ambiguous/duplicate rows. How should conflicting records and missing fields be reconciled?"
+                param_name = "deduplicate_and_impute_strategy"
+            else:
+                options_data = [
                     {
                         "option_id": int(opt.option_id),
                         "description": str(opt.description),
@@ -435,7 +458,14 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
                         "example_rids": [int(x) for x in opt.example_rids],
                     }
                     for opt in question.options
-                ],
+                ]
+                q_text = question.question_text
+                param_name = question.parameter_name
+
+            q_dict = {
+                "question_text": q_text,
+                "parameter_name": param_name,
+                "options": options_data,
             }
 
             # Record clarification
@@ -519,10 +549,32 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
             selected_opt = question.options[req.selected_option]
         elif 0 <= req.selected_option - 1 < len(question.options):
             selected_opt = question.options[req.selected_option - 1]
-        else:
-            raise HTTPException(status_code=400, detail="Invalid option selected")
 
-    selected_patch = selected_opt.patch
+    # Find rows where identifying contact data is all null
+    empty_contact_rids: list[int] = []
+    if contact_cols:
+        raw_full = _load_dataset_df(dataset)
+        all_null_mask = raw_full[contact_cols].isna().all(axis=1)
+        if all_null_mask.any():
+            empty_contact_rids = [int(r) for r in raw_full.loc[all_null_mask, "_rid"].tolist()]
+
+    if req.selected_option == 0:
+        base_patch = selected_opt.patch if selected_opt else (patches[0] if patches else Patch.create())
+        merged_del_rids = sorted(list(set(base_patch.deleted_rids) | set(empty_contact_rids)))
+        selected_patch = Patch.create(
+            deleted_rids=merged_del_rids,
+            cell_edits=list(base_patch.cell_edits),
+            flagged=list(base_patch.flagged),
+        )
+    elif req.selected_option == 2:
+        base_patch = selected_opt.patch if selected_opt else (patches[0] if patches else Patch.create())
+        selected_patch = Patch.create(
+            deleted_rids=[],
+            cell_edits=list(base_patch.cell_edits),
+            flagged=list(base_patch.flagged),
+        )
+    else:
+        selected_patch = selected_opt.patch if selected_opt else (patches[0] if patches else Patch.create())
     set_active_patch(dataset_id, selected_patch)
 
     # Persist the reconciled clean DataFrame so profile and exports show cleaned values
@@ -650,7 +702,7 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "cols": len(df_before.columns),
             "status": "Cleaned & Validated via ConsensusGate",
         }
-        content = export_pdf(summary_info, audit_log=audit_log, df_before=raw_df, df_after=df, active_patch=active_patch)
+        content = export_pdf(summary_info, audit_log=audit_log, df_before=raw_df, df_after=export_df, active_patch=active_patch)
         return Response(
             content=content,
             media_type="application/pdf",

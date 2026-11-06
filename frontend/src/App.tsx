@@ -39,7 +39,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-const isStandaloneClient = typeof window !== 'undefined' && window.location.protocol === 'https:' && !import.meta.env.VITE_API_URL;
+const isStandaloneClient = !import.meta.env.VITE_API_URL;
 const API_BASE = isStandaloneClient ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
 
 interface DatasetInfo {
