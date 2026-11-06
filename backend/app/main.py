@@ -469,7 +469,9 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    df = _load_dataset_df(dataset)
+    raw_df = _load_dataset_df(dataset)
+    df_before = _drop_rid(raw_df)
+    df = raw_df.copy()
     active_patch = get_active_patch(dataset_id, db)
     if active_patch:
         df = active_patch.apply(df)
@@ -506,7 +508,7 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "cols": len(export_df.columns),
             "status": "Cleaned & Validated via ConsensusGate",
         }
-        content = export_pdf(summary_info, audit_log=audit_log)
+        content = export_pdf(summary_info, audit_log=audit_log, df_before=df_before, df_after=export_df)
         return Response(
             content=content,
             media_type="application/pdf",

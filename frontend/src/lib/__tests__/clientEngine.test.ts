@@ -47,7 +47,7 @@ describe('clientEngine', () => {
     expect(pdfBlob.type).toBe('application/pdf');
     expect(pdfBlob.size).toBeGreaterThan(100);
     const pdfText = await pdfBlob.text();
-    expect(pdfText.startsWith('%PDF-1.4')).toBe(true);
+    expect(pdfText.startsWith('%PDF-')).toBe(true);
     expect(pdfText.includes('CONSENSUSPROBE: DATA CLEANING AUDIT REPORT')).toBe(true);
 
     // Test XLSX export

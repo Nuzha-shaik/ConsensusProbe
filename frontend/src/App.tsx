@@ -880,6 +880,15 @@ function MainStudio() {
                     <FileText className="w-3.5 h-3.5" />
                     <span>Audit PDF</span>
                   </button>
+                  <a
+                    href="/ConsensusProbe_Research_Paper.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-xs flex items-center space-x-1 cursor-pointer transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Research Paper</span>
+                  </a>
                 </div>
               )}
             </div>
