@@ -39,7 +39,8 @@ import {
   Loader2
 } from 'lucide-react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const isStandaloneClient = typeof window !== 'undefined' && window.location.protocol === 'https:' && !import.meta.env.VITE_API_URL;
+const API_BASE = isStandaloneClient ? '' : (import.meta.env.VITE_API_URL || 'http://localhost:8000');
 
 interface DatasetInfo {
   id: string;
@@ -166,6 +167,29 @@ function MainStudio() {
       }
     }
 
+    if (isStandaloneClient) {
+      try {
+        const clientDs = await clientIngestFile(uploadFile);
+        const data: DatasetInfo = {
+          id: clientDs.id,
+          filename: clientDs.filename,
+          sha256: clientDs.sha256,
+          rows: clientDs.rows,
+          cols: clientDs.cols,
+        };
+        setCurrentDataset(data);
+        const clientProf = clientGetProfile(clientDs.id);
+        setProfile(clientProf as any);
+        setActiveTab('profile');
+        return data;
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Failed to parse dataset.');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', uploadFile);
 
@@ -252,7 +276,7 @@ function MainStudio() {
     setLoading(true);
     setError(null);
 
-    if (ds.id.startsWith('ds_')) {
+    if (ds.id.startsWith('ds_') || isStandaloneClient) {
       try {
         const clientRes = clientRunConsensus(ds.id);
         setConsensusScore(clientRes.consensus_score);
@@ -403,7 +427,7 @@ function MainStudio() {
     setError(null);
     const chosenOption = optionOverride !== undefined ? optionOverride : selectedOption;
 
-    if (currentDataset.id.startsWith('ds_')) {
+    if (currentDataset.id.startsWith('ds_') || isStandaloneClient) {
       try {
         const clientRes = clientClarify(currentDataset.id, chosenOption);
         setCleanStatus(clientRes.status);
@@ -501,7 +525,7 @@ function MainStudio() {
     if (!currentDataset) return;
     const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
 
-    if (currentDataset.id.startsWith('ds_')) {
+    if (currentDataset.id.startsWith('ds_') || isStandaloneClient) {
       try {
         let blob: Blob;
         let filename: string;
@@ -602,6 +626,10 @@ function MainStudio() {
               <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>PROVABLE</span>
+              </span>
+              <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20" title={isStandaloneClient ? "Running in standalone browser mode" : "Connected to local backend"}>
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse"></span>
+                <span>{isStandaloneClient ? 'CLIENT ENGINE' : 'HYBRID ENGINE'}</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">Multi-Plan Disagreement Profiling & Governance</p>
