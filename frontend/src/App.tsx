@@ -12,6 +12,7 @@ import { CanaryAuditPanel } from './components/showcase/CanaryAuditPanel';
 import { ClarificationModal, RecordedDecision } from './components/showcase/ClarificationModal';
 import { adaptApiResponseToRunViewModel } from './adapters/runViewModel';
 import { normalizeCrosstab } from './lib/layoutNormalizer';
+import { clientIngestFile, clientGetProfile, clientRunConsensus, clientClarify, clientExportCsv } from './lib/clientEngine';
 import {
   Upload,
   Database,
@@ -137,13 +138,12 @@ function MainStudio() {
     return <LoginPage />;
   }
 
-  // Unified Ingest File Handler
+  // Unified Ingest File Handler (Hybrid: Backend API + In-Browser Fallback)
   const handleIngestFile = async (file: File) => {
     setLoading(true);
     setError(null);
 
     let uploadFile = file;
-    // Rung 2: Check if cross-tab format and normalize into tidy table
     if (file.name.endsWith('.csv') || file.type === 'text/csv') {
       try {
         const text = await file.text();
@@ -164,10 +164,14 @@ function MainStudio() {
     formData.append('file', uploadFile);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(`${API_BASE}/upload`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.detail || 'Upload failed');
@@ -182,7 +186,23 @@ function MainStudio() {
       }
       setActiveTab('profile');
     } catch (err: any) {
-      setError(err.message);
+      console.warn('[ConsensusProbe] Backend unavailable, running client-side engine:', err);
+      try {
+        const clientDs = await clientIngestFile(uploadFile);
+        const data: DatasetInfo = {
+          id: clientDs.id,
+          filename: clientDs.filename,
+          sha256: clientDs.sha256,
+          rows: clientDs.rows,
+          cols: clientDs.cols,
+        };
+        setCurrentDataset(data);
+        const clientProf = clientGetProfile(clientDs.id);
+        setProfile(clientProf as any);
+        setActiveTab('profile');
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Failed to parse dataset.');
+      }
     } finally {
       setLoading(false);
     }
@@ -225,16 +245,20 @@ function MainStudio() {
     await handleIngestFile(file);
   };
 
-  // Run ConsensusGate
+  // Run ConsensusGate (Hybrid: Backend + In-Browser Engine)
   const handleRunConsensus = async () => {
     if (!currentDataset) return;
     setLoading(true);
     setError(null);
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
       const res = await fetch(`${API_BASE}/clean/${currentDataset.id}`, {
         method: 'POST',
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error('Consensus cleaning failed');
       const data = await res.json();
       setConsensusScore(data.consensus_score);
@@ -247,13 +271,11 @@ function MainStudio() {
         setPatchSummary(data.patch_summary);
       }
 
-      // Refresh profile
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
 
       setActiveTab('workspace');
 
-      // Sync run metadata to Firebase Firestore
       recordCleaningRun({
         datasetId: currentDataset.id,
         filename: currentDataset.filename,
@@ -264,20 +286,44 @@ function MainStudio() {
         patchSummary: data.patch_summary,
       });
     } catch (err: any) {
-      setError(err.message);
+      console.warn('[ConsensusProbe] Backend unavailable, running client consensus engine:', err);
+      try {
+        const clientRes = clientRunConsensus(currentDataset.id);
+        setConsensusScore(clientRes.consensus_score);
+        setCleanStatus(clientRes.status);
+        if (clientRes.status === 'needs_clarification') {
+          setClarification(clientRes.question as any);
+        } else {
+          setClarification(null);
+          setPatchSummary(clientRes.patch_summary as any);
+        }
+        setActiveTab('workspace');
+        recordCleaningRun({
+          datasetId: currentDataset.id,
+          filename: currentDataset.filename,
+          rows: currentDataset.rows,
+          cols: currentDataset.cols,
+          consensusScore: clientRes.consensus_score,
+          status: clientRes.status,
+          patchSummary: clientRes.patch_summary,
+        });
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Consensus execution failed.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Submit clarification answer
-  // Submit clarification answer (H8: wire applyToSimilar)
+  // Submit clarification answer (Hybrid: Backend + In-Browser Engine)
   const handleResolveClarification = async (optionOverride?: number, applyToSimilar?: boolean) => {
     if (!currentDataset) return;
     setLoading(true);
     setError(null);
     const chosenOption = optionOverride !== undefined ? optionOverride : selectedOption;
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
       const res = await fetch(`${API_BASE}/clarify/${currentDataset.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -285,14 +331,15 @@ function MainStudio() {
           selected_option: chosenOption,
           notes: applyToSimilar ? 'User selected resolution (apply to similar)' : 'User selected resolution',
         }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       if (!res.ok) throw new Error('Failed to resolve clarification');
       const data = await res.json();
       setCleanStatus(data.status);
       setPatchSummary(data.patch_summary);
       setClarification(null);
 
-      // Refresh profile
       const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
       if (profRes.ok) setProfile(await profRes.json());
 
@@ -306,13 +353,30 @@ function MainStudio() {
         patchSummary: data.patch_summary,
       });
     } catch (err: any) {
-      setError(err.message);
+      console.warn('[ConsensusProbe] Backend unavailable, applying clarification via client engine:', err);
+      try {
+        const clientRes = clientClarify(currentDataset.id, chosenOption);
+        setCleanStatus(clientRes.status);
+        setPatchSummary(clientRes.patch_summary as any);
+        setClarification(null);
+        recordCleaningRun({
+          datasetId: currentDataset.id,
+          filename: currentDataset.filename,
+          rows: currentDataset.rows,
+          cols: currentDataset.cols,
+          consensusScore: consensusScore,
+          status: clientRes.status,
+          patchSummary: clientRes.patch_summary,
+        });
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Failed to apply clarification.');
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Authenticated export helper (M5)
+  // Authenticated export helper (Hybrid: Backend + Client Export)
   const handleExport = async (format: 'csv' | 'xlsx' | 'pdf') => {
     if (!currentDataset) return;
     try {
@@ -336,7 +400,21 @@ function MainStudio() {
       a.remove();
       window.URL.revokeObjectURL(url);
     } catch (err: any) {
-      setError(err.message);
+      console.warn('[ConsensusProbe] Backend export unavailable, exporting via client engine:', err);
+      try {
+        const blob = clientExportCsv(currentDataset.id);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const baseName = currentDataset.filename.replace(/\.[^/.]+$/, '');
+        a.download = `${baseName}_cleaned.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (clientErr: any) {
+        setError(clientErr.message || 'Export failed.');
+      }
     }
   };
 
