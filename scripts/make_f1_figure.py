@@ -1,0 +1,422 @@
+"""Generate high-resolution, publication-grade Figure F1 (ConsensusProbe Architecture).
+Features:
+- Professional workflow/flowchart design
+- K=3 Multi-agent swarm styling with neat dotted-line connections
+- Adaptive Disagreement Gate (d > tau_d) branching to Human Clarification Dialog
+- Canary Sentinel integrity verification
+- Provable Before vs After audit trail export
+- High-DPI rasterization (PNG) and vector rendering (PDF)
+"""
+import os
+import subprocess
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+FIG_DIR = ROOT / "paper" / "figures"
+FIG_DIR.mkdir(parents=True, exist_ok=True)
+
+SVG_CONTENT = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 780" width="1560" height="780" style="background:#ffffff; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+  <defs>
+    <!-- Shadows & Gradients -->
+    <filter id="card-shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <filter id="glow-amber" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#f59e0b" flood-opacity="0.25"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arr-slate" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+    </marker>
+    <marker id="arr-purple" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#7c3aed"/>
+    </marker>
+    <marker id="arr-teal" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0d9488"/>
+    </marker>
+    <marker id="arr-amber" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d97706"/>
+    </marker>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas Outer Frame -->
+  <rect x="10" y="10" width="1540" height="760" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+
+  <!-- Top Title & Architecture Banner -->
+  <rect x="10" y="10" width="1540" height="62" rx="14" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="10" y="56" width="1540" height="16" fill="#f8fafc"/>
+  <text x="36" y="46" font-size="20" font-weight="700" fill="#0f172a" letter-spacing="-0.3">ConsensusProbe System Architecture: Disagreement-Driven Interactive Multi-Agent Pipeline</text>
+  <rect x="1255" y="24" width="270" height="32" rx="16" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+  <circle cx="1272" cy="40" r="5" fill="#2563eb"/>
+  <text x="1286" y="45" font-size="12" font-weight="600" fill="#1e40af">Rule R1–R7 Provable Pipeline</text>
+
+  <!-- ======================================================================= -->
+  <!-- STAGE 1: INGESTION & CANARY SENTINEL (x: 35 to 265) -->
+  <!-- ======================================================================= -->
+  <g transform="translate(35, 95)">
+    <!-- Stage Container -->
+    <rect x="0" y="0" width="230" height="645" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <rect x="0" y="0" width="230" height="42" rx="12" fill="#e2e8f0"/>
+    <rect x="0" y="30" width="230" height="12" fill="#e2e8f0"/>
+    <text x="18" y="27" font-size="13" font-weight="700" fill="#334155">STAGE 1: INGESTION</text>
+
+    <!-- Card 1A: Raw Tabular Ingestion -->
+    <g transform="translate(15, 60)">
+      <rect x="0" y="0" width="200" height="150" rx="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="12" y="12" width="76" height="20" rx="4" fill="#f1f5f9"/>
+      <text x="18" y="26" font-size="10" font-weight="700" fill="#475569">INPUT DATA</text>
+      <text x="12" y="52" font-size="14" font-weight="700" fill="#0f172a">Raw Tabular Stream</text>
+      <text x="12" y="72" font-size="11" font-weight="500" fill="#64748b">• CSV / Excel Formats</text>
+      <text x="12" y="90" font-size="11" font-weight="500" fill="#64748b">• Encoding &amp; Delimiter Sniff</text>
+      <text x="12" y="108" font-size="11" font-weight="500" fill="#64748b">• Structural Matrix Parser</text>
+      <rect x="12" y="122" width="176" height="18" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="18" y="135" font-size="9.5" font-weight="600" fill="#475569">Target: T_0 (Ambiguous Cells)</text>
+    </g>
+
+    <!-- Downward Dotted Flow -->
+    <path d="M 115 220 L 115 258" stroke="#64748b" stroke-width="1.5" stroke-dasharray="3,3" marker-end="url(#arr-slate)"/>
+
+    <!-- Card 1B: Sentinel Canary Injector -->
+    <g transform="translate(15, 265)">
+      <rect x="0" y="0" width="200" height="165" rx="9" fill="#ffffff" stroke="#0284c7" stroke-width="1.3"/>
+      <rect x="12" y="12" width="96" height="20" rx="4" fill="#e0f2fe"/>
+      <text x="18" y="26" font-size="10" font-weight="700" fill="#0369a1">RULE R1 AUDIT</text>
+      <text x="12" y="52" font-size="14" font-weight="700" fill="#0369a1">Canary Sentinel</text>
+      <text x="12" y="72" font-size="11" font-weight="500" fill="#475569">• Injects Known-Truth Rows</text>
+      <text x="12" y="90" font-size="11" font-weight="500" fill="#475569">• Provable Anchor Points</text>
+      <text x="12" y="108" font-size="11" font-weight="500" fill="#475569">• Catches Silent Hallucination</text>
+      <rect x="12" y="122" width="176" height="30" rx="4" fill="#f0f9ff" stroke="#bae6fd"/>
+      <text x="18" y="136" font-size="9.5" font-weight="600" fill="#0369a1">Canary Matrix C ~ D_canary</text>
+      <text x="18" y="147" font-size="9" fill="#0284c7">Silent-Error Detection Guard</text>
+    </g>
+
+    <!-- Card 1C: Seed Calibration -->
+    <g transform="translate(15, 455)">
+      <rect x="0" y="0" width="200" height="155" rx="9" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <text x="12" y="28" font-size="13" font-weight="700" fill="#334155">Deterministic Config</text>
+      <text x="12" y="50" font-size="11" font-weight="500" fill="#64748b">• Fixed Seed: 20261105</text>
+      <text x="12" y="68" font-size="11" font-weight="500" fill="#64748b">• Budget USD: $0.00 (Mock)</text>
+      <text x="12" y="86" font-size="11" font-weight="500" fill="#64748b">• Temperature: Multi-T</text>
+      <rect x="12" y="102" width="176" height="38" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="18" y="117" font-size="9.5" font-weight="600" fill="#334155">Dev Calibration: 20 seeds</text>
+      <text x="18" y="131" font-size="9.5" font-weight="600" fill="#334155">Test Evaluation: 100 seeds</text>
+    </g>
+  </g>
+
+  <!-- Connectors Stage 1 -> Stage 2 -->
+  <path d="M 265 240 L 320 240 L 320 185 L 345 185" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M 265 375 L 345 375" stroke="#7c3aed" stroke-width="1.6" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-purple)"/>
+  <path d="M 265 520 L 320 520 L 320 565 L 345 565" stroke="#0d9488" stroke-width="1.6" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-teal)"/>
+
+  <!-- ======================================================================= -->
+  <!-- STAGE 2: MULTI-AGENT PROPOSER ENSEMBLE K=3 (x: 350 to 650) -->
+  <!-- ======================================================================= -->
+  <g transform="translate(350, 95)">
+    <!-- Outer Grouping Container with Dotted Outline -->
+    <rect x="0" y="0" width="300" height="645" rx="14" fill="#f8fafc" stroke="#6366f1" stroke-width="1.8" stroke-dasharray="6,4" filter="url(#card-shadow)"/>
+    
+    <!-- Stage Header Badge -->
+    <rect x="15" y="14" width="270" height="38" rx="8" fill="#e0e7ff" stroke="#c7d2fe"/>
+    <text x="26" y="38" font-size="13" font-weight="700" fill="#3730a3">STAGE 2: K=3 PROPOSER SWARM</text>
+
+    <!-- Agent 1 Card (Blue) -->
+    <g transform="translate(18, 65)">
+      <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="1.5"/>
+      <rect x="14" y="12" width="115" height="22" rx="4" fill="#eff6ff" stroke="#bfdbfe"/>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#1d4ed8">AGENT 1 • PROPOSER</text>
+      <text x="14" y="56" font-size="14.5" font-weight="700" fill="#1e3a8a">Structural Cleaner</text>
+      <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Format normalization &amp; trimming</text>
+      <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Delimiter &amp; casing alignment</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Strict Conservative</text>
+      <rect x="14" y="128" width="236" height="24" rx="4" fill="#eff6ff"/>
+      <text x="20" y="144" font-size="10.5" font-weight="700" fill="#1d4ed8">Output: Candidate Plan P_1</text>
+    </g>
+
+    <!-- Agent 2 Card (Purple) -->
+    <g transform="translate(18, 250)">
+      <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#8b5cf6" stroke-width="1.5"/>
+      <rect x="14" y="12" width="115" height="22" rx="4" fill="#faf5ff" stroke="#e9d5ff"/>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#6d28d9">AGENT 2 • PROPOSER</text>
+      <text x="14" y="56" font-size="14.5" font-weight="700" fill="#581c87">Entity Deduplicator</text>
+      <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Fuzzy key matching &amp; clustering</text>
+      <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Primary key deduplication</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Entity Resolution</text>
+      <rect x="14" y="128" width="236" height="24" rx="4" fill="#faf5ff"/>
+      <text x="20" y="144" font-size="10.5" font-weight="700" fill="#6d28d9">Output: Candidate Plan P_2</text>
+    </g>
+
+    <!-- Agent 3 Card (Teal) -->
+    <g transform="translate(18, 435)">
+      <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#14b8a6" stroke-width="1.5"/>
+      <rect x="14" y="12" width="115" height="22" rx="4" fill="#f0fdfa" stroke="#99f6e4"/>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#0f766e">AGENT 3 • PROPOSER</text>
+      <text x="14" y="56" font-size="14.5" font-weight="700" fill="#134e4a">Domain Imputer</text>
+      <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Missing value context inference</text>
+      <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Type coercion &amp; semantic flags</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Generative Patch</text>
+      <rect x="14" y="128" width="236" height="24" rx="4" fill="#f0fdfa"/>
+      <text x="20" y="144" font-size="10.5" font-weight="700" fill="#0f766e">Output: Candidate Plan P_3</text>
+    </g>
+
+    <text x="20" y="628" font-size="10.5" font-style="italic" fill="#6366f1">• Independent LLM Invocations across Distinct Prompts</text>
+  </g>
+
+  <!-- Connectors Stage 2 -> Stage 3 -->
+  <!-- Plan 1 Path -->
+  <path d="M 650 240 L 690 240 L 690 270 L 725 270" stroke="#2563eb" stroke-width="1.8" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-blue)"/>
+  <text x="668" y="232" font-size="10" font-weight="700" fill="#2563eb">P_1</text>
+  
+  <!-- Plan 2 Path -->
+  <path d="M 650 425 L 725 425" stroke="#7c3aed" stroke-width="1.8" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-purple)"/>
+  <text x="668" y="417" font-size="10" font-weight="700" fill="#7c3aed">P_2</text>
+  
+  <!-- Plan 3 Path -->
+  <path d="M 650 610 L 690 610 L 690 530 L 725 530" stroke="#0d9488" stroke-width="1.8" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-teal)"/>
+  <text x="668" y="602" font-size="10" font-weight="700" fill="#0d9488">P_3</text>
+
+  <!-- ======================================================================= -->
+  <!-- STAGE 3: SUPERVISOR AUDITOR & DISAGREEMENT ENGINE (x: 730 to 1030) -->
+  <!-- ======================================================================= -->
+  <g transform="translate(730, 95)">
+    <!-- Container -->
+    <rect x="0" y="0" width="300" height="645" rx="14" fill="#fffdfa" stroke="#f59e0b" stroke-width="1.5" filter="url(#card-shadow)"/>
+    <rect x="0" y="0" width="300" height="42" rx="14" fill="#fef3c7"/>
+    <rect x="0" y="30" width="300" height="12" fill="#fef3c7"/>
+    <text x="20" y="27" font-size="13" font-weight="700" fill="#92400e">STAGE 3: SUPERVISOR AUDITOR</text>
+
+    <!-- Card 3A: Pairwise Disagreement Profiler -->
+    <g transform="translate(18, 55)">
+      <rect x="0" y="0" width="264" height="185" rx="10" fill="#ffffff" stroke="#f59e0b" stroke-width="1.3"/>
+      <rect x="14" y="12" width="138" height="22" rx="4" fill="#fef3c7"/>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#b45309">DISAGREEMENT METRIC</text>
+      <text x="14" y="56" font-size="14.5" font-weight="700" fill="#78350f">Pairwise Jaccard Profiler</text>
+      <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Compares Atomic Edit Sets E_i, E_j</text>
+      <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Distance: d_ij = 1 - (|E_i ∩ E_j| / |E_i ∪ E_j|)</text>
+      
+      <!-- Formula Box -->
+      <rect x="14" y="108" width="236" height="38" rx="6" fill="#fefce8" stroke="#fef08a"/>
+      <text x="24" y="131" font-size="12" font-weight="700" fill="#a16207">d = (2 / K(K-1)) ∑ d(P_i, P_j)</text>
+      
+      <text x="14" y="165" font-size="10.5" font-weight="600" fill="#d97706">• Measures semantic plan divergence</text>
+    </g>
+
+    <!-- Card 3B: Sentinel Canary Check -->
+    <g transform="translate(18, 255)">
+      <rect x="0" y="0" width="264" height="125" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="14" y="12" width="128" height="20" rx="4" fill="#f1f5f9"/>
+      <text x="20" y="26" font-size="10" font-weight="700" fill="#475569">CANARY INTEGRITY</text>
+      <text x="14" y="52" font-size="13.5" font-weight="700" fill="#0f172a">Sentinel Verification</text>
+      <text x="14" y="72" font-size="11" font-weight="500" fill="#475569">• Verifies sentinel ground-truth cells</text>
+      <text x="14" y="90" font-size="11" font-weight="500" fill="#475569">• Catches hallucinated / corrupt edits</text>
+      <rect x="14" y="100" width="236" height="18" rx="4" fill="#f0fdf4"/>
+      <text x="20" y="113" font-size="9.5" font-weight="700" fill="#166534">Honesty Rule R7: Evaluated per seed</text>
+    </g>
+
+    <!-- Card 3C: Decision Gate Comparator -->
+    <g transform="translate(18, 395)">
+      <rect x="0" y="0" width="264" height="230" rx="10" fill="#ffffff" stroke="#ea580c" stroke-width="1.8" filter="url(#glow-amber)"/>
+      <rect x="14" y="12" width="135" height="22" rx="4" fill="#ffedd5"/>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#c2410c">GOVERNANCE GATE</text>
+      <text x="14" y="56" font-size="14.5" font-weight="700" fill="#9a3412">Adaptive Threshold Gate</text>
+      <text x="14" y="78" font-size="11.5" font-weight="600" fill="#475569">Calibrated Threshold: τ_d = 0.38</text>
+      
+      <!-- Comparator Diamond Representation -->
+      <rect x="42" y="92" width="180" height="52" rx="8" fill="#fff7ed" stroke="#fb923c" stroke-width="1.5"/>
+      <text x="56" y="114" font-size="13" font-weight="800" fill="#c2410c">Is  d &gt; τ_d ?</text>
+      <text x="56" y="132" font-size="10.5" font-weight="600" fill="#ea580c">(or Canary Alert)</text>
+
+      <!-- Sub-conditions -->
+      <text x="14" y="165" font-size="10.5" font-weight="600" fill="#047857">✓ NO (d ≤ τ_d): Low Divergence</text>
+      <text x="14" y="180" font-size="10" fill="#64748b">  → Auto-apply majority patch</text>
+      
+      <text x="14" y="202" font-size="10.5" font-weight="600" fill="#b45309">⚠ YES (d &gt; τ_d): High Disagreement</text>
+      <text x="14" y="217" font-size="10" fill="#64748b">  → Surface 1-click human clarification</text>
+    </g>
+  </g>
+
+  <!-- Connectors Stage 3 -> Stage 4 -->
+  <!-- HIGH DISAGREEMENT (YES): Dotted Amber Line to Human Clarification -->
+  <path d="M 1030 490 L 1060 490 L 1060 215 L 1085 215" stroke="#d97706" stroke-width="2.2" stroke-dasharray="5,4" fill="none" marker-end="url(#arr-amber)"/>
+  <rect x="1015" y="325" width="85" height="22" rx="4" fill="#fef3c7" stroke="#f59e0b"/>
+  <text x="1021" y="340" font-size="10" font-weight="800" fill="#b45309">YES (d &gt; τ_d)</text>
+
+  <!-- LOW DISAGREEMENT (NO): Solid Green Line to Majority Fusion -->
+  <path d="M 1030 550 L 1085 550" stroke="#059669" stroke-width="2.2" fill="none" marker-end="url(#arr-green)"/>
+  <rect x="1015" y="555" width="85" height="22" rx="4" fill="#ecfdf5" stroke="#10b981"/>
+  <text x="1021" y="570" font-size="10" font-weight="800" fill="#047857">NO (d ≤ τ_d)</text>
+
+  <!-- ======================================================================= -->
+  <!-- STAGE 4: INTERACTIVE RESOLUTION & CONSENSUS (x: 1090 to 1320) -->
+  <!-- ======================================================================= -->
+  <g transform="translate(1090, 95)">
+    <!-- Stage Container -->
+    <rect x="0" y="0" width="230" height="645" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <rect x="0" y="0" width="230" height="42" rx="12" fill="#e2e8f0"/>
+    <rect x="0" y="30" width="230" height="12" fill="#e2e8f0"/>
+    <text x="18" y="27" font-size="13" font-weight="700" fill="#334155">STAGE 4: RESOLUTION</text>
+
+    <!-- Card 4A: Interactive Clarification Dialog (Amber / Human Gate) -->
+    <g transform="translate(14, 55)">
+      <rect x="0" y="0" width="202" height="235" rx="10" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8"/>
+      <rect x="12" y="12" width="128" height="22" rx="4" fill="#fef3c7"/>
+      <text x="18" y="27" font-size="10" font-weight="700" fill="#b45309">HUMAN-IN-THE-LOOP</text>
+      <text x="12" y="56" font-size="14" font-weight="700" fill="#92400e">Interactive Gate</text>
+      <text x="12" y="78" font-size="11" font-weight="600" fill="#78350f">• Disputes Target Conflicted Cells</text>
+      <text x="12" y="96" font-size="11" font-weight="500" fill="#475569">• 1-Click Clarification Options</text>
+      <text x="12" y="114" font-size="11" font-weight="500" fill="#475569">• Minimal Question Overhead</text>
+      <text x="12" y="132" font-size="11" font-weight="500" fill="#475569">• Zero Question Fatigue</text>
+      
+      <!-- UI Mock Preview Card -->
+      <rect x="12" y="146" width="178" height="52" rx="6" fill="#ffffff" stroke="#fcd34d"/>
+      <text x="20" y="165" font-size="10" font-weight="700" fill="#92400e">Agent 3 Conflict on Col #4</text>
+      <rect x="20" y="173" width="70" height="18" rx="3" fill="#2563eb"/>
+      <text x="28" y="186" font-size="9" font-weight="700" fill="#ffffff">Plan A ($)</text>
+      <rect x="98" y="173" width="70" height="18" rx="3" fill="#e2e8f0"/>
+      <text x="106" y="186" font-size="9" font-weight="700" fill="#334155">Plan B (€)</text>
+
+      <text x="12" y="222" font-size="10" font-style="italic" fill="#b45309">Human decision selects path</text>
+    </g>
+
+    <!-- Dotted Feedback Line from Human Choice down to Consensus Fusion -->
+    <path d="M 115 290 L 115 390" stroke="#d97706" stroke-width="1.8" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-amber)"/>
+    <text x="122" y="345" font-size="10" font-weight="700" fill="#d97706">Resolved</text>
+
+    <!-- Card 4B: Consensus Patch Synthesizer (Emerald) -->
+    <g transform="translate(14, 400)">
+      <rect x="0" y="0" width="202" height="225" rx="10" fill="#ffffff" stroke="#10b981" stroke-width="1.6"/>
+      <rect x="12" y="12" width="128" height="22" rx="4" fill="#ecfdf5"/>
+      <text x="18" y="27" font-size="10" font-weight="700" fill="#047857">MAJORITY SYNTHESIS</text>
+      <text x="12" y="56" font-size="14" font-weight="700" fill="#065f46">Consensus Engine</text>
+      <text x="12" y="78" font-size="11" font-weight="500" fill="#475569">• Merges uncontentious cells</text>
+      <text x="12" y="96" font-size="11" font-weight="500" fill="#475569">• Incorporates human choices</text>
+      <text x="12" y="114" font-size="11" font-weight="500" fill="#475569">• Rollback protection</text>
+      <text x="12" y="132" font-size="11" font-weight="500" fill="#475569">• Atomic cell-level execution</text>
+      
+      <rect x="12" y="152" width="178" height="42" rx="6" fill="#f0fdf4" stroke="#a7f3d0"/>
+      <text x="20" y="171" font-size="10" font-weight="700" fill="#065f46">Consensus Matrix T*</text>
+      <text x="20" y="185" font-size="9.5" fill="#047857">100% Deterministic Patches</text>
+
+      <text x="12" y="214" font-size="10" font-weight="600" fill="#059669">Zero silent data corruption</text>
+    </g>
+  </g>
+
+  <!-- Connectors Stage 4 -> Stage 5 -->
+  <path d="M 1320 500 L 1355 500 L 1355 240 L 1380 240" stroke="#2563eb" stroke-width="2" fill="none" marker-end="url(#arr-blue)"/>
+  <path d="M 1320 540 L 1380 540" stroke="#475569" stroke-width="2" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-slate)"/>
+
+  <!-- ======================================================================= -->
+  <!-- STAGE 5: PROVABLE OUTPUT & GOVERNANCE LAYER (x: 1380 to 1535) -->
+  <!-- ======================================================================= -->
+  <g transform="translate(1380, 95)">
+    <!-- Container -->
+    <rect x="0" y="0" width="145" height="645" rx="12" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" filter="url(#card-shadow)"/>
+    <rect x="0" y="0" width="145" height="42" rx="12" fill="#e2e8f0"/>
+    <rect x="0" y="30" width="145" height="12" fill="#e2e8f0"/>
+    <text x="12" y="27" font-size="12" font-weight="700" fill="#334155">STAGE 5: EXPORT</text>
+
+    <!-- Card 5A: Clean Tidy Dataset -->
+    <g transform="translate(10, 60)">
+      <rect x="0" y="0" width="125" height="240" rx="9" fill="#ffffff" stroke="#2563eb" stroke-width="1.5"/>
+      <rect x="8" y="12" width="75" height="20" rx="4" fill="#eff6ff"/>
+      <text x="14" y="26" font-size="9.5" font-weight="700" fill="#1e40af">CLEAN DATA</text>
+      <text x="8" y="52" font-size="13" font-weight="700" fill="#1e3a8a">Neutralized Matrix T*</text>
+      <text x="8" y="74" font-size="10" font-weight="500" fill="#475569">• CSV Export</text>
+      <text x="8" y="92" font-size="10" font-weight="500" fill="#475569">• Excel (.xlsx)</text>
+      <text x="8" y="110" font-size="10" font-weight="500" fill="#475569">• Clean Schema</text>
+      <text x="8" y="128" font-size="10" font-weight="500" fill="#475569">• Coerced Types</text>
+      <text x="8" y="146" font-size="10" font-weight="500" fill="#475569">• Deduplicated</text>
+      <text x="8" y="164" font-size="10" font-weight="500" fill="#475569">• Imputed Nulls</text>
+      <rect x="8" y="185" width="109" height="42" rx="4" fill="#f0fdf4" stroke="#bbf7d0"/>
+      <text x="12" y="202" font-size="9.5" font-weight="700" fill="#166534">High Fidelity</text>
+      <text x="12" y="217" font-size="8.5" fill="#15803d">Target Error: 0.0%</text>
+    </g>
+
+    <!-- Card 5B: Cryptographic Audit PDF -->
+    <g transform="translate(10, 360)">
+      <rect x="0" y="0" width="125" height="260" rx="9" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
+      <rect x="8" y="12" width="80" height="20" rx="4" fill="#f1f5f9"/>
+      <text x="14" y="26" font-size="9.5" font-weight="700" fill="#334155">AUDIT TRAIL</text>
+      <text x="8" y="52" font-size="13" font-weight="700" fill="#0f172a">Provable Audit Report</text>
+      <text x="8" y="74" font-size="10" font-weight="500" fill="#475569">• PDF Certificate</text>
+      <text x="8" y="92" font-size="10" font-weight="500" fill="#475569">• BEFORE Table</text>
+      <text x="8" y="110" font-size="10" font-weight="500" fill="#475569">• AFTER Table</text>
+      <text x="8" y="128" font-size="10" font-weight="500" fill="#475569">• Cell Diffs (Yellow)</text>
+      <text x="8" y="146" font-size="10" font-weight="500" fill="#475569">• SHA-256 Hash</text>
+      <text x="8" y="164" font-size="10" font-weight="500" fill="#475569">• Gate Traces</text>
+      <rect x="8" y="195" width="109" height="50" rx="4" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="12" y="212" font-size="9.5" font-weight="700" fill="#0f172a">Full Compliance</text>
+      <text x="12" y="226" font-size="8.5" fill="#475569">Cryptographic</text>
+      <text x="12" y="238" font-size="8.5" fill="#475569">Chain of Custody</text>
+    </g>
+  </g>
+</svg>'''
+
+def main():
+    svg_path = FIG_DIR / "F1.svg"
+    svg_path.write_text(SVG_CONTENT, encoding="utf-8")
+    print(f"Written {svg_path}")
+
+    # Use node playwright in frontend to render razor-sharp PNG and PDF
+    node_render_script = f'''
+const {{ chromium }} = require('playwright');
+const fs = require('fs');
+const path = require('path');
+
+(async () => {{
+  const browser = await chromium.launch();
+  const page = await browser.newPage({{
+    viewport: {{ width: 1560, height: 780 }},
+    deviceScaleFactor: 2
+  }});
+  
+  const svgContent = fs.readFileSync({repr(str(svg_path))}, 'utf-8');
+  await page.setContent(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body, html {{ margin: 0; padding: 0; background: #ffffff; overflow: hidden; }}
+    svg {{ display: block; width: 1560px; height: 780px; }}
+  </style>
+</head>
+<body>
+  ${{svgContent}}
+</body>
+</html>`);
+
+  await page.waitForTimeout(500);
+
+  const pngPath = {repr(str(FIG_DIR / "F1.png"))};
+  const pdfPath = {repr(str(FIG_DIR / "F1.pdf"))};
+
+  await page.screenshot({{
+    path: pngPath,
+    clip: {{ x: 0, y: 0, width: 1560, height: 780 }},
+    type: 'png'
+  }});
+  console.log(`Rendered PNG: ${{pngPath}}`);
+
+  await page.pdf({{
+    path: pdfPath,
+    width: '1560px',
+    height: '780px',
+    printBackground: true,
+    pageRanges: '1'
+  }});
+  console.log(`Rendered PDF: ${{pdfPath}}`);
+
+  await browser.close();
+}})();
+'''
+    subprocess.run(["node", "-e", node_render_script], cwd=ROOT / "frontend", check=True)
+    print("F1 redesign completed successfully!")
+
+if __name__ == "__main__":
+    main()

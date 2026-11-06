@@ -38,7 +38,13 @@ bib_keys = set(re.findall(r'@\w+\{(\w+),', bib))
 bibitem_keys = set(re.findall(r'\\bibitem\{([^}]+)\}', tex))
 all_bib_keys = bib_keys.union(bibitem_keys)
 
-cite_keys = set(re.findall(r'\\citep?\{([^}]+)\}', tex))
+raw_cites = re.findall(r'\\citep?\{([^}]+)\}', tex)
+cite_keys = set()
+for raw in raw_cites:
+    for k in raw.split(','):
+        k = k.strip()
+        if k:
+            cite_keys.add(k)
 for c in sorted(cite_keys - all_bib_keys):
     errors.append(f'UNDEFINED CITE: \\cite{{{c}}}')
 

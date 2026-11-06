@@ -45,24 +45,29 @@ def main():
     systems = ["A", "A2", "B", "C", "D", "E", "F", "R"]
 
     # --- F1: Pipeline Architecture ---
-    fig, ax = plt.subplots(figsize=(8, 4))
-    ax.axis("off")
-    boxes = [
-        ("Raw Dataset\n(CSV / Excel)", 0.08, 0.5),
-        ("K Candidate\nPlans Generation", 0.32, 0.5),
-        ("ConsensusGate\nDisagreement Engine", 0.58, 0.5),
-        ("Interactive\nClarification", 0.58, 0.82),
-        ("Neutralized Export\n(PDF/CSV/XLSX)", 0.88, 0.5),
-    ]
-    for text, x, y in boxes:
-        ax.text(x, y, text, ha="center", va="center", bbox=dict(boxstyle="round,pad=0.6", facecolor="#e0f2fe", edgecolor="#0284c7", lw=1.5), fontsize=10, weight="bold")
-    ax.annotate("", xy=(0.21, 0.5), xytext=(0.17, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
-    ax.annotate("", xy=(0.46, 0.5), xytext=(0.43, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
-    ax.annotate("", xy=(0.77, 0.5), xytext=(0.70, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
-    ax.annotate("", xy=(0.58, 0.73), xytext=(0.58, 0.62), arrowprops=dict(arrowstyle="<->", lw=2, color="#d97706"))
-    ax.text(0.60, 0.68, "Ambiguity (d > tau_d)", color="#b45309", fontsize=8, weight="bold")
-    ax.set_title("F1: ConsensusProbe System Architecture Pipeline", weight="bold")
-    save_fig(fig, "F1")
+    try:
+        from scripts.make_f1_figure import main as make_f1
+        make_f1()
+    except Exception as e:
+        print(f"Warning: could not run make_f1_figure ({e}), falling back")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        ax.axis("off")
+        boxes = [
+            ("Raw Dataset\n(CSV / Excel)", 0.08, 0.5),
+            ("K Candidate\nPlans Generation", 0.32, 0.5),
+            ("ConsensusGate\nDisagreement Engine", 0.58, 0.5),
+            ("Interactive\nClarification", 0.58, 0.82),
+            ("Neutralized Export\n(PDF/CSV/XLSX)", 0.88, 0.5),
+        ]
+        for text, x, y in boxes:
+            ax.text(x, y, text, ha="center", va="center", bbox=dict(boxstyle="round,pad=0.6", facecolor="#e0f2fe", edgecolor="#0284c7", lw=1.5), fontsize=10, weight="bold")
+        ax.annotate("", xy=(0.21, 0.5), xytext=(0.17, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
+        ax.annotate("", xy=(0.46, 0.5), xytext=(0.43, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
+        ax.annotate("", xy=(0.77, 0.5), xytext=(0.70, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
+        ax.annotate("", xy=(0.58, 0.73), xytext=(0.58, 0.62), arrowprops=dict(arrowstyle="<->", lw=2, color="#d97706"))
+        ax.text(0.60, 0.68, "Ambiguity (d > tau_d)", color="#b45309", fontsize=8, weight="bold")
+        ax.set_title("F1: ConsensusProbe System Architecture Pipeline", weight="bold")
+        save_fig(fig, "F1")
 
     # --- F2: ConsensusGate Flow ---
     fig, ax = plt.subplots(figsize=(7, 4.5))
