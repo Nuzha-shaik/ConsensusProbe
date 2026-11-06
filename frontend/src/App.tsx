@@ -35,7 +35,8 @@ import {
   TrendingUp,
   Zap,
   GitCompare,
-  Cpu
+  Cpu,
+  Loader2
 } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -190,6 +191,7 @@ function MainStudio() {
         setProfile(profData);
       }
       setActiveTab('profile');
+      return data;
     } catch (err: any) {
       console.warn('[ConsensusProbe] Backend unavailable, running client-side engine:', err);
       try {
@@ -205,6 +207,7 @@ function MainStudio() {
         const clientProf = clientGetProfile(clientDs.id);
         setProfile(clientProf as any);
         setActiveTab('profile');
+        return data;
       } catch (clientErr: any) {
         setError(clientErr.message || 'Failed to parse dataset.');
       }
@@ -251,14 +254,15 @@ function MainStudio() {
   };
 
   // Run ConsensusGate (Hybrid: Backend + In-Browser Engine)
-  const handleRunConsensus = async () => {
-    if (!currentDataset) return;
+  const handleRunConsensus = async (overrideDataset?: DatasetInfo | unknown) => {
+    const ds = (overrideDataset && typeof overrideDataset === 'object' && 'id' in overrideDataset) ? (overrideDataset as DatasetInfo) : currentDataset;
+    if (!ds) return;
     setLoading(true);
     setError(null);
 
-    if (currentDataset.id.startsWith('ds_')) {
+    if (ds.id.startsWith('ds_')) {
       try {
-        const clientRes = clientRunConsensus(currentDataset.id);
+        const clientRes = clientRunConsensus(ds.id);
         setConsensusScore(clientRes.consensus_score);
         setCleanStatus(clientRes.status);
         if (clientRes.status === 'needs_clarification') {
@@ -270,10 +274,10 @@ function MainStudio() {
         }
         setActiveTab('workspace');
         recordCleaningRun({
-          datasetId: currentDataset.id,
-          filename: currentDataset.filename,
-          rows: currentDataset.rows,
-          cols: currentDataset.cols,
+          datasetId: ds.id,
+          filename: ds.filename,
+          rows: ds.rows,
+          cols: ds.cols,
           consensusScore: clientRes.consensus_score,
           status: clientRes.status,
           patchSummary: clientRes.patch_summary,
@@ -289,7 +293,7 @@ function MainStudio() {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2500);
-      const res = await fetch(`${API_BASE}/clean/${currentDataset.id}`, {
+      const res = await fetch(`${API_BASE}/clean/${ds.id}`, {
         method: 'POST',
         signal: controller.signal,
       });
@@ -307,16 +311,16 @@ function MainStudio() {
         setPatchSummary(data.patch_summary);
       }
 
-      const profRes = await fetch(`${API_BASE}/profile/${currentDataset.id}`);
+      const profRes = await fetch(`${API_BASE}/profile/${ds.id}`);
       if (profRes.ok) setProfile(await profRes.json());
 
       setActiveTab('workspace');
 
       recordCleaningRun({
-        datasetId: currentDataset.id,
-        filename: currentDataset.filename,
-        rows: currentDataset.rows,
-        cols: currentDataset.cols,
+        datasetId: ds.id,
+        filename: ds.filename,
+        rows: ds.rows,
+        cols: ds.cols,
         consensusScore: data.consensus_score,
         status: data.status,
         patchSummary: data.patch_summary,
@@ -324,7 +328,7 @@ function MainStudio() {
     } catch (err: any) {
       console.warn('[ConsensusProbe] Backend unavailable, running client consensus engine:', err);
       try {
-        const clientRes = clientRunConsensus(currentDataset.id);
+        const clientRes = clientRunConsensus(ds.id);
         setConsensusScore(clientRes.consensus_score);
         setCleanStatus(clientRes.status);
         if (clientRes.status === 'needs_clarification') {
@@ -336,10 +340,10 @@ function MainStudio() {
         }
         setActiveTab('workspace');
         recordCleaningRun({
-          datasetId: currentDataset.id,
-          filename: currentDataset.filename,
-          rows: currentDataset.rows,
-          cols: currentDataset.cols,
+          datasetId: ds.id,
+          filename: ds.filename,
+          rows: ds.rows,
+          cols: ds.cols,
           consensusScore: clientRes.consensus_score,
           status: clientRes.status,
           patchSummary: clientRes.patch_summary,
@@ -347,6 +351,51 @@ function MainStudio() {
       } catch (clientErr: any) {
         setError(clientErr.message || 'Consensus execution failed.');
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Dedicated Live Swarm Inspector Launch Handler
+  const handleOpenSwarmInspector = async () => {
+    if (currentDataset) {
+      setActiveTab('workspace');
+      if (!consensusScore && cleanStatus !== 'applied') {
+        await handleRunConsensus(currentDataset);
+      }
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      let file: File;
+      try {
+        const res = await fetch('/samples/customers_contested.csv');
+        if (!res.ok) throw new Error('Fetch sample failed');
+        const blob = await res.blob();
+        file = new File([blob], 'customers_contested.csv', { type: 'text/csv' });
+      } catch {
+        const sampleCsv = [
+          'id,name,email,spent,country',
+          '1,Alice Morgan,alice@corp.io,1250.00,US',
+          '2,Bob Smith,,840.50,CA',
+          '3,Charlie Vance,charlie@null.org,-15.00,UK',
+          '4,Dana White,dana@ufc.com,4200.00,USA',
+          '5,Elena Ramos,elena@madrid.es,930.00,ESP'
+        ].join('\n');
+        file = new File([sampleCsv], 'customers_contested.csv', { type: 'text/csv' });
+      }
+
+      const ingested = await handleIngestFile(file);
+      setActiveTab('workspace');
+      if (ingested) {
+        await handleRunConsensus(ingested);
+      }
+    } catch (err: any) {
+      console.error('Failed to open live swarm inspector:', err);
+      setError(err.message || 'Failed to initialize swarm inspector');
+      setActiveTab('upload');
     } finally {
       setLoading(false);
     }
@@ -700,11 +749,21 @@ function MainStudio() {
                       <span>Upload Dataset</span>
                     </button>
                     <button
-                      onClick={() => setActiveTab('profile')}
-                      className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/80 font-semibold rounded-xl text-xs transition flex items-center space-x-2 cursor-pointer"
+                      onClick={handleOpenSwarmInspector}
+                      disabled={loading}
+                      className="px-4 py-2.5 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700/80 font-semibold rounded-xl text-xs transition flex items-center space-x-2 cursor-pointer disabled:opacity-50"
                     >
-                      <Cpu className="w-4 h-4 text-sky-400" />
-                      <span>Live Swarm Inspector</span>
+                      {loading ? (
+                        <>
+                          <Loader2 className="w-4 h-4 text-sky-400 animate-spin" />
+                          <span>Initializing Swarm...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Cpu className="w-4 h-4 text-sky-400" />
+                          <span>Live Swarm Inspector</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -1005,7 +1064,8 @@ function MainStudio() {
         )}
 
         {/* 3. Profile Tab */}
-        {activeTab === 'profile' && profile && (
+        {activeTab === 'profile' && (
+          profile ? (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -1013,7 +1073,7 @@ function MainStudio() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">SHA-256: {currentDataset?.sha256}</p>
               </div>
               <button
-                onClick={handleRunConsensus}
+                onClick={() => handleRunConsensus()}
                 disabled={loading}
                 className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center space-x-2"
               >
@@ -1090,6 +1150,35 @@ function MainStudio() {
               </div>
             </div>
           </div>
+          ) : (
+            <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-center shadow-xs space-y-4">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">No Dataset Ingested for Profiling</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                  Upload a dataset or load an empirical sample to inspect column schemas, data types, and null distributions.
+                </p>
+              </div>
+              <div className="flex justify-center gap-3 pt-2">
+                <button
+                  onClick={() => setActiveTab('upload')}
+                  className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Upload Dataset</span>
+                </button>
+                <button
+                  onClick={() => handleLoadSample('contested')}
+                  disabled={loading}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
+                >
+                  <span>Load Benchmark Sample</span>
+                </button>
+              </div>
+            </div>
+          )
         )}
 
         {/* 4. ConsensusGate Workspace Tab */}
@@ -1130,7 +1219,7 @@ function MainStudio() {
             </div>
 
             {/* Visual Multi-Agent Swarm Command Center */}
-            {viewModel && (
+            {viewModel ? (
               <>
                 <SwarmAgentCards
                   viewModel={viewModel}
@@ -1239,6 +1328,37 @@ function MainStudio() {
                   </div>
                 )}
               </>
+            ) : (
+              <div className="max-w-xl mx-auto my-12 p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-center shadow-xs space-y-4">
+                <div className="w-12 h-12 mx-auto rounded-2xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                  <Cpu className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Multi-Agent Swarm Ready to Engage</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                    {currentDataset
+                      ? "Dataset is ingested. Activate the tri-agent swarm to evaluate candidate plans and measure semantic disagreement."
+                      : "No dataset currently active. Launch the live demo swarm to explore multi-agent consensus in action."}
+                  </p>
+                </div>
+                <div className="flex justify-center gap-3 pt-2">
+                  <button
+                    onClick={handleOpenSwarmInspector}
+                    disabled={loading}
+                    className="px-5 py-2.5 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center space-x-2 cursor-pointer"
+                  >
+                    <Cpu className="w-4 h-4" />
+                    <span>{loading ? 'Initializing Swarm...' : 'Launch Live Swarm Demo'}</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('upload')}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload Dataset</span>
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* Clarification Trigger Banner */}
