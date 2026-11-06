@@ -77,7 +77,7 @@ atoms.append(("edit", rid, col, _hash_value(value)))
 **File:** [`README.md` L78–85](file:///c:/Users/koush/ConsensusProbe/README.md#L78-L85)
 
 ```javascript
-apiKey: "AIzaSyAjoXPfYkcee6or90W0MyiTd0oaAX-8pBM",
+apiKey: "AIzaSy[REDACTED_API_KEY]",
 ```
 
 **What is wrong:**
