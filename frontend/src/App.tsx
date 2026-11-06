@@ -11,6 +11,7 @@ import { AgentTraceTimeline } from './components/showcase/AgentTraceTimeline';
 import { CanaryAuditPanel } from './components/showcase/CanaryAuditPanel';
 import { ClarificationModal, RecordedDecision } from './components/showcase/ClarificationModal';
 import { adaptApiResponseToRunViewModel } from './adapters/runViewModel';
+import { normalizeCrosstab } from './lib/layoutNormalizer';
 import {
   Upload,
   Database,
@@ -140,8 +141,27 @@ function MainStudio() {
   const handleIngestFile = async (file: File) => {
     setLoading(true);
     setError(null);
+
+    let uploadFile = file;
+    // Rung 2: Check if cross-tab format and normalize into tidy table
+    if (file.name.endsWith('.csv') || file.type === 'text/csv') {
+      try {
+        const text = await file.text();
+        const rows = text.split('\n').map((l) => l.split(','));
+        const norm = normalizeCrosstab(rows);
+        if (norm.isCrosstab && norm.records.length > 0) {
+          const normCsv = [norm.headers.join(','), ...norm.records.map((r) => r.join(','))].join('\n');
+          uploadFile = new File([normCsv], file.name.replace(/\.[^/.]+$/, '') + '_normalized.csv', {
+            type: 'text/csv',
+          });
+        }
+      } catch (e) {
+        console.warn('Cross-tab normalizer skipped:', e);
+      }
+    }
+
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', uploadFile);
 
     try {
       const res = await fetch(`${API_BASE}/upload`, {
@@ -169,13 +189,16 @@ function MainStudio() {
   };
 
   // One-click Sample Experiment Loader
-  const handleLoadSample = async (sampleType: 'clean' | 'contested') => {
+  const handleLoadSample = async (sampleType: 'clean' | 'contested' | 'sales') => {
     setLoading(true);
     setError(null);
     try {
-      const filename = sampleType === 'clean' ? 'retail_clean.csv' : 'customers_contested.csv';
-      const res = await fetch(`/samples/${filename}`);
-      if (!res.ok) throw new Error(`Failed to load sample dataset ${filename}`);
+      let filename = 'retail_clean.csv';
+      if (sampleType === 'contested') filename = 'customers_contested.csv';
+      if (sampleType === 'sales') filename = 'sales_clean_822.csv';
+
+      const res = await fetch('/samples/' + filename);
+      if (!res.ok) throw new Error('Failed to load sample dataset ' + filename);
       const blob = await res.blob();
       const file = new File([blob], filename, { type: 'text/csv' });
       await handleIngestFile(file);
@@ -185,7 +208,6 @@ function MainStudio() {
       setLoading(false);
     }
   };
-
   const getPipelineStep = (): PipelineStepId => {
     if (!currentDataset) return 'ingest';
     if (loading) return 'propose';

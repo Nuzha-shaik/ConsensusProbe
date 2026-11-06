@@ -1,0 +1,118 @@
+================================================================================
+CONSENSUSPROBE: PROJECT EXPLANATION & CORE IDEA
+================================================================================
+
+1. WHAT IS CONSENSUSPROBE? (THE BIG IDEA)
+--------------------------------------------------------------------------------
+ConsensusProbe is an AI Safety Guard for Data Engineering.
+
+The Problem in Modern Tech:
+When companies use Artificial Intelligence or automated scripts to clean messy 
+spreadsheets, a single AI will often make aggressive, silent assumptions—like 
+deleting rows it thinks are "broken" or making up values where data is missing. 
+When that happens, companies lose real customer orders and revenue data without 
+anyone noticing until it's too late.
+
+The ConsensusProbe Solution:
+"Never trust a single AI to clean company data alone. Instead, run 3 independent 
+AI cleaning agents. If they all agree, approve it automatically. If they disagree 
+or argue, STOP and ask the human before any data gets destroyed."
+
+
+================================================================================
+2. THE SIMPLEST REAL-WORLD EXAMPLE OF ALL TIME
+================================================================================
+
+Imagine a coffee shop has this messy 4-row customer list:
+
+Row 1: John Smith  | Phone: 555-0199 | Email: john@gmail.com
+Row 2: John Smith  | Phone: (blank)  | Email: john@gmail.com
+Row 3: Alice Brown | Phone: 555-0122 | Email: (blank)
+Row 4: Bob Taylor  | Phone: (blank)  | Email: (blank)
+
+You hire 3 AI Assistants (Cleaner 1, Cleaner 2, Cleaner 3) to clean up the table.
+
+--------------------------------------------------------------------------------
+CASE A: All Assistants Agree (Auto-Approve, Disagreement d = 0.00)
+--------------------------------------------------------------------------------
+Look at Row 4 (Bob Taylor):
+- Cleaner 1 says: "Bob has no phone and no email. Delete Bob."
+- Cleaner 2 says: "Delete Bob."
+- Cleaner 3 says: "Delete Bob."
+
+Because all 3 cleaners 100% agree, the Disagreement Score (d) is 0.0000.
+The system says: "Auto-Approved!" 
+Bob is removed automatically, saving you time without bothering you.
+
+--------------------------------------------------------------------------------
+CASE B: The Assistants Disagree (Contested, Disagreement d > 0 -> Ask Human!)
+--------------------------------------------------------------------------------
+Now look at Row 1 and Row 2 (John Smith):
+- Cleaner 1 (Aggressive): "Row 2 has no phone number. Incomplete data! Delete Row 2."
+- Cleaner 2 (Smart Merger): "Wait! Both rows have john@gmail.com. Row 2 is just 
+  a duplicate order. Merge Row 1 and Row 2 so we keep John's phone number!"
+- Cleaner 3 (Conservative): "Keep both rows, just fill in the missing phone 
+  number on Row 2 using Row 1."
+
+In a normal app with only ONE AI, Cleaner 1 would silently DELETE John Smith, 
+and you would lose a customer forever!
+
+In ConsensusProbe:
+1. The Supervisor Agent measures the conflict: Cleaner 1 wants to delete, but 
+   Cleaner 2 wants to merge.
+2. The Disagreement Score jumps above threshold (e.g., d = 0.85 > tau_d).
+3. The Gatekeeper Agent halts the pipeline and pops up a clear question for YOU:
+   "Conflict on John Smith (Row 2):
+    Option A: Delete row (Lose 1 order)
+    Option B: Merge row with Row 1 (Keep data)
+    Which one do you choose?"
+4. You click "Option B", and your customer data is protected!
+
+
+================================================================================
+3. WHAT HAPPENED WITH YOUR EXCEL FILE? (WHY DID IT DELETE 825 ROWS?)
+================================================================================
+
+Was your idea a mistake?
+NO. Your idea is 100% NOT a mistake.
+
+The issue was a dumb rule in the early prototype backend code:
+In your spreadsheet ("3.-Badly-Structured-Sales-Data-3.xlsx"), orders were 
+formatted as a Pivot Matrix:
+
+Order ID: CA-100293 | Date: 2013-03-14 | First Class: (blank) | Standard Class: $91.056
+
+Because this order shipped via "Standard Class", the "First Class" box was 
+left blank on purpose! (An order only ships by one method).
+
+What the naive prototype bot did:
+The prototype bot had a dumb rule: "If any column has empty cells, delete the row."
+It looked at the blank "First Class" box and thought:
+"Missing data detected! Delete this row!"
+And because every single order in that spreadsheet had blanks in other shipping 
+columns, the bot blindly deleted all 825 rows!
+
+Then, because the original web interface had hardcoded mockup text ("product_name" 
+and "price"), it showed a confusing screen full of zeros.
+
+This has now been fixed with the Layout Normalizer, which correctly flattens 
+cross-tabs into clean tabular data (Ship Mode, Segment, Order ID, Date, Sales) 
+with all 822 orders preserved and $391,721.91 in total sales accounted for.
+
+
+================================================================================
+4. SUMMARY OF THE 3 AGENT ROLES
+================================================================================
+
+1. CLEANER SWARM (3 Agents: Cleaner 1, Cleaner 2, Cleaner 3):
+   - Propose 3 independent cleaning plans (e.g., drop vs. impute vs. merge).
+
+2. SUPERVISOR AGENT:
+   - Measures mathematical disagreement (d) between the 3 candidate plans.
+   - Audits synthetic canary records to ensure no hallucinated cleaning rules 
+     alter valid data.
+
+3. GATEKEEPER AGENT:
+   - If Disagreement d <= threshold (0.0): Auto-approves the clean data.
+   - If Disagreement d > threshold: Pauses the run and asks the human to make 
+     the final call on ambiguous rows.

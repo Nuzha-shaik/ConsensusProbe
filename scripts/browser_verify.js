@@ -84,24 +84,26 @@ async function run() {
     console.log('Captured 04_swarm_command_center.png');
   }
 
-  // 6. Test Contested Sample Button
+  // 6. Test Sales Data 3 Sample Button (Clean 822 rows)
   const uploadTab2 = page.locator("button:has-text('Upload')");
   if (await uploadTab2.count() > 0) {
     await uploadTab2.first().click();
     await page.waitForTimeout(1000);
-    const contestedBtn = page.locator("button:has-text('Try a contested file')");
-    if (await contestedBtn.count() > 0) {
-      console.log('Clicking "Try a contested file" sample button...');
-      await contestedBtn.first().click();
+    const salesBtn = page.locator("button:has-text('Try Sales Data 3')");
+    if (await salesBtn.count() > 0) {
+      console.log('Clicking "Try Sales Data 3" sample button...');
+      await salesBtn.first().click();
       await page.waitForTimeout(2000);
+      await page.screenshot({ path: path.join(screenshotsDir, '05_sales_sample_profile.png') });
+      console.log('Captured 05_sales_sample_profile.png');
 
-      const runGateBtn2 = page.locator("button:has-text('Run ConsensusGate')");
-      if (await runGateBtn2.count() > 0) {
-        console.log('Clicking Run ConsensusGate on contested file...');
-        await runGateBtn2.first().click();
+      const runGateBtn3 = page.locator("button:has-text('Run ConsensusGate')");
+      if (await runGateBtn3.count() > 0) {
+        console.log('Clicking Run ConsensusGate on sales dataset...');
+        await runGateBtn3.first().click();
         await page.waitForTimeout(3000);
-        await page.screenshot({ path: path.join(screenshotsDir, '05_contested_swarm_gate.png') });
-        console.log('Captured 05_contested_swarm_gate.png');
+        await page.screenshot({ path: path.join(screenshotsDir, '06_sales_swarm_command_center.png') });
+        console.log('Captured 06_sales_swarm_command_center.png');
       }
     }
   }

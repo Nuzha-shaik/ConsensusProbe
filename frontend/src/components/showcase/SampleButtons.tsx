@@ -1,8 +1,8 @@
 import React from 'react';
-import { Sparkles, AlertCircle } from 'lucide-react';
+import { Sparkles, AlertCircle, FileSpreadsheet } from 'lucide-react';
 
 interface SampleButtonsProps {
-  onLoadSample: (sampleType: 'clean' | 'contested') => Promise<void> | void;
+  onLoadSample: (sampleType: 'clean' | 'contested' | 'sales') => Promise<void> | void;
   isLoading?: boolean;
 }
 
@@ -30,6 +30,16 @@ export const SampleButtons: React.FC<SampleButtonsProps> = ({ onLoadSample, isLo
       >
         <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
         Try a contested file (Triggers Gate d&gt;0)
+      </button>
+
+      <button
+        type="button"
+        disabled={isLoading}
+        onClick={() => onLoadSample('sales')}
+        className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-sky-500/10 hover:bg-sky-500/20 text-sky-700 dark:text-sky-300 border border-sky-500/30 transition shadow-xs disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+      >
+        <FileSpreadsheet className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+        Try Sales Data 3 (Clean 822 rows)
       </button>
     </div>
   );

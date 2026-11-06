@@ -75,13 +75,13 @@ ConsensusProbe is integrated with Firebase Hosting and Cloud Firestore under pro
 ### Configuration (`frontend/src/firebase.ts`)
 ```javascript
 const firebaseConfig = {
-  apiKey: "AIzaSyAjoXPfYkcee6or90W0MyiTd0oaAX-8pBM",
-  authDomain: "ai-powered-multi-agents.firebaseapp.com",
-  projectId: "ai-powered-multi-agents",
-  storageBucket: "ai-powered-multi-agents.firebasestorage.app",
-  messagingSenderId: "634255760892",
-  appId: "1:634255760892:web:20a788bbed7ade776c2679",
-  measurementId: "G-DSDLWKN71J"
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+  measurementId: "YOUR_MEASUREMENT_ID"
 };
 ```
 
