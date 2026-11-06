@@ -24,6 +24,8 @@ plt.rcParams.update({
     "ytick.labelsize": 9,
     "legend.fontsize": 9,
     "figure.titlesize": 13,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 
 def save_fig(fig, name):
@@ -66,7 +68,7 @@ def main():
         ax.annotate("", xy=(0.77, 0.5), xytext=(0.70, 0.5), arrowprops=dict(arrowstyle="->", lw=2, color="#0f172a"))
         ax.annotate("", xy=(0.58, 0.73), xytext=(0.58, 0.62), arrowprops=dict(arrowstyle="<->", lw=2, color="#d97706"))
         ax.text(0.60, 0.68, "Ambiguity (d > tau_d)", color="#b45309", fontsize=8, weight="bold")
-        ax.set_title("F1: ConsensusProbe System Architecture Pipeline", weight="bold")
+        ax.set_title("ConsensusProbe System Architecture Pipeline", weight="bold")
         save_fig(fig, "F1")
 
     # --- F2: ConsensusGate Flow ---
@@ -89,7 +91,7 @@ def main():
     ax.text(0.30, 0.41, "YES", color="#b45309", weight="bold")
     ax.annotate("", xy=(0.75, 0.33), xytext=(0.58, 0.44), arrowprops=dict(arrowstyle="->", lw=1.5))
     ax.text(0.68, 0.41, "NO", color="#15803d", weight="bold")
-    ax.set_title("F2: ConsensusGate Decision Logic Flow", weight="bold")
+    ax.set_title("ConsensusGate Decision Logic Flow", weight="bold")
     save_fig(fig, "F2")
 
     # --- F3: Ambiguity-Type Distribution ---
@@ -104,7 +106,7 @@ def main():
     clean_types = [t.replace("_", "\n") for t in types]
     bars = ax.bar(clean_types, counts, color="#0284c7", edgecolor="#0369a1")
     ax.set_ylabel("Occurrences in Benchmark Runs")
-    ax.set_title("F3: Distribution of Ambiguity Taxonomy Types", weight="bold")
+    ax.set_title("Distribution of Ambiguity Taxonomy Types", weight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.6)
     save_fig(fig, "F3")
 
@@ -121,7 +123,7 @@ def main():
         ax.annotate(f" {s}", (q_avg, acc_avg), weight="bold", fontsize=10)
     ax.set_xlabel("Average Clarification Questions per Task")
     ax.set_ylabel("Task Success Rate (%)")
-    ax.set_title("F4: Efficiency Frontier (Success vs. Interaction Budget)", weight="bold")
+    ax.set_title("Efficiency Frontier (Success vs. Interaction Budget)", weight="bold")
     ax.grid(True, linestyle="--", alpha=0.5)
     save_fig(fig, "F4")
 
@@ -133,8 +135,14 @@ def main():
         err_rates.append(np.mean([r["silent_error"] for r in s_recs]) * 100)
     colors = ["#e11d48" if s in ("A", "A2", "D") else "#0284c7" for s in systems]
     ax.bar(systems, err_rates, color=colors, edgecolor="#0f172a", width=0.6)
+    import matplotlib.patches as mpatches
+    legend_handles = [
+        mpatches.Patch(color="#e11d48", label="Non-zero Silent Error"),
+        mpatches.Patch(color="#0284c7", label="Zero Silent Error"),
+    ]
+    ax.legend(handles=legend_handles, loc="upper right")
     ax.set_ylabel("Silent-Error Rate (%)")
-    ax.set_title("F5: Silent-Error Rate Across Systems (Lower is Better)", weight="bold")
+    ax.set_title("Silent-Error Rate Across Systems (Lower is Better)", weight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.6)
     save_fig(fig, "F5")
 
@@ -145,10 +153,10 @@ def main():
     unamb_d = np.random.beta(1, 5, size=500) * 0.15
     ax.hist(unamb_d, bins=25, alpha=0.6, label="Unambiguous Tasks", color="#0284c7", density=True)
     ax.hist(amb_d, bins=25, alpha=0.6, label="Ambiguous Tasks", color="#e11d48", density=True)
-    ax.axvline(x=0.05, color="#0f172a", linestyle="--", lw=1.5, label=r"Calibrated $\tau_d$")
+    ax.axvline(x=0.0, color="#0f172a", linestyle="--", lw=1.5, label=r"Calibrated $\tau_d = 0.0$")
     ax.set_xlabel("Mean Pairwise Disagreement Score (d)")
     ax.set_ylabel("Empirical Density")
-    ax.set_title("F6: Disagreement Separation (Ambiguous vs. Unambiguous)", weight="bold")
+    ax.set_title("Disagreement Separation (Ambiguous vs. Unambiguous)", weight="bold")
     ax.legend()
     save_fig(fig, "F6")
 
@@ -165,7 +173,7 @@ def main():
     ax.axvline(x=dev_cal["best_tau_d"], color="#e11d48", linestyle="-.", label=f"Optimal tau_d={dev_cal['best_tau_d']}")
     ax.set_xlabel(r"Disagreement Threshold $\tau_d$")
     ax.set_ylabel("Metric Value")
-    ax.set_title(r"F7: DEV Pilot Calibration Curve for $\tau_d$", weight="bold")
+    ax.set_title("DEV Pilot Calibration Curve for $\tau_d$", weight="bold")
     ax.legend()
     ax.grid(True, linestyle="--", alpha=0.5)
     save_fig(fig, "F7")
@@ -184,7 +192,7 @@ def main():
     ax.set_xticks(x + width)
     ax.set_xticklabels(systems)
     ax.set_ylabel("Task Success Rate (%)")
-    ax.set_title("F8: Task Success by User Simulation Mode", weight="bold")
+    ax.set_title("Task Success by User Simulation Mode", weight="bold")
     ax.legend()
     ax.grid(axis="y", linestyle="--", alpha=0.5)
     save_fig(fig, "F8")
@@ -199,7 +207,7 @@ def main():
     ax.plot(p_vals, err_vals, marker="s", color="#e11d48", lw=2, label="Silent Error (%)")
     ax.set_xlabel(r"Ambiguity Probability Parameter $p_{\mathrm{amb}}$")
     ax.set_ylabel("Rate (%)")
-    ax.set_title(r"F9: Robustness Across Generative Ambiguity Levels ($p_{\mathrm{amb}}$)", weight="bold")
+    ax.set_title("Robustness Across Generative Ambiguity Levels ($p_{\mathrm{amb}}$)", weight="bold")
     ax.legend()
     ax.grid(True, linestyle="--", alpha=0.5)
     save_fig(fig, "F9")
@@ -216,7 +224,7 @@ def main():
     ax2 = ax.twinx()
     ax2.plot(k_vals, k_tokens, marker="^", color="#d97706", lw=2, linestyle="--", label="Tokens")
     ax2.set_ylabel("Average Tokens per Task", color="#d97706")
-    ax.set_title("F10: Ensemble Size (K) Ablation vs. Performance and Token Cost", weight="bold")
+    ax.set_title("Ensemble Size (K) Ablation vs. Performance and Token Cost", weight="bold")
     save_fig(fig, "F10")
 
     # --- F11: Canary Detection ---
@@ -243,7 +251,7 @@ def main():
     ax.set_xticks(x)
     ax.set_xticklabels(systems)
     ax.set_ylabel("Tokens per Task")
-    ax.set_title("F12: Computational Resource Cost by System", weight="bold")
+    ax.set_title("Computational Resource Cost by System", weight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.5)
     save_fig(fig, "F12")
 
@@ -255,7 +263,7 @@ def main():
         precs.append(np.mean([r["question_precision"] for r in s_recs]) * 100 if s_recs else 100.0)
     ax.bar(systems, precs, color="#10b981", edgecolor="#047857", width=0.55)
     ax.set_ylabel("Question Precision (%)")
-    ax.set_title("F13: Question Precision (Targeting Genuine Ambiguities)", weight="bold")
+    ax.set_title("Question Precision (Targeting Genuine Ambiguities)", weight="bold")
     ax.grid(axis="y", linestyle="--", alpha=0.5)
     save_fig(fig, "F13")
 

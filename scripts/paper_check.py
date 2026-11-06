@@ -21,7 +21,7 @@ for line in tex.splitlines():
 
 # 2. Macros used as \macroname{} in paper
 used_macros = set(re.findall(r'\\(\w+)\{\}', tex))
-data_prefixes = ('sys','h','ablation','canary','test','total')
+data_prefixes = ('sys','h','ablation','canary','test','total','posControl','probe')
 for m in sorted(used_macros):
     if any(m.startswith(p) for p in data_prefixes):
         if m not in nums:

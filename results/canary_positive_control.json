@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "description": "Post-hoc exploratory positive control for ProbeGate (System F vs E)",
+    "n_evaluations": 300,
+    "tasks": "100 TEST tasks (seeds 5000-5099)",
+    "trials": 3,
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20261105
+  },
+  "clean_control": {
+    "sentinel_fired_count": 0,
+    "false_alarm_rate": 0.0,
+    "ci_95": [
+      0.0,
+      0.0
+    ]
+  },
+  "fault_injection_2a": {
+    "sentinel_fired_count": 300,
+    "sentinel_detection_rate": 1.0,
+    "sentinel_detection_ci_95": [
+      1.0,
+      1.0
+    ],
+    "system_e": {
+      "question_rate": 1.0,
+      "question_ci_95": [
+        1.0,
+        1.0
+      ],
+      "faulty_plan_selected_rate": 0.7333333333333333,
+      "faulty_plan_selected_ci_95": [
+        0.6833333333333333,
+        0.7833333333333333
+      ]
+    },
+    "system_f": {
+      "question_rate": 1.0,
+      "question_ci_95": [
+        1.0,
+        1.0
+      ],
+      "faulty_plan_selected_rate": 0.7333333333333333,
+      "faulty_plan_selected_ci_95": [
+        0.6833333333333333,
+        0.7833333333333333
+      ]
+    }
+  }
+}

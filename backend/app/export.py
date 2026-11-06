@@ -2,6 +2,7 @@
 from __future__ import annotations
 import io
 import re
+import html
 import pandas as pd
 import openpyxl
 from reportlab.lib.pagesizes import letter
@@ -124,22 +125,99 @@ def export_pdf(
         and (set(df_before.columns) != set(df_after.columns) or "Sales" in df_after.columns)
     )
 
+    # Styles for table cells
+    th_style = ParagraphStyle(
+        "THStyle",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=7,
+        leading=8.5,
+        textColor=colors.HexColor("#f8fafc"),
+    )
+    td_normal = ParagraphStyle(
+        "TDNormal",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=6.5,
+        leading=8,
+        textColor=colors.HexColor("#0f172a"),
+    )
+    td_modified = ParagraphStyle(
+        "TDModified",
+        parent=styles["Normal"],
+        fontName="Helvetica-Bold",
+        fontSize=6.5,
+        leading=8,
+        textColor=colors.HexColor("#991b1b"),
+    )
+    td_blank = ParagraphStyle(
+        "TDBlank",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=6.5,
+        leading=8,
+        textColor=colors.HexColor("#b91c1c"),
+    )
+
+    def calc_col_widths(headers, sub_df, total_width=540.0):
+        weights = []
+        for h in headers:
+            if h == "#":
+                weights.append(22.0)
+                continue
+            h_lower = str(h).lower()
+            max_len = len(str(h))
+            if h in sub_df.columns:
+                for v in sub_df[h]:
+                    if pd.notna(v):
+                        max_len = max(max_len, len(str(v)))
+            
+            if "email" in h_lower or "@" in h_lower:
+                w = max(max_len * 5.2, 140.0)
+            elif "id" in h_lower or "code" in h_lower:
+                w = max(max_len * 4.6, 50.0)
+            elif "phone" in h_lower or "tel" in h_lower:
+                w = max(max_len * 4.8, 65.0)
+            elif "name" in h_lower:
+                w = max(max_len * 4.8, 75.0)
+            elif "age" in h_lower or "qty" in h_lower or "num" in h_lower:
+                w = max(max_len * 4.0, 32.0)
+            elif "gender" in h_lower or "sex" in h_lower:
+                w = max(max_len * 4.0, 40.0)
+            else:
+                w = max(max_len * 4.6, 45.0)
+            weights.append(w)
+        
+        fixed_w = weights[0]
+        rem_target = total_width - fixed_w
+        rem_sum = sum(weights[1:])
+        if rem_sum <= 0:
+            return [fixed_w] + [rem_target / (len(headers) - 1)] * (len(headers) - 1)
+        
+        scaled = [fixed_w]
+        for w in weights[1:]:
+            scaled.append(round((w / rem_sum) * rem_target, 1))
+        
+        diff = round(total_width - sum(scaled), 1)
+        widest_idx = weights.index(max(weights[1:]))
+        scaled[widest_idx] += diff
+        return scaled
+
     # Helper to build preview table with difference highlighting
     def build_diff_table(df: pd.DataFrame, is_after: bool = False):
         display_df = df.drop(columns=["_rid"]) if "_rid" in df.columns else df
         cols = list(display_df.columns)[:max_preview_cols]
         sub_df = display_df[cols].head(max_preview_rows)
         headers = ["#"] + [str(c) for c in cols]
-        data = [headers]
+        data = [[Paragraph(f"<b>{html.escape(h)}</b>", th_style) for h in headers]]
 
         table_styles = [
             ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#f8fafc")),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 7),
-            ("TOPPADDING", (0, 0), (-1, -1), 2.2),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 2.2),
             ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+            ("TOPPADDING", (0, 0), (-1, -1), 2.0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 2.0),
+            ("LEFTPADDING", (0, 0), (-1, -1), 3.0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 3.0),
             ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#ffffff"), colors.HexColor("#f8fafc")]),
         ]
 
@@ -147,7 +225,7 @@ def export_pdf(
 
         for r_idx in range(len(sub_df)):
             row_rid = df["_rid"].iloc[r_idx] if "_rid" in df.columns else r_idx
-            row_cells = [str(r_idx + 1)]
+            row_cells = [Paragraph(str(r_idx + 1), td_normal)]
 
             for c_idx, c_name in enumerate(cols):
                 val = sub_df.iloc[r_idx][c_name]
@@ -169,17 +247,14 @@ def export_pdf(
                     )
 
                     if is_modified:
-                        cell_text = f"-> {str_val}" if str_val else "-> [Empty]"
-                        row_cells.append(cell_text)
-                        # RED RECTANGULAR BOX BORDER LINE + Yellow Fill
+                        cell_text = f"-&gt; {html.escape(str_val)}" if str_val else "-&gt; [Empty]"
+                        row_cells.append(Paragraph(cell_text, td_modified))
                         table_styles.extend([
                             ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.8, colors.HexColor("#dc2626")),
                             ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fef08a")),
-                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#991b1b")),
-                            ("FONTNAME", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), "Helvetica-Bold"),
                         ])
                     else:
-                        row_cells.append(str_val)
+                        row_cells.append(Paragraph(html.escape(str_val), td_normal))
                 else:
                     # Ingested table: clearly highlight missing or deleted rows
                     is_row_deleted = (row_rid in deleted_rids) or (
@@ -187,26 +262,24 @@ def export_pdf(
                     )
                     if is_blank:
                         cell_text = "(blank) [!]"
+                        row_cells.append(Paragraph(cell_text, td_blank))
                         table_styles.extend([
                             ("BOX", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), 1.2, colors.HexColor("#ef4444")),
                             ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
-                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
                         ])
-                        row_cells.append(cell_text)
                     elif is_row_deleted:
-                        cell_text = str_val if str_val else "[Empty]"
+                        cell_text = html.escape(str_val) if str_val else "[Empty]"
+                        row_cells.append(Paragraph(cell_text, td_blank))
                         table_styles.extend([
                             ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
-                            ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
                         ])
-                        row_cells.append(cell_text)
                     else:
-                        row_cells.append(str_val if str_val else "[Empty]")
+                        row_cells.append(Paragraph(html.escape(str_val) if str_val else "[Empty]", td_normal))
 
             data.append(row_cells)
 
-        col_w = 540 / len(headers)
-        t = Table(data, colWidths=[col_w] * len(headers))
+        col_widths = calc_col_widths(headers, sub_df, 540.0)
+        t = Table(data, colWidths=col_widths)
         t.setStyle(TableStyle(table_styles))
         return t
 

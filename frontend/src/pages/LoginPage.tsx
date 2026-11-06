@@ -79,11 +79,11 @@ export const LoginPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Cryptographic Provenance & Canary Integrity Widget */}
+          {/* SHA-256 Provenance & Canary Sentinel */}
           <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 font-mono">
             <div className="flex items-center space-x-1.5 text-slate-300">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Canary Sentinel Ground-Truth</span>
+              <span>Probe Sentinel Ground-Truth</span>
             </div>
             <div className="flex items-center space-x-1.5 text-sky-400">
               <Shield className="w-3.5 h-3.5" />

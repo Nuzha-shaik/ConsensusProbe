@@ -72,16 +72,46 @@ def compute_macros() -> dict[str, str]:
     macros["hFourStatus"] = "Supported" if hypo["H4"]["supported"] else "Not Supported"
 
     # Ablations
+    word_map = {"2": "Two", "3": "Three", "4": "Four", "5": "Five"}
     for k_val in [2, 3, 4, 5]:
         item = ablat["k_ablation"][f"K_{k_val}"]
-        macros[f"ablationK{k_val}Success"] = f"{item['task_success_rate'] * 100:.1f}\\%"
-        macros[f"ablationK{k_val}SilentError"] = f"{item['silent_error_rate'] * 100:.1f}\\%"
-        macros[f"ablationK{k_val}Questions"] = f"{item['avg_questions']:.2f}"
-        macros[f"ablationK{k_val}Tokens"] = f"{int(round(item['avg_tokens'])):,}"
+        w = word_map[str(k_val)]
+        for prefix in [f"ablationK{k_val}", f"ablationK{w}"]:
+            macros[f"{prefix}Success"] = f"{item['task_success_rate'] * 100:.1f}\\%"
+            macros[f"{prefix}SilentError"] = f"{item['silent_error_rate'] * 100:.1f}\\%"
+            macros[f"{prefix}Questions"] = f"{item['avg_questions']:.2f}"
+            macros[f"{prefix}Tokens"] = f"{int(round(item['avg_tokens'])):,}"
+
+    for k in list(macros.keys()):
+        if k.startswith("sysA2"):
+            macros[k.replace("sysA2", "sysATwo")] = macros[k]
 
     macros["canaryInterceptionRate"] = f"{ablat['canary_detection']['interception_rate'] * 100:.1f}\\%"
     macros["canaryTotalEvaluations"] = str(ablat["canary_detection"]["total_canary_evaluations"])
     macros["canaryInterceptedCount"] = str(ablat["canary_detection"]["unsafe_plans_intercepted"])
+
+    # Renamed probe macros (measuring probe-row deletions)
+    macros["probeViolationRate"] = f"{ablat['canary_detection']['interception_rate'] * 100:.1f}\\%"
+    macros["probeTotalEvaluations"] = str(ablat["canary_detection"]["total_canary_evaluations"])
+    macros["probeViolationCount"] = str(ablat["canary_detection"]["unsafe_plans_intercepted"])
+
+    # Post-hoc positive control macros
+    pos_control_path = os.path.join(RESULTS_DIR, "canary_positive_control.json")
+    if os.path.isfile(pos_control_path):
+        with open(pos_control_path, "r", encoding="utf-8") as f_pos:
+            pos = json.load(f_pos)
+        macros["posControlTotal"] = str(pos["metadata"]["n_evaluations"])
+        macros["posControlCleanAlarmRate"] = f"{pos['clean_control']['false_alarm_rate'] * 100:.1f}\\%"
+        macros["posControlSentinelCount"] = str(pos["fault_injection_2a"]["sentinel_fired_count"])
+        macros["posControlSentinelRate"] = f"{pos['fault_injection_2a']['sentinel_detection_rate'] * 100:.1f}\\%"
+        macros["posControlSysEQuestionRate"] = f"{pos['fault_injection_2a']['system_e']['question_rate'] * 100:.1f}\\%"
+        macros["posControlSysEFaultyRate"] = f"{pos['fault_injection_2a']['system_e']['faulty_plan_selected_rate'] * 100:.1f}\\%"
+        macros["posControlSysEFaultyCiLower"] = f"{pos['fault_injection_2a']['system_e']['faulty_plan_selected_ci_95'][0] * 100:.1f}\\%"
+        macros["posControlSysEFaultyCiUpper"] = f"{pos['fault_injection_2a']['system_e']['faulty_plan_selected_ci_95'][1] * 100:.1f}\\%"
+        macros["posControlSysFQuestionRate"] = f"{pos['fault_injection_2a']['system_f']['question_rate'] * 100:.1f}\\%"
+        macros["posControlSysFFaultyRate"] = f"{pos['fault_injection_2a']['system_f']['faulty_plan_selected_rate'] * 100:.1f}\\%"
+        macros["posControlSysFFaultyCiLower"] = f"{pos['fault_injection_2a']['system_f']['faulty_plan_selected_ci_95'][0] * 100:.1f}\\%"
+        macros["posControlSysFFaultyCiUpper"] = f"{pos['fault_injection_2a']['system_f']['faulty_plan_selected_ci_95'][1] * 100:.1f}\\%"
 
     return macros
 

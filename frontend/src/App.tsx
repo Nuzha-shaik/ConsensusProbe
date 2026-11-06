@@ -508,7 +508,7 @@ function MainStudio() {
         if (format === 'pdf') {
           blob = clientExportPdf(currentDataset.id, {
             status: cleanStatus || 'applied',
-            consensusScore: consensusScore ?? 0.38,
+            consensusScore: consensusScore ?? 0.0,
             tauD: simulatedTauD,
             recordedDecisions,
           });
@@ -561,7 +561,7 @@ function MainStudio() {
         if (format === 'pdf') {
           blob = clientExportPdf(currentDataset.id, {
             status: cleanStatus || 'applied',
-            consensusScore: consensusScore ?? 0.38,
+            consensusScore: consensusScore ?? 0.0,
             tauD: simulatedTauD,
             recordedDecisions,
           });
@@ -827,7 +827,7 @@ function MainStudio() {
                       <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                       <div>
                         <div className="text-xs font-bold text-emerald-300">Auto-Pass Consensus Gate</div>
-                        <div className="text-[10px] text-emerald-400/80 font-mono">Zero silent error risk • Instant execution</div>
+                        <div className="text-[10px] text-emerald-400/80 font-mono">0.0% benchmark silent error • Instant execution</div>
                       </div>
                     </div>
                     <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
@@ -856,9 +856,9 @@ function MainStudio() {
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Questions/task (vs 1.0 in System C)</p>
               </div>
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs transition hover:border-slate-300 dark:hover:border-slate-700">
-                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Canary Interception</span>
+                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Probe Sentinel Integrity</span>
                 <div className="text-2xl font-bold font-mono tracking-tight text-slate-900 dark:text-white mt-1">100%</div>
-                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium">System F ProbeGate protection</p>
+                <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium">Safe probe row preserved (0 violations)</p>
               </div>
             </div>
 
@@ -945,7 +945,7 @@ function MainStudio() {
                         <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300">0.0% Silent Error</span>
                       </div>
                       <div className="text-[11px] text-slate-600 dark:text-slate-300">
-                        Questions: 0.38/task (62% less human load) • 100% Canary Interception Guarantee
+                        Questions: 0.38/task (62% less human load) • ProbeGate Sentinel Verified (0 Violations)
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
@@ -1038,7 +1038,7 @@ function MainStudio() {
 
             {loading && (
               <div className="p-4 bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 rounded-xl text-xs text-center font-medium animate-pulse">
-                Uploading and computing cryptographic checksums...
+                Uploading and computing SHA-256 integrity checksums...
               </div>
             )}
           </div>

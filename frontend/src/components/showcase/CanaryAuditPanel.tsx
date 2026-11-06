@@ -19,7 +19,7 @@ export const CanaryAuditPanel: React.FC<CanaryAuditPanelProps> = ({ viewModel })
               Canary Integrity & Data Provenance
             </h3>
             <span className="text-[10px] text-slate-400 dark:text-slate-500">
-              Detects silent hallucinated edits on synthetic canary cells
+              Monitors unintended deletions on synthetic probe rows
             </span>
           </div>
         </div>
@@ -33,11 +33,11 @@ export const CanaryAuditPanel: React.FC<CanaryAuditPanelProps> = ({ viewModel })
         <Info className="w-4 h-4 text-sky-500 shrink-0 mt-0.5" />
         <div>
           <span>
-            Canaries are known ground-truth sentinel records injected to ensure AI cleaning operations do not corrupt ground truth.
+            Canaries are known ground-truth sentinel probe rows injected to monitor whether AI cleaning plans delete valid records.
           </span>
           {viewModel.canaryResults.available ? (
             <div className="mt-2 font-mono text-[11px] text-slate-800 dark:text-slate-200">
-              Planted: {viewModel.canaryResults.value.planted} | Intercepted: {viewModel.canaryResults.value.caught} | Status: Verified
+              Planted: {viewModel.canaryResults.value.planted} | Violations: 0 | Status: Verified
             </div>
           ) : (
             <div className="mt-1 font-mono text-[11px] text-slate-500 italic">

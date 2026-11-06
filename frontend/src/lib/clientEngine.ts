@@ -466,7 +466,7 @@ export function clientRunConsensus(datasetId: string): ClientCleanResponse {
 
   if (hasContestedAspects) {
     // Generate clarification question on disagreement
-    const score = 0.38; // Calibrated disagreement threshold > 0.0000
+    const score = 0.38; // Sample disagreement score (d > tau_d = 0.0000)
     const affectedCount = Math.max(duplicateRids.length + Math.min(blankCellCount, ds.rows), 1);
     const exampleRids = duplicateRids.length > 0 ? duplicateRids.slice(0, 3) : [1, 2];
 
@@ -766,7 +766,7 @@ export function clientExportPdf(
   const sha256 = ds ? ds.sha256 : 'sha256-unverified';
   const rowCount = ds ? ds.rows : 0;
   const colCount = ds ? ds.cols : 0;
-  const dScore = (extra?.consensusScore ?? 0.38).toFixed(4);
+  const dScore = (extra?.consensusScore ?? 0.0).toFixed(4);
   const tauD = (extra?.tauD ?? 0.0).toFixed(2);
   const statusLabel =
     !extra?.status || extra.status === 'needs_clarification'
@@ -836,6 +836,7 @@ export function clientExportPdf(
     body: beforeBody,
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', textColor: [30, 41, 59] },
+    columnStyles: { 0: { cellWidth: 8 } },
     headStyles: { fillColor: [51, 65, 85], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     didParseCell: (data) => {
@@ -901,6 +902,7 @@ export function clientExportPdf(
     body: afterBody,
     theme: 'grid',
     styles: { fontSize: 7, cellPadding: 1.5, overflow: 'ellipsize', textColor: [30, 41, 59] },
+    columnStyles: { 0: { cellWidth: 8 } },
     headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     didParseCell: (data) => {

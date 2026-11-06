@@ -147,8 +147,9 @@
 This paper presents ConsensusGate, a policy that samples <i>K</i> plans, converts each into a set of cell-level edits, and asks the operator a question only when the plans differ on a destructive edit.
 We compare it with six baseline policies on 100 synthetic retail and inventory tasks with five types of ambiguity, using 7200 runs under three simulated operators.
 ConsensusGate gives a silent-error rate of 0.0\%, against 5.0\% for a single plan, and asks 0.38 questions per task where asking every time needs 1.00.
-Two of four pre-specified hypotheses hold (silent-error reduction and superiority over confidence scores). Non-inferiority to always asking was inconclusive, while canary probe verification (ProbeGate) intercepted 0 of 300 canaries because the unique probe rows were not targeted by duplicate-cleaning operations.
-All plans come from a seeded mock LLM, reflecting academic and computational constraints at the collegiate level, so the numbers evaluate the consensus gating algorithm under controlled noise rather than live foundation model behaviors.
+Two primary pre-specified hypotheses hold (H1, H3); non-inferiority to always asking (H2) could not be confirmed; and H4 holds on the overhead criterion only and is uninformative because the sentinel never fired.
+A canary-based variant, ProbeGate, recorded zero probe violations across 300 candidate plans; a post-hoc code audit confirmed that mock plans never deleted the unique safe probe row, and an exploratory positive control verified 100\% sentinel triggering under forced deletion.
+All plans come from a seeded mock LLM, so the numbers describe the policy under simulated noise and not the behavior of a deployed model.
   <p class="keywords"><strong><em>Index Terms</em>&mdash;</strong>data cleaning, large language models, ensemble disagreement, human-in-the-loop, clarification questions</p>
 </div>
 
@@ -163,21 +164,14 @@ Take two product names that differ only in letter case. Whether they are duplica
 <p>Asking the operator about every decision is not practical. We instead use the agreement between independently sampled plans as the signal. If <i>K</i> plans for one table make the same destructive edits, the task probably has an obvious solution. If they do not, a decision from the operator is needed.
 A similar idea has been used for code generation~[clarifygpt2024], where candidate programs are executed and a question is asked when their outputs differ. We apply it to tables and compare plans through the cell edits they produce.
 The experiments in this paper test the policy itself. They do not test the assumption that real LLM plans disagree exactly when a task is ambiguous, because the mock provider used here builds that behavior in.</p>
-<p>\paragraph{System Taxonomy and Nomenclature</strong>
-To avoid ambiguity among the components evaluated:
-\begin{itemize</strong>
-    <li><strong>ConsensusProbe</strong> denotes the complete end-to-end framework and interactive system architecture (Fig.~<span class="ref-cite">fig:pipeline</span>).
-    <li><strong>ConsensusGate</strong> is the multi-agent disagreement gating policy (System~E) that samples <i>K</i> plans and gates destructive actions.
-    <li><strong>ProbeGate</strong> is the canary-augmented safety extension (System~F).
-    <li><strong>Track~S</strong> is the synthetic benchmark suite of 100 controlled retail and inventory tasks.
-\end{itemize</strong></p>
 <p>The main contributions are the following.
 \begin{enumerate</strong>
     <li><strong>ConsensusGate</strong>, a policy that samples <i>K=3</i> cleaning plans, measures how much their edits disagree, and consults the operator only when the disagreement involves destructive edits.
-    <li><strong>ProbeGate</strong>, an experimental extension that inserts canary ground-truth probe rows into the dataset to test whether the consensus step catches over-aggressive row deletion. It produced no detections due to safe probe non-deletion (Section~<span class="ref-cite">sec:probegate</span>).
+    <li><strong>ProbeGate</strong>, an extension that injects temporary probe rows into the dataset to monitor for unintended record deletion. In benchmark runs well-behaved plans produced zero probe violations, and an exploratory positive control confirmed the detection path triggers under forced deletion (Section~<span class="ref-cite">sec:probegate</span>).
     <li><strong>Track~S</strong>, a synthetic benchmark of 100 tasks with gold edits and five ambiguity types, used for 7200 evaluations of eight policies under three simulated operators.
 \end{enumerate</strong></p>
-<p>The rest of the paper is organized as follows. Section~<span class="ref-cite">sec:related</span> reviews related work, Section~<span class="ref-cite">sec:method</span> describes the method, Section~<span class="ref-cite">sec:setup</span> the experimental setup, and Sections~<span class="ref-cite">sec:results</span> and~<span class="ref-cite">sec:ablations</span> the results. Section~<span class="ref-cite">sec:limits</span> discusses limitations, Section~<span class="ref-cite">sec:future</span> the planned validation with live models, and Section~<span class="ref-cite">sec:conclusion</span> concludes.</p>
+<p>Specifically, <strong>ConsensusProbe</strong> is the overall software framework; <strong>ConsensusGate</strong> is the core disagreement policy; <strong>ProbeGate</strong> is the canary-checking variant; and <strong>Track~S</strong> is the synthetic evaluation benchmark.
+The rest of the paper is organized as follows. Section~<span class="ref-cite">sec:related</span> reviews related work, Section~<span class="ref-cite">sec:method</span> describes the method, Section~<span class="ref-cite">sec:setup</span> the experimental setup, and Sections~<span class="ref-cite">sec:results</span> and~<span class="ref-cite">sec:ablations</span> the results. Section~<span class="ref-cite">sec:limits</span> discusses limitations, Section~<span class="ref-cite">sec:future</span> the planned validation with live models, and Section~<span class="ref-cite">sec:conclusion</span> concludes.</p>
 <p>% ============================================================
 <h2 class="sec-title">II. RELATED WORK</h2></p>
 <h3 class="subsec-title"><em>A. LLM Agents for Data Work</em></h3>
@@ -214,7 +208,7 @@ The disagreement score is the mean Jaccard distance over all pairs of plans,
 It equals zero when all plans make exactly the same edits and one when no two plans share an edit.
 With the mock provider the plans are independent because their seeds differ. A real model would have to obtain this through temperature or prompt variation, and its plans would probably be correlated (Section~<span class="ref-cite">sec:limits</span>).</p>
 <h3 class="subsec-title"><em>F. ConsensusGate (System~E)</em></h3>
-<p>The policy proceeds as follows (detailed in Fig.~<span class="ref-cite">fig:consensus_flow</span>).
+<p>The policy proceeds as follows (Fig.~<span class="ref-cite">fig:consensus_flow</span>).
 \begin{enumerate</strong>
     <li>Generate <i>K=3</i> plans and compute <i>\bar{d</strong></i>.
     <li>If <i>\bar{d</strong> > \tau_d</i> and the disagreement involves destructive atoms, show the conflicting atoms to the operator as a question.
@@ -223,19 +217,33 @@ With the mock provider the plans are independent because their seeds differ. A r
 \end{enumerate</strong>
 The threshold <i>\tau_d = 0.0</i> was chosen on 20 DEV tasks (seeds 1000--1019) by maximizing task-success F1 under leave-one-out cross-validation, which gave a DEV F1 of 0.8522 (Fig.~<span class="ref-cite">fig:calibration</span>).
 At this value the gate asks whenever any destructive disagreement exists, so the score <i>\bar{d</strong></i> acts as a yes/no test. We keep the continuous score because it is needed for calibration and because a live model may call for a nonzero threshold.</p>
-<h3 class="subsec-title"><em>G. ProbeGate (System~F)</em></h3>
-<p>System~F adds a canary-based verification layer to ConsensusGate.
-Before cleaning plans are applied to the real data, synthetic ground-truth probe rows are appended into a temporary copy of the dataset: two duplicate test rows and one unique calibration probe row (<code>CANARY\_RID\_OFFSET + 2</strong>).
-A plan is flagged as unsafe if its operations aggressively prune or delete the unique calibration probe.
-If an unsafe plan is detected, the system raises an alert and falls back to the most conservative plan with the fewest destructive edits.</p>
-<p>Across 300 canary-augmented evaluations, exactly 0 unsafe plans were intercepted (0.0\%).
-The empirical reason for this zero interception rate is now understood: the cleaning plans generated by the benchmark provider focus strictly on resolving duplicate records and missing cells.
-Because the injected safe probe row possessed a unique identifier and complete values, no generated plan ever selected it for deletion.
-Consequently, <code>verify\_canary\_safety</strong> returned true across all 300 evaluations, and no alert was triggered.
-We report this transparently as an implementation flaw of the canary test suite under mock plan generation.
-Future work must incorporate adversarial plan mutations that explicitly target non-duplicate records to properly evaluate this layer.</p>
+<h3 class="subsec-title"><em>G. ProbeGate Extension (System~F)</em></h3>
+<p>System~F extends ConsensusGate with canary probe verification.
+Before consensus resolution, temporary canary rows are injected into a working copy of the table: two known duplicate rows and one unique calibration probe row.
+Each candidate plan is executed on this augmented table, and the sentinel monitors whether any plan deletes the unique calibration probe row.
+If any plan deletes this safe probe row, the system sets an alert flag (<code>any\_unsafe = True</strong>), which forces human clarification by satisfying the question gate (<code>should\_ask = consensus.should\_ask(tau\_d) or any\_unsafe</strong>).</p>
+<p>In the ablation benchmark (100 TEST tasks <i>\times</i> <i>K=3</i> plans = 300 plans checked standalone in the ablation script) and across all <i>N=900</i> runs in the main evaluation, exactly 0 plans deleted the unique probe row (0 probe violations out of 300 candidate plans, or 0.0\%).
+A post-hoc code audit revealed the reason: because the mock provider generates well-behaved deduplication plans that match on duplicate keys, and because the safe probe row is completely unique with no missing fields, no plan ever targeted it for deletion. The sentinel therefore never fired during standard benchmark runs, providing no evidence about detection ability under nominal conditions.</p>
+<p>To verify that the detection path functions when a true violation occurs, we conducted a post-hoc, exploratory positive-control experiment (Table~<span class="ref-cite">tab:positive_control</span>). Across 300 evaluations (100 TEST tasks <i>\times</i> 3 trials), we injected an over-aggressive category deduplication operation into one of the <i>K=3</i> plans, forcing the deletion of the safe probe row.
+The sentinel fired in 100.0\% of runs (300/300, 95\% CI [100.0\%, 100.0\%]), with a 0.0\% false-alarm rate on clean control (0/300, 95\% CI [0.0\%, 0.0\%]).
+Both System~E and System~F asked questions on 100.0\% of runs because the injected fault also elevated <i>\bar{d</strong></i> above <i>\tau_d=0.0</i>.
+This confirms that the implementation's detection path triggers as designed, although detection under forced fault injection is near-guaranteed by construction.</p>
+<p>\begin{table</strong>[!t]
+\caption{Exploratory positive control: single-plan fault injection (noisy mode, 300 evaluations).</strong></p>
+<p>\centering
+\footnotesize
+\begin{tabular</strong>{lcccc</strong>
+\toprule
+System & Sentinel Fired & Question Rate & Faulty Plan Applied & 95\% CI (Fault Leak) \\
+\midrule
+Clean Control (F) & 0.0\% (0/300) & --- & --- & [0.0\%, 0.0\%] \\
+System E (Gate only) & N/A & 100.0\% & 73.3\% & [68.3\%, 78.3\%] \\
+<strong>System F (ProbeGate)</strong> & 100.0\% (300/300) & 100.0\% & 73.3\% & [68.3\%, 78.3\%] \\
+\bottomrule
+\end{tabular</strong>
+\end{table</strong></p>
 <h3 class="subsec-title"><em>H. Prototype</em></h3>
-<p>A FastAPI and React prototype exposes the policy through an interactive question interface (Fig.~<span class="ref-cite">fig:pipeline</span>). Its usability and its export and audit stages are not evaluated here, and no empirical metric in this paper depends on them.</p>
+<p>A FastAPI and React prototype exposes the policy through a question interface (Fig.~<span class="ref-cite">fig:pipeline</span>). Its usability and its export and audit stages are not evaluated here, and no result in this paper depends on them.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F1.png" class="fig-img" alt="Architecture of the ConsensusProbe prototype. Only plan generation, disagreement scoring, the gate and resolution are evaluated in this paper." />
             <p class="fig-caption"><strong>Fig.</strong> Architecture of the ConsensusProbe prototype. Only plan generation, disagreement scoring, the gate and resolution are evaluated in this paper.</p>
@@ -274,14 +282,10 @@ Type & Description \\
             <p class="fig-caption"><strong>Fig.</strong> Ambiguity types among the 100 TEST tasks.</p>
         </div>
 <h3 class="subsec-title"><em>J. Systems</em></h3>
-<p>The eight systems evaluated in Table~<span class="ref-cite">tab:systems</span> systematically span the primary architectural paradigms for LLM data cleaning:
-\begin{enumerate</strong>
-    <li><strong>Single-agent execution</strong>: System~A generates 1 plan and applies it without operator interaction.
-    <li><strong>Multi-agent ensemble</strong>: System~A2 takes a majority vote over <i>K=3</i> plans with zero interaction (token-matched to E).
-    <li><strong>Interactive eager asking</strong>: System~C asks the user on 100\% of tasks, establishing the theoretical upper bound on questions and human effort.
-    <li><strong>Confidence-based gating</strong>: System~D queries the user when simulated self-reported confidence drops below <i>\tau_c=0.75</i>.
-    <li><strong>Proposed consensus gating</strong>: System~E (<strong>ConsensusGate</strong>) asks only when plans disagree on destructive edits (<i>\tau_d=0.0</i>), and System~F (<strong>ProbeGate</strong>) combines consensus gating with dataset canary probes. System~R provides a random-ask baseline matching E's question rate.
-\end{enumerate</strong></p>
+<p>The eight systems are listed in Table~<span class="ref-cite">tab:systems</span>.
+Table~<span class="ref-cite">tab:systems</span> benchmarks our proposed ConsensusGate (System~E) directly against single-agent cleaning (System~A), a multi-agent majority ensemble (System~A2), and eager interactive questioning on every task (System~C), alongside heuristic guardrails (B) and confidence-threshold baselines (D).
+A2 is a majority-vote ensemble with the same token budget as E. D asks only when a simulated self-reported confidence falls below <i>\tau_c=0.75</i>. C asks on every task and therefore gives the upper bound on questions.
+We did not implement a ClarifyGPT-style baseline for tables (Section~<span class="ref-cite">sec:limits</span>).</p>
 <p>\begin{table</strong>[!t]
 \caption{Systems evaluated.</strong></p>
 <p>\centering
@@ -350,8 +354,8 @@ Figures~<span class="ref-cite">fig:success_vs_questions</span> and~<span class="
             <p class="fig-caption"><strong>Fig.</strong> Task success versus mean questions per task.</p>
         </div>
 <div class="figure-container">
-            <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F5.png" class="fig-img" alt="Silent-error rate by system." />
-            <p class="fig-caption"><strong>Fig.</strong> Silent-error rate by system.</p>
+            <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F5.png" class="fig-img" alt="Silent-error rate by system (red bars indicate non-zero silent error)." />
+            <p class="fig-caption"><strong>Fig.</strong> Silent-error rate by system (red bars indicate non-zero silent error).</p>
         </div>
 <h3 class="subsec-title"><em>E. Hypothesis Tests</em></h3>
 <p>The tests are summarized in Table~<span class="ref-cite">tab:hypotheses</span>. Effects are absolute differences in the noisy mode, and the <i>p</i>-values are Holm--Bonferroni adjusted.</p>
@@ -373,19 +377,19 @@ H4 & F error <i>\leq</i> E, <i>\leq</i>0.25 extra Qs & 0.0\% & [0.0\%, 0.0\%] & 
 \end{tabularx</strong>
 \end{table</strong></p>
 <p>\paragraph{H1</strong>
-In noisy mode the silent-error rate of E differs from that of A by <i>-</i>5.0\% (E minus A, 95\% CI [<i>-</i>10.0\%, <i>-</i>1.0\%]), confirming that E makes significantly fewer silent errors than a single agent.
-Because the mock draws plan errors independently, a forbidden edit passes unflagged only if every plan contains it, which is unlikely by construction. The result confirms that the gate works as designed under the noise model.</p>
+In noisy mode the silent-error rate of E differs from that of A by <i>-</i>5.0\% (E minus A, 95\% CI [<i>-</i>10.0\%, <i>-</i>1.0\%]), so E makes fewer silent errors.
+Because the mock draws plan errors independently, a forbidden edit passes unflagged only if every plan contains it, which is unlikely by construction. The result confirms that the gate works as designed and says little about real ensembles.</p>
 <p>\paragraph{H2</strong>
 Non-inferiority to C within <i>\Delta=2</i> points was not established. The difference is <i>-</i>1.0\% (95\% CI [<i>-</i>3.7\%, 1.7\%]), and the lower bound lies below <i>-\Delta</i>.
-The interval also contains zero and is wider than the margin, so with 100 tasks the data neither support nor exclude a loss of more than two points. E asks <i>-</i>0.62 fewer questions per task relative to C.
-A likely explanation is that asking every time also catches cases where all plans agree on an action that is wrong.</p>
+The interval also contains zero and is wider than the margin, so with 100 tasks the data neither support nor exclude a loss of more than two points. E asks <i>-</i>0.62 questions per task relative to C.
+A possible explanation, which we did not test, is that asking every time also catches cases where all plans agree on an action that is wrong.</p>
 <p>\paragraph{H3</strong>
-The success of E exceeds that of D by 11.3\% (95\% CI [6.0\%, 17.0\%]), and E asks <i>-</i>0.13 fewer questions per task relative to D.
-Under this noise model, multi-agent plan disagreement indicates ambiguity far more reliably than simulated self-reported confidence.</p>
+The success of E exceeds that of D by 11.3\% (95\% CI [6.0\%, 17.0\%]), and E asks <i>-</i>0.13 questions per task relative to D.
+Under this noise model, plan disagreement indicates ambiguity better than the simulated confidence score.</p>
 <p>\paragraph{H4</strong>
-ProbeGate matches E on error, questions, precision, tokens and latency (differences of 0.0\% and 0.00), and its success differs by only 0.1 points (72.7\% against 72.8\%). The canary check therefore introduces no measurable runtime overhead.
-However, its canary interception rate was 0.0\% (0 of 300) due to the safe probe non-deletion mechanism detailed in Section~<span class="ref-cite">sec:probegate</span>.
-H4 is therefore strictly supported on the overhead criterion alone; it does not demonstrate empirical canary interception efficacy.</p>
+ProbeGate matches E on error, questions, precision, tokens and latency (differences of 0.0\% and 0.00).
+The 0.1-point difference in success (72.7\% vs 72.8\%) arises entirely from simulated operator sampling noise, as the pseudo-random seed in noisy mode hashes the system label (`E' vs `F'); under the oracle operator, E and F achieve identical success (75.0\%).
+H4 holds on the overhead criterion only and is uninformative regarding detection performance because the sentinel never fired during the benchmark (0 of 300 candidate plans deleted the safe probe row).</p>
 <h3 class="subsec-title"><em>F. Results by Operator Mode</em></h3>
 <p>Table~<span class="ref-cite">tab:mode_results</span> gives the results of System~E for each mode.</p>
 <p>\begin{table</strong>[!t]
@@ -402,10 +406,10 @@ Unsure & 72.0\% & 0.0\% & 0.38 \\
 \bottomrule
 \end{tabular</strong>
 \end{table</strong></p>
-<p>With the oracle, success is 75.0\%. Wrong answers from the noisy user lower it to 71.3\%, while silent errors stay at 0.0\%.
+<p>With the oracle, success is 75.0\%. Wrong answers from the noisy user lower it to 71.3\%, while silent errors stay at 0.0\%; uncertain resolutions may be flagged for inspection, but we did not check this.
 The unsure user gives 72.0\%, a smaller loss that comes from the majority fallback.
-Even with the oracle no system exceeds 75.0\% success (C, E and F reach it), so about a quarter of the tasks fail under every policy.
-Figure~<span class="ref-cite">fig:success_by_mode</span> compares all systems by mode, and Fig.~<span class="ref-cite">fig:disagreement_dist</span> shows that ambiguous and unambiguous tasks separate cleanly in <i>\bar{d</strong></i> under the mock provider.</p>
+Even with the oracle no system exceeds 75.0\% success (C, E and F reach it), so about a quarter of the tasks fail under every policy. We have not yet analyzed these failures by ambiguity type or operation. Likely causes are errors shared by all plans and gold edits that the mock plans cannot reach.
+Figure~<span class="ref-cite">fig:success_by_mode</span> compares all systems by mode, and Fig.~<span class="ref-cite">fig:disagreement_dist</span> shows that ambiguous and unambiguous tasks separate cleanly in <i>\bar{d</strong></i>. That separation is produced by the mock and should not be taken as a property of real plans.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F8.png" class="fig-img" alt="Task success by operator mode for all systems." />
             <p class="fig-caption"><strong>Fig.</strong> Task success by operator mode for all systems.</p>
@@ -435,7 +439,7 @@ Figure~<span class="ref-cite">fig:success_by_mode</span> compares all systems by
 \end{table</strong></p>
 <p>Moving from <i>K=2</i> to <i>K=3</i> removes the silent errors (2.0\% to 0.0\%) and raises success from 70.3\% to 71.3\%.
 <i>K=4</i> adds about one more point (72.7\%) and <i>K=5</i> nothing (72.7\%), while tokens grow linearly and the question rate rises from 0.27 to 0.51 (Fig.~<span class="ref-cite">fig:k_ablation</span>).
-We therefore use <i>K=3</i> as an effective compromise between quality and computational token cost.</p>
+We therefore use <i>K=3</i> as a compromise between quality and cost.</p>
 <div class="figure-container">
             <img src="file:///C:/Users/koush/ConsensusProbe/paper/figures/F10.png" class="fig-img" alt="Success and token cost as a function of <i>K</i>." />
             <p class="fig-caption"><strong>Fig.</strong> Success and token cost as a function of <i>K</i>.</p>
@@ -453,21 +457,19 @@ Figure~<span class="ref-cite">fig:calibration</span> shows the DEV calibration c
         </div>
 <p>% ============================================================
 <h2 class="sec-title">VII. LIMITATIONS</h2></p>
-<p>\paragraph{Mock provider and college-level execution scope</strong>
-All plans are generated through a seeded noise model rather than commercial foundation model APIs.
-Executing the full experimental grid (8 systems <i>\times</i> 3 operator modes <i>\times</i> 3 trials <i>\times</i> 100 tasks <i>\times</i> <i>K=3</i> plans = 7,200 evaluations) against commercial frontier models requires significant API budgets and computing resources beyond typical college laboratory constraints.
-While the mock provider allows bit-level mathematical reproducibility and verified paired bootstrap intervals, it models plan errors as independent draws.
-In real LLMs, errors are often correlated across samples.
-These results demonstrate the mathematical correctness and efficiency of the consensus gating logic; validating performance against commercial APIs remains planned future work.</p>
+<p>\paragraph{Mock provider</strong>
+All plans come from a noise model and not from a real LLM. This allows exact reproduction, but real models make correlated mistakes, and an ensemble helps only when its members err differently~[dietterich2000].
+If each plan makes a given error independently with probability <i>\varepsilon</i>, all <i>K</i> plans make the same error with probability <i>\varepsilon^{K</strong></i>, which is far below the per-plan rate. A low silent-error rate for any policy that questions disagreement is therefore close to guaranteed here.
+The experiments check that the policy and its implementation behave as specified. They do not show that disagreement between real plans signals ambiguity.</p>
 <p>\paragraph{Edit-level comparison</strong>
 Disagreement is measured on exact edits, so two plans that reach the same table through different edits, for example by deleting different members of a duplicate pair, count as disagreeing. With <i>\tau_d=0.0</i> this may inflate the number of questions.
 For the same reason the comparison lacks a ClarifyGPT-style baseline~[clarifygpt2024] that runs each plan and compares the resulting tables. Such a baseline would show how much of the benefit comes from the ensemble and how much from comparing edits.</p>
 <p>\paragraph{Statistical power and unexplained failures</strong>
-With 100 tasks the intervals are wide, and H2 is inconclusive. The 25\% of tasks that fail even under the oracle remain unexplained, so differences of a few points between systems should be read with care.</p>
+With 100 tasks the intervals remain wide (as observed with H2), and larger multi-domain enterprise benchmarks remain an important area for future evaluation. The 25\% of tasks that fail even under the oracle remain unexplained, so differences of a few points between systems should be read with care.</p>
 <p>\paragraph{Data and operators</strong>
 Track~S is generated by procedure and may miss problems found in real tables. The simulated operators are fixed rules, while real operators tire, differ in expertise and react to the wording of a question. The value <i>K=3</i> was set under the mock noise model and may not suit real LLMs.</p>
-<p>\paragraph{Canary probe limitation</strong>
-The zero interception rate represents an implementation limitation of our canary test suite under non-adversarial mock plan generation, rather than evidence that canary detection is impossible.</p>
+<p>\paragraph{Canary probe interpretation</strong>
+The zero probe-violation count was clarified through a post-hoc code audit: well-behaved plans never targeted the unique calibration probe row. While our exploratory positive control demonstrated 100\% sensitivity under forced fault injection, evaluating canary detection against organic errors produced by live LLM ensembles remains open.</p>
 <p>% ============================================================
 <h2 class="sec-title">VIII. PLANNED VALIDATION WITH LIVE MODELS</h2></p>
 <p>None of the following has been carried out yet.
@@ -476,15 +478,16 @@ The zero interception rate represents an implementation limitation of our canary
     <li>Sample plans from one model at fixed temperature and from several models, and report how often all plans contain the same forbidden edit.
     <li>Evaluate on public cleaning datasets and on at least one real retail or inventory table.
     <li>Compare cleaned tables as well as edit atoms, and add the table-level baseline described above.
-    <li>Redesign the canary injection mechanism so that adversarial mutations target non-duplicate rows, and re-run System~F.
+    <li>Having completed the code audit and positive control for canary probes, evaluate probe-row preservation and plan-level fault injection using live LLM ensembles.
     <li>Re-calibrate <i>\tau_d</i> on live ensembles, test a hybrid policy that adds occasional random questions, analyze the failed tasks, run a small study with human operators, and register the hypotheses with an external service before the live runs.
 \end{enumerate</strong></p>
 <p>% ============================================================
 <h2 class="sec-title">IX. CONCLUSION</h2></p>
 <p>We presented ConsensusGate, a policy that asks an operator for a decision only when several LLM-generated cleaning plans disagree on a destructive edit.
 On 100 synthetic tasks it reached a silent-error rate of 0.0\% with 0.38 questions per task, compared with 1.00 for an always-ask policy, and 92.1\% of its questions fell on ambiguous tasks, against 43.1\% for the confidence policy and 52.5\% for random asking.
-Two of the four hypotheses were supported (H1 and H3), H2 was inconclusive, and H4 held on runtime overhead only, with canary detection yielding 0.0\% due to unique probe non-deletion.
-Transparent reporting of these simulation characteristics and negative results provides an honest baseline for future live foundation model evaluations.</p>
+Two primary hypotheses were supported (H1, H3); H4 was met on the overhead criterion only (and is uninformative because the sentinel never fired during the benchmark); and non-inferiority to always asking (H2) was inconclusive.
+A post-hoc code audit resolved the zero probe-violation count of ProbeGate, and an exploratory positive control confirmed that the sentinel triggers reliably under forced fault injection.
+Since the plans come from a mock with independent errors, the low silent-error rate is partly a property of the simulator. Experiments with real models, as outlined in Section~<span class="ref-cite">sec:future</span>, are needed before the policy can be recommended for practical use.</p>
 <p>% ============================================================</p>
   <h2 class="sec-title">REFERENCES</h2><ol class="bib-list"><li id="brown2020">[1] T. B. Brown <em>et al.</em>, "Language models are few-shot learners," arXiv:2005.14165, 2020.</li><li id="openai2023">[2] OpenAI, "{GPT-4</em> technical report," arXiv:2303.08774, 2023.</li><li id="lambda2025">[3] M. Sun, R. Han, B. Jiang, H. Qi, D. Sun, Y. Yuan, and J. Huang, "{LAMBDA</em>: A large model based data agent," <em>J. Amer. Statist. Assoc.</em>, 2025, doi: 10.1080/01621459.2025.2510000.</li><li id="datainterp2024">[4] S. Hong <em>et al.</em>, "Data Interpreter: An {LLM</em> agent for data science," arXiv:2402.18679, 2024.</li><li id="sunsurvey2024">[5] M. Sun, R. Han, B. Jiang, H. Qi, D. Sun, Y. Yuan, and J. Huang, "A survey on large language model-based agents for statistics and data science," arXiv:2412.14222, 2024.</li><li id="cao2024">[6] R. Cao <em>et al.</em>, "{Spider2-V</em>: How far are multimodal agents from automating data science and engineering workflows?" in <em>Advances in Neural Information Processing Systems</em>, vol. 37, 2024, pp. 107703--107744.</li><li id="prepbench">[7] J. Xu, R. Wang, J. Wang, and G. Li, "{PrepBench</em>: How far are we from natural-language-driven data preparation?" <em>Proc. VLDB Endowment</em>, 2026, arXiv:2605.08687.</li><li id="huang2023">[8] L. Huang <em>et al.</em>, "A survey on hallucination in large language models: Principles, taxonomy, challenges, and open questions," arXiv:2311.05232, 2023.</li><li id="clarifygpt2024">[9] F. Mu, L. Shi, S. Wang, Z. Yu, B. Zhang, C. Wang, S. Liu, and Q. Wang, "{ClarifyGPT</em>: A framework for enhancing {LLM</em>-based code generation via requirements clarification," <em>Proc. ACM Softw. Eng.</em>, vol. 1, no. FSE, pp. 2332--2354, 2024.</li><li id="taskweaver2023">[10] B. Qiao <em>et al.</em>, "{TaskWeaver</em>: A code-first agent framework," arXiv:2311.17541, 2023.</li><li id="metagpt2023">[11] S. Hong <em>et al.</em>, "{MetaGPT</em>: Meta programming for multi-agent collaborative framework," arXiv:2308.00352, 2023.</li><li id="autogen2023">[12] Q. Wu <em>et al.</em>, "{AutoGen</em>: Enabling next-gen {LLM</em> applications via multi-agent conversation," arXiv:2308.08155, 2023.</li><li id="agentcoder2023">[13] D. Huang, Q. Bu, J. M. Zhang, M. Luck, and H. Cui, "{AgentCoder</em>: Multi-agent-based code generation with iterative testing and optimisation," arXiv:2312.13010, 2023.</li><li id="guo2024">[14] T. Guo <em>et al.</em>, "Large language model based multi-agents: A survey of progress and challenges," arXiv:2402.01680, 2024.</li><li id="narayan2022">[15] A. Narayan, I. Chami, L. Orr, and C. R\'e, "Can foundation models wrangle your data?" <em>Proc. VLDB Endowment</em>, vol. 16, no. 4, pp. 738--746, 2022.</li><li id="park2021">[16] S. Park, A. Y. Wang, B. Kawas, Q. V. Liao, D. Piorkowski, and M. Danilevsky, "Facilitating knowledge sharing from domain experts to data scientists for building {NLP</em> models," in <em>Proc. 26th Int. Conf. Intelligent User Interfaces</em>, 2021, pp. 585--596.</li><li id="selfcons2023">[17] X. Wang <em>et al.</em>, "Self-consistency improves chain of thought reasoning in language models," in <em>Proc. Int. Conf. Learning Representations (ICLR)</em>, 2023.</li><li id="dietterich2000">[18] T. G. Dietterich, "Ensemble methods in machine learning," in <em>Multiple Classifier Systems (MCS 2000)</em>, ser. Lecture Notes in Computer Science, vol. 1857. Springer, 2000, pp. 1--15.</li><li id="efron1993">[19] B. Efron and R. J. Tibshirani, <em>An Introduction to the Bootstrap</em>. New York, NY, USA: Chapman \& Hall, 1993.</li><li id="holm1979">[20] S. Holm, "A simple sequentially rejective multiple test procedure," <em>Scand. J. Statist.</em>, vol. 6, no. 2, pp. 65--70, 1979.</li></ol>
 </div>

@@ -1,0 +1,15 @@
+\begin{table}[!t]
+\caption{Exploratory positive control: single-plan fault injection (noisy mode, 300 evaluations).}
+\label{tab:positive_control}
+\centering
+\footnotesize
+\begin{tabular}{lcccc}
+\toprule
+System & Sentinel Fired & Question Rate & Faulty Plan Applied & 95\% CI (Fault Leak) \\
+\midrule
+Clean Control (F) & 0.0\% (0/300) & --- & --- & [0.0\%, 0.0\%] \\
+System E (Gate only) & N/A & 100.0\% & 73.3\% & [68.3\%, 78.3\%] \\
+\textbf{System F (ProbeGate)} & 100.0\% (300/300) & 100.0\% & 73.3\% & [68.3\%, 78.3\%] \\
+\bottomrule
+\end{tabular}
+\end{table}

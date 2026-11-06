@@ -41,7 +41,7 @@
   <text x="1286" y="45" font-size="12" font-weight="600" fill="#1e40af">ConsensusProbe Multi-Agent Pipeline</text>
 
   <!-- ======================================================================= -->
-  <!-- STAGE 1: INGESTION & CANARY SENTINEL (x: 35 to 265) -->
+  <!-- STAGE 1: INGESTION & SENTINEL PROBE (x: 35 to 265) -->
   <!-- ======================================================================= -->
   <g transform="translate(35, 95)">
     <!-- Stage Container -->
@@ -70,14 +70,14 @@
     <g transform="translate(15, 265)">
       <rect x="0" y="0" width="200" height="165" rx="9" fill="#ffffff" stroke="#0284c7" stroke-width="1.3"/>
       <rect x="12" y="12" width="96" height="20" rx="4" fill="#e0f2fe"/>
-      <text x="18" y="26" font-size="10" font-weight="700" fill="#0369a1">CANARY SENTINEL</text>
+      <text x="18" y="26" font-size="10" font-weight="700" fill="#0369a1">SENTINEL PROBE</text>
       <text x="12" y="52" font-size="14" font-weight="700" fill="#0369a1">Canary Sentinel</text>
-      <text x="12" y="72" font-size="11" font-weight="500" fill="#475569">• Injects Known-Truth Rows</text>
-      <text x="12" y="90" font-size="11" font-weight="500" fill="#475569">• Provable Anchor Points</text>
-      <text x="12" y="108" font-size="11" font-weight="500" fill="#475569">• Evaluates Canary Integrity</text>
+      <text x="12" y="72" font-size="11" font-weight="500" fill="#475569">  Injects Safe Probe Rows</text>
+      <text x="12" y="90" font-size="11" font-weight="500" fill="#475569">  Calibration Anchor Points</text>
+      <text x="12" y="108" font-size="11" font-weight="500" fill="#475569">  Monitors Unintended Deletion</text>
       <rect x="12" y="122" width="176" height="30" rx="4" fill="#f0f9ff" stroke="#bae6fd"/>
-      <text x="18" y="136" font-size="9.5" font-weight="600" fill="#0369a1">Canary Matrix C ~ D_canary</text>
-      <text x="18" y="147" font-size="9" fill="#0284c7">Silent-Error Detection Guard</text>
+      <text x="18" y="136" font-size="9.5" font-weight="600" fill="#0369a1">Temporary Injected Probes</text>
+      <text x="18" y="147" font-size="9" fill="#0284c7">Unintended Deletion Guard</text>
     </g>
 
     <!-- Card 1C: Seed Calibration -->
@@ -113,11 +113,11 @@
     <g transform="translate(18, 65)">
       <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#3b82f6" stroke-width="1.5"/>
       <rect x="14" y="12" width="115" height="22" rx="4" fill="#eff6ff" stroke="#bfdbfe"/>
-      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#1d4ed8">AGENT 1 • PROPOSER</text>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#1d4ed8">PLAN SAMPLE 1</text>
       <text x="14" y="56" font-size="14.5" font-weight="700" fill="#1e3a8a">Structural Cleaner</text>
       <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Format normalization &amp; trimming</text>
       <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Delimiter &amp; casing alignment</text>
-      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Strict Conservative</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">  Seed Derivation: s_1</text>
       <rect x="14" y="128" width="236" height="24" rx="4" fill="#eff6ff"/>
       <text x="20" y="144" font-size="10.5" font-weight="700" fill="#1d4ed8">Output: Candidate Plan P_1</text>
     </g>
@@ -126,11 +126,11 @@
     <g transform="translate(18, 250)">
       <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#8b5cf6" stroke-width="1.5"/>
       <rect x="14" y="12" width="115" height="22" rx="4" fill="#faf5ff" stroke="#e9d5ff"/>
-      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#6d28d9">AGENT 2 • PROPOSER</text>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#6d28d9">PLAN SAMPLE 2</text>
       <text x="14" y="56" font-size="14.5" font-weight="700" fill="#581c87">Entity Deduplicator</text>
       <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Fuzzy key matching &amp; clustering</text>
       <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Primary key deduplication</text>
-      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Entity Resolution</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">  Seed Derivation: s_2</text>
       <rect x="14" y="128" width="236" height="24" rx="4" fill="#faf5ff"/>
       <text x="20" y="144" font-size="10.5" font-weight="700" fill="#6d28d9">Output: Candidate Plan P_2</text>
     </g>
@@ -139,16 +139,16 @@
     <g transform="translate(18, 435)">
       <rect x="0" y="0" width="264" height="165" rx="10" fill="#ffffff" stroke="#14b8a6" stroke-width="1.5"/>
       <rect x="14" y="12" width="115" height="22" rx="4" fill="#f0fdfa" stroke="#99f6e4"/>
-      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#0f766e">AGENT 3 • PROPOSER</text>
+      <text x="20" y="27" font-size="10.5" font-weight="700" fill="#0f766e">PLAN SAMPLE 3</text>
       <text x="14" y="56" font-size="14.5" font-weight="700" fill="#134e4a">Domain Imputer</text>
       <text x="14" y="78" font-size="11" font-weight="500" fill="#475569">• Missing value context inference</text>
       <text x="14" y="96" font-size="11" font-weight="500" fill="#475569">• Type coercion &amp; semantic flags</text>
-      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">• Prompt strategy: Generative Patch</text>
+      <text x="14" y="114" font-size="11" font-weight="500" fill="#475569">  Seed Derivation: s_3</text>
       <rect x="14" y="128" width="236" height="24" rx="4" fill="#f0fdfa"/>
       <text x="20" y="144" font-size="10.5" font-weight="700" fill="#0f766e">Output: Candidate Plan P_3</text>
     </g>
 
-    <text x="20" y="628" font-size="10.5" font-style="italic" fill="#6366f1">• Independent LLM Invocations across Distinct Prompts</text>
+    <text x="20" y="628" font-size="10.5" font-style="italic" fill="#6366f1">  Independent Plan Samples Derived by Seed</text>
   </g>
 
   <!-- Connectors Stage 2 -> Stage 3 -->
@@ -254,7 +254,7 @@
       <text x="12" y="78" font-size="11" font-weight="600" fill="#78350f">• Disputes Target Conflicted Cells</text>
       <text x="12" y="96" font-size="11" font-weight="500" fill="#475569">• 1-Click Clarification Options</text>
       <text x="12" y="114" font-size="11" font-weight="500" fill="#475569">• Minimal Question Overhead</text>
-      <text x="12" y="132" font-size="11" font-weight="500" fill="#475569">• Zero Question Fatigue</text>
+      <text x="12" y="132" font-size="11" font-weight="500" fill="#475569">  Selective Clarification</text>
       
       <!-- UI Mock Preview Card -->
       <rect x="12" y="146" width="178" height="52" rx="6" fill="#ffffff" stroke="#fcd34d"/>
@@ -286,7 +286,7 @@
       <text x="20" y="171" font-size="10" font-weight="700" fill="#065f46">Consensus Matrix T*</text>
       <text x="20" y="185" font-size="9.5" fill="#047857">100% Deterministic Patches</text>
 
-      <text x="12" y="214" font-size="10" font-weight="600" fill="#059669">Zero silent data corruption</text>
+      <text x="12" y="214" font-size="10" font-weight="600" fill="#059669">Low-Disagreement Consensus</text>
     </g>
   </g>
 
@@ -326,7 +326,7 @@
       <rect x="0" y="0" width="125" height="260" rx="9" fill="#ffffff" stroke="#64748b" stroke-width="1.5"/>
       <rect x="8" y="12" width="80" height="20" rx="4" fill="#f1f5f9"/>
       <text x="14" y="26" font-size="9.5" font-weight="700" fill="#334155">AUDIT TRAIL</text>
-      <text x="8" y="52" font-size="13" font-weight="700" fill="#0f172a">Provable Audit Report</text>
+      <text x="8" y="52" font-size="13" font-weight="700" fill="#0f172a">Data Cleaning Audit Report</text>
       <text x="8" y="74" font-size="10" font-weight="500" fill="#475569">• PDF Certificate</text>
       <text x="8" y="92" font-size="10" font-weight="500" fill="#475569">• BEFORE Table</text>
       <text x="8" y="110" font-size="10" font-weight="500" fill="#475569">• AFTER Table</text>
