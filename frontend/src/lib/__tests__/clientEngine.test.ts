@@ -83,28 +83,60 @@ Bob Taylor,(blank),(blank)`;
     expect(consensusRes.status).toBe('needs_clarification');
     expect(consensusRes.consensus_score).toBeGreaterThan(0.0);
 
-    // Clarifying with Option 0 (merge duplicates & impute)
+    // Clarifying with Option 0 (merge duplicates & prune incomplete rows)
     const clarifyRes = clientClarify(ds.id, 0);
     expect(clarifyRes.status).toBe('applied');
-    expect(clarifyRes.patch_summary?.deleted_rows).toBe(1);
-    expect(clarifyRes.patch_summary?.edited_cells).toBeGreaterThanOrEqual(2);
+    expect(clarifyRes.patch_summary?.deleted_rows).toBe(2);
+    expect(clarifyRes.patch_summary?.edited_cells).toBeGreaterThanOrEqual(1);
 
-    // Profile after cleaning: duplicate John Smith removed, rows=3, null_count=0
+    // Profile after cleaning: duplicate John Smith removed, incomplete Bob Taylor pruned, rows=2, null_count=0
     const profAfter = clientGetProfile(ds.id);
-    expect(profAfter.rows).toBe(3);
+    expect(profAfter.rows).toBe(2);
     const phoneAfter = profAfter.columns.find((c) => c.name === 'PHONE');
     const emailAfter = profAfter.columns.find((c) => c.name === 'EMAIL');
     expect(phoneAfter?.null_count).toBe(0);
     expect(emailAfter?.null_count).toBe(0);
 
-    // Verified preview has non-blank values
+    // Verified preview has non-blank values and NO "Unknown" strings
     const records = profAfter.preview;
-    expect(records.length).toBe(3);
+    expect(records.length).toBe(2);
     expect(records[0].NAME).toBe('John Smith');
     expect(records[0].PHONE).toBe('555-0199');
     expect(records[1].NAME).toBe('Alice Brown');
-    expect(records[1].EMAIL).not.toBe('(blank)');
-    expect(records[2].NAME).toBe('Bob Taylor');
-    expect(records[2].PHONE).not.toBe('(blank)');
+    expect(records[1].EMAIL).toBe('alice.brown@gmail.com');
+    expect(records.some((r) => r.NAME === 'Bob Taylor')).toBe(false);
+  });
+
+  it('correctly handles user table with literal "Unknown" strings and produces clean PDF/CSV without Unknown', async () => {
+    const userCsv = `NAME,PHONE,EMAIL
+John Smith,555-0199,john@gmail.com
+John Smith,Unknown,john@gmail.com
+Alice Brown,555-0122,Unknown
+Bob Taylor,Unknown,Unknown`;
+
+    const file = new File([userCsv], 'jk.csv', { type: 'text/csv' });
+    const ds = await clientIngestFile(file);
+    expect(ds.rows).toBe(4);
+
+    const profBefore = clientGetProfile(ds.id);
+    expect(profBefore.columns.find((c) => c.name === 'PHONE')?.null_count).toBe(2);
+    expect(profBefore.columns.find((c) => c.name === 'EMAIL')?.null_count).toBe(2);
+
+    clientClarify(ds.id, 0);
+
+    const profAfter = clientGetProfile(ds.id);
+    expect(profAfter.rows).toBe(2);
+    expect(profAfter.preview[1].EMAIL).toBe('alice.brown@gmail.com');
+
+    // Export PDF
+    const pdfBlob = clientExportPdf(ds.id);
+    expect(pdfBlob.size).toBeGreaterThan(100);
+
+    // Export CSV
+    const csvBlob = clientExportCsv(ds.id);
+    const csvText = await csvBlob.text();
+    expect(csvText.includes('Unknown')).toBe(false);
+    expect(csvText.includes('Bob Taylor')).toBe(false);
+    expect(csvText.includes('alice.brown@gmail.com')).toBe(true);
   });
 });

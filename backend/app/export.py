@@ -150,17 +150,20 @@ def export_pdf(
 
             for c_idx, c_name in enumerate(cols):
                 val = sub_df.iloc[r_idx][c_name]
-                is_blank = pd.isna(val) or str(val).strip() in ("", "(blank)", "None", "nan", "NaN")
+                is_blank = pd.isna(val) or bool(re.match(r"^\s*\(?(blank|unknown|null|none|nan|missing|undefined|\[unknown\]|\[missing\]|\[empty\])\)?\s*$", str(val), re.IGNORECASE)) or str(val).strip() in ("", "-")
                 str_val = "" if is_blank else str(val).strip()
 
                 if is_after:
-                    # Cell was modified or filled during cleaning
+                    orig_val = None
+                    if df_before is not None and "_rid" in df_before.columns and row_rid in df_before["_rid"].values:
+                        matched = df_before.loc[df_before["_rid"] == row_rid, c_name]
+                        if len(matched) > 0:
+                            orig_val = matched.iloc[0]
+                    orig_is_blank = pd.isna(orig_val) or bool(re.match(r"^\s*\(?(blank|unknown|null|none|nan|missing|undefined|\[unknown\]|\[missing\]|\[empty\])\)?\s*$", str(orig_val), re.IGNORECASE)) or str(orig_val).strip() in ("", "-")
+
                     is_modified = is_reshaped if (c_idx == sales_c_idx) else (
                         (row_rid, c_name) in edits_dict or (
-                            df_before is not None and not df_before.empty and (
-                                str_val == "Unknown" or
-                                (r_idx < len(df_before) and str(df_before.iloc[r_idx].get(c_name, "")).strip() != str_val and str(df_before.iloc[r_idx].get(c_name, "")).strip() in ("", "None", "nan", "NaN", "(blank)"))
-                            )
+                            orig_val is not None and str_val != "" and (orig_is_blank or str(orig_val).strip() != str_val)
                         )
                     )
 
@@ -178,7 +181,9 @@ def export_pdf(
                         row_cells.append(str_val)
                 else:
                     # Ingested table: clearly highlight missing or deleted rows
-                    is_row_deleted = (row_rid in deleted_rids) or (df_after is not None and len(df_after) < len(df_before) and row_rid not in (df_after["_rid"].values if "_rid" in df_after.columns else []))
+                    is_row_deleted = (row_rid in deleted_rids) or (
+                        df_after is not None and "_rid" in df_after.columns and row_rid not in df_after["_rid"].values
+                    )
                     if is_blank:
                         cell_text = "(blank) [!]"
                         table_styles.extend([
@@ -187,8 +192,8 @@ def export_pdf(
                             ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),
                         ])
                         row_cells.append(cell_text)
-                    elif is_row_deleted and c_idx == 0:
-                        cell_text = f"{str_val} [DELETED]"
+                    elif is_row_deleted:
+                        cell_text = str_val if str_val else "[Empty]"
                         table_styles.extend([
                             ("BACKGROUND", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#fee2e2")),
                             ("TEXTCOLOR", (c_idx + 1, r_idx + 1), (c_idx + 1, r_idx + 1), colors.HexColor("#b91c1c")),

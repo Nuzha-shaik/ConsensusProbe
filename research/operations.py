@@ -1,5 +1,6 @@
 """Data cleaning operations: pure, copy-on-write, return (new_df, Patch)."""
 from __future__ import annotations
+import re
 import json
 from typing import Any, Callable
 import pandas as pd
@@ -167,6 +168,17 @@ def handle_missing(df: pd.DataFrame, col: str, strategy: str) -> tuple[pd.DataFr
         fill_val = mode.iloc[0]
     elif strategy.startswith('fill:'):
         fill_val = strategy[5:]
+        if 'inferred@' in fill_val and 'NAME' in result.columns:
+            domain = fill_val.split('@')[-1]
+            cell_edits = {}
+            for idx in result.index[null_mask]:
+                rid = result.at[idx, '_rid']
+                name_val = str(result.at[idx, 'NAME']).strip()
+                name_slug = re.sub(r'[^a-z0-9]+', '.', name_val.lower()).strip('.') if name_val else 'contact'
+                inferred_email = f"{name_slug}@{domain}"
+                cell_edits[(rid, col)] = inferred_email
+                result.at[idx, col] = inferred_email
+            return result, Patch.create(cell_edits=cell_edits)
     else:
         raise OperationError(f"handle_missing: unknown strategy '{strategy}'")
 

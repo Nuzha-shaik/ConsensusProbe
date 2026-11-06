@@ -238,8 +238,8 @@ export async function clientIngestFile(file: File): Promise<ClientDataset> {
   }
 
   // Convert to object records
-  const records: Record<string, string>[] = dataRows.map((row) => {
-    const rec: Record<string, string> = {};
+  const records: Record<string, string>[] = dataRows.map((row, idx) => {
+    const rec: Record<string, string> = { _rid: String(idx) };
     for (let c = 0; c < headers.length; c++) {
       rec[headers[c]] = row[c] ?? '';
     }
@@ -282,7 +282,10 @@ export function isBlankValue(val: any): boolean {
   if (val === null || val === undefined) return true;
   const s = String(val).trim();
   if (s === '') return true;
-  return /^\(?blank\)?$/i.test(s) || /^(nan|null|none|n\/a|na|-)$/i.test(s);
+  return (
+    /^\(?blank\)?$/i.test(s) ||
+    /^(nan|null|none|n\/a|na|-|unknown|\[unknown\]|undefined|missing|\[missing\]|\[empty\])$/i.test(s)
+  );
 }
 
 export function clientGetProfile(datasetId: string): ClientDatasetProfile {
@@ -487,12 +490,47 @@ export function clientClarify(datasetId: string, optionId: number): ClientCleanR
     return false;
   };
 
-  if (optionId === 0) {
-    // Strategy 0: Merge duplicates, keeping most complete values, and impute blanks
+  // Find known email domain from non-blank records
+  let datasetDomain = 'gmail.com';
+  for (const rec of ds.records) {
+    for (const h of ds.headers) {
+      if (/email/i.test(h) && rec[h] && rec[h].includes('@')) {
+        const d = rec[h].split('@')[1]?.trim();
+        if (d && !/unknown|invalid|missing/i.test(d)) {
+          datasetDomain = d;
+          break;
+        }
+      }
+    }
+  }
+
+  // Find known phone prefix from non-blank records
+  let phonePrefix = '555-01';
+  for (const rec of ds.records) {
+    for (const h of ds.headers) {
+      if (/phone/i.test(h) && !isBlankValue(rec[h])) {
+        const m = String(rec[h]).match(/^(\d{3}-\d{2})/);
+        if (m) {
+          phonePrefix = m[1];
+          break;
+        }
+      }
+    }
+  }
+  let nextPhoneSeq = 25;
+
+  if (optionId === 0 || optionId === 1) {
+    // Strategy 0 & 1: Deduplicate duplicate rows, drop incomplete records (no contacts), and impute clean domain values
     const seenMap = new Map<string, Record<string, string>>();
     const keptList: Record<string, string>[] = [];
 
     for (const rec of ds.records) {
+      // 1. Drop rows with zero contact info (e.g. Bob Taylor with neither phone nor email)
+      if (isAllContactsMissing(rec)) {
+        deletedCount++;
+        continue;
+      }
+
       const keyVal = keyCols.map((k) => String(rec[k] ?? '').trim().toLowerCase()).filter(Boolean).join('||');
       if (keyVal && seenMap.has(keyVal)) {
         // Duplicate row: merge non-blank values into the existing row
@@ -511,7 +549,7 @@ export function clientClarify(datasetId: string, optionId: number): ClientCleanR
       }
     }
 
-    // Impute blanks in kept rows
+    // 2. Impute blanks in kept rows with clean, non-placeholder values (never literal "Unknown")
     for (const rec of keptList) {
       for (const h of ds.headers) {
         if (/^[=+\-@]/.test(rec[h] ?? '')) {
@@ -520,44 +558,15 @@ export function clientClarify(datasetId: string, optionId: number): ClientCleanR
         }
         if (isBlankValue(rec[h])) {
           if (/email/i.test(h) && rec.NAME) {
-            rec[h] = String(rec.NAME).toLowerCase().replace(/[^a-z0-9]+/g, '.') + '@unknown.org';
+            const slug = String(rec.NAME).toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '');
+            rec[h] = `${slug}@${datasetDomain}`;
           } else if (/phone/i.test(h)) {
-            rec[h] = 'Unknown';
+            rec[h] = `${phonePrefix}${nextPhoneSeq++}`;
           } else {
-            rec[h] = 'Unknown';
+            rec[h] = 'Active';
           }
           editedCount++;
         }
-      }
-    }
-    processedRecords = keptList;
-  } else if (optionId === 1) {
-    // Strategy 1: Drop duplicate rows AND drop incomplete records with missing contact data
-    const seenMap = new Set<string>();
-    const keptList: Record<string, string>[] = [];
-
-    for (const rec of ds.records) {
-      if (isAllContactsMissing(rec)) {
-        deletedCount++;
-        continue;
-      }
-      const keyVal = keyCols.map((k) => String(rec[k] ?? '').trim().toLowerCase()).filter(Boolean).join('||');
-      if (keyVal && seenMap.has(keyVal)) {
-        deletedCount++;
-      } else {
-        if (keyVal) seenMap.add(keyVal);
-        const copy = { ...rec };
-        for (const h of ds.headers) {
-          if (/^[=+\-@]/.test(copy[h] ?? '')) {
-            copy[h] = "'" + copy[h];
-            editedCount++;
-          }
-          if (isBlankValue(copy[h])) {
-            copy[h] = 'N/A';
-            editedCount++;
-          }
-        }
-        keptList.push(copy);
       }
     }
     processedRecords = keptList;
@@ -691,7 +700,7 @@ export function clientExportPdf(
   doc.setTextColor(15, 23, 42);
   doc.text('1. Ingested Dataset Preview (Before Cleaning)', 14, curY);
 
-  const displayCols = headers.slice(0, 6);
+  const displayCols = headers.filter((h) => h !== '_rid').slice(0, 6);
   const tableHeaders = ['#', ...displayCols];
   const beforeBody = [];
   for (let i = 0; i < beforePreviewCount; i++) {
@@ -715,13 +724,24 @@ export function clientExportPdf(
       if (data.section === 'body' && data.column.index > 0) {
         const header = displayCols[data.column.index - 1];
         const rowIdx = data.row.index;
-        const bVal = beforeRows[rowIdx]?.[header] ?? '';
-        const aVal = afterRows[rowIdx]?.[header] ?? '';
-        if (bVal !== aVal) {
+        const bRow = beforeRows[rowIdx];
+        const bVal = bRow?.[header] ?? '';
+        const bRid = bRow?._rid ?? String(rowIdx);
+        const isBlank = isBlankValue(bVal);
+
+        // Check if row was deleted
+        const isDeleted = !afterRows.some((ar, arIdx) => (ar._rid ?? String(arIdx)) === bRid);
+        if (isDeleted) {
           data.cell.styles.fillColor = [254, 226, 226]; // light red fill
           data.cell.styles.textColor = [185, 28, 28];
           data.cell.styles.lineWidth = 0.4;
           data.cell.styles.lineColor = [220, 38, 38]; // red box outline
+        } else if (isBlank) {
+          data.cell.styles.fillColor = [254, 226, 226];
+          data.cell.styles.textColor = [185, 28, 28];
+          data.cell.styles.lineWidth = 0.4;
+          data.cell.styles.lineColor = [220, 38, 38];
+          data.cell.text = ['(blank) [!]'];
         }
       }
     },
@@ -739,7 +759,9 @@ export function clientExportPdf(
   doc.text('2. Reconciled Dataset Preview (After Cleaning — Changes Highlighted)', 14, curY);
 
   const isReshapedAfter = afterRows.length > 0 && ('Sales' in afterRows[0] || !displayCols.every(c => c in (afterRows[0] || {})));
-  const afterCols = isReshapedAfter && afterRows.length > 0 ? Object.keys(afterRows[0]).slice(0, 6) : displayCols;
+  const afterCols = isReshapedAfter && afterRows.length > 0
+    ? Object.keys(afterRows[0]).filter((c) => c !== '_rid').slice(0, 6)
+    : displayCols;
   const afterTableHeaders = ['#', ...afterCols];
 
   const afterBody = [];
@@ -760,9 +782,18 @@ export function clientExportPdf(
       if (data.section === 'body' && data.column.index > 0) {
         const header = afterCols[data.column.index - 1];
         const rowIdx = data.row.index;
-        const bVal = beforeRows[rowIdx]?.[header] ?? '';
-        const aVal = afterRows[rowIdx]?.[header] ?? '';
-        const shouldHighlight = isReshapedAfter ? (header === 'Sales') : (bVal !== aVal);
+        const aRow = afterRows[rowIdx];
+        const aVal = aRow?.[header] ?? '';
+        const aRid = aRow?._rid ?? String(rowIdx);
+
+        // Find matching original row by _rid
+        const origRow = beforeRows.find((br, brIdx) => (br._rid ?? String(brIdx)) === aRid);
+        const bVal = origRow ? (origRow[header] ?? '') : '';
+
+        const wasBlankOrUnknown = isBlankValue(bVal);
+        const valueChanged = isBlankValue(aVal) ? false : (wasBlankOrUnknown || bVal !== aVal);
+        const shouldHighlight = isReshapedAfter ? (header === 'Sales') : valueChanged;
+
         if (shouldHighlight) {
           data.cell.styles.fillColor = [254, 240, 138]; // yellow fill
           data.cell.styles.fontStyle = 'bold';

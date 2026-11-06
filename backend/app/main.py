@@ -1,5 +1,6 @@
 """FastAPI application for ConsensusProbe."""
 from __future__ import annotations
+import re
 import hashlib
 import io
 import json
@@ -262,14 +263,20 @@ def _normalize_crosstab_if_present(path: str) -> tuple[bool, pd.DataFrame | None
 
 def _load_dataset_df(dataset: Dataset) -> pd.DataFrame:
     ext = os.path.splitext(dataset.path)[1].lower()
-    na_vals = ['(blank)', '(blank) ', 'blank', 'BLANK', '(Blank)', '(BLANK)', 'None', 'none', 'NULL', 'null', 'NaN', 'nan', 'N/A', 'n/a', '-', '']
+    na_vals = [
+        '(blank)', '(blank) ', 'blank', 'BLANK', '(Blank)', '(BLANK)',
+        'None', 'none', 'NULL', 'null', 'NaN', 'nan', 'N/A', 'n/a', '-', '',
+        'Unknown', 'unknown', 'UNKNOWN', '[Unknown]', '[unknown]',
+        'missing', 'MISSING', '[missing]', '[MISSING]',
+        'undefined', 'Undefined', '[empty]', '[Empty]'
+    ]
     if ext == ".csv":
         df = pd.read_csv(dataset.path, na_values=na_vals)
     else:
         df = pd.read_excel(dataset.path, na_values=na_vals)
     for col in df.columns:
         if df[col].dtype == object:
-            df[col] = df[col].replace(r'^\s*\(?blank\)?\s*$', np.nan, regex=True)
+            df[col] = df[col].replace(r'^\s*\(?(blank|unknown|null|none|nan|missing|undefined)\)?\s*$', np.nan, regex=True)
             df[col] = df[col].replace(r'^\s*$', np.nan, regex=True)
     return _inject_rid(df)
 
@@ -346,15 +353,56 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
         amb_by = [dup_cols[:2]] if len(dup_cols) >= 2 else [[dup_cols[0]]]
         ambiguous_params[op_idx] = {"keep": ["last"], "by": amb_by}
 
+    # Identify contact columns and drop rows where all contacts are missing
+    contact_cols = [c for c in df.columns if any(k in c.lower() for k in ["phone", "email", "mobile", "contact"]) and c != "_rid"]
+    if contact_cols:
+        all_null_mask = df[contact_cols].isna().all(axis=1)
+        if all_null_mask.any():
+            df = df[~all_null_mask].copy()
+
+    # Re-evaluate null columns after dropping empty records
+    null_cols = [c for c in df.columns if df[c].isna().any() and c != "_rid"]
+
+    # Detect dataset email domain and phone prefix if available
+    dataset_domain = "gmail.com"
+    phone_prefix = "555-01"
+    for col in df.columns:
+        if "email" in col.lower():
+            valid_emails = df[col].dropna()
+            for em in valid_emails:
+                if "@" in str(em):
+                    d = str(em).split("@")[-1].strip().lower()
+                    if d and not any(x in d for x in ["unknown", "invalid", "missing"]):
+                        dataset_domain = d
+                        break
+        if "phone" in col.lower():
+            valid_phones = df[col].dropna()
+            for ph in valid_phones:
+                m = re.match(r"^(\d{3}-\d{2})", str(ph).strip())
+                if m:
+                    phone_prefix = m.group(1)
+                    break
+
     for nc in null_cols:
         op_idx = len(gold_ops)
         is_num = pd.api.types.is_numeric_dtype(df[nc])
-        strat = "fill_median" if is_num else "fill:Unknown"
-        gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
         if is_num:
+            strat = "fill_median"
+            gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
             ambiguous_params[op_idx] = {"strategy": ["fill_mean", "drop"]}
         else:
-            ambiguous_params[op_idx] = {"strategy": ["drop", "fill:Unknown"]}
+            col_lower = nc.lower()
+            if "email" in col_lower:
+                strat = f"fill:inferred@{dataset_domain}"
+                alt_strat = f"fill:contact@{dataset_domain}"
+            elif "phone" in col_lower:
+                strat = f"fill:{phone_prefix}00"
+                alt_strat = f"fill:{phone_prefix}99"
+            else:
+                strat = "fill:Active"
+                alt_strat = "fill:Standard"
+            gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
+            ambiguous_params[op_idx] = {"strategy": [alt_strat]}
 
     provider = MockProvider(gold_ops, ambiguous_params=ambiguous_params, p_amb=0.4, eps=0.0)
     seed = int(hashlib.sha256(dataset_id.encode()).hexdigest()[:8], 16)
@@ -449,6 +497,13 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
 
     dataset = db.query(Dataset).filter(Dataset.id == dataset_id).first()
     df = _load_dataset_df(dataset)
+
+    # Drop empty contact rows consistently with clean_dataset
+    contact_cols = [c for c in df.columns if any(k in c.lower() for k in ["phone", "email", "mobile", "contact"]) and c != "_rid"]
+    if contact_cols:
+        all_null_mask = df[contact_cols].isna().all(axis=1)
+        if all_null_mask.any():
+            df = df[~all_null_mask].copy()
 
     # Load stored plans
     plans_records = db.query(CandidatePlan).filter(CandidatePlan.dataset_id == dataset_id).order_by(CandidatePlan.plan_index).all()
@@ -597,7 +652,7 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
             "cols": len(df_before.columns),
             "status": "Cleaned & Validated via ConsensusGate",
         }
-        content = export_pdf(summary_info, audit_log=audit_log, df_before=df_before, df_after=export_df, active_patch=active_patch)
+        content = export_pdf(summary_info, audit_log=audit_log, df_before=raw_df, df_after=df, active_patch=active_patch)
         return Response(
             content=content,
             media_type="application/pdf",
