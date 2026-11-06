@@ -86,8 +86,86 @@ class CleanResponse(BaseModel):
     question: dict | None = None
     patch_summary: dict | None = None
 
-# --- In-memory active patch tracker for current session ---
+import time
+from collections import OrderedDict
+import numpy as np
+
+# --- Active patch cache with TTL & LRU eviction (M10) + DB persistence (H2) ---
 _ACTIVE_PATCHES: dict[str, Patch] = {}
+_PATCH_CACHE: OrderedDict[str, tuple[float, Patch]] = OrderedDict()
+PATCH_TTL_SECONDS = 3600  # 1 hour
+PATCH_CACHE_MAX_SIZE = 100
+
+
+def _to_json_safe(v: Any) -> Any:
+    if isinstance(v, (np.integer, int)):
+        return int(v)
+    if isinstance(v, (np.floating, float)):
+        return float(v)
+    if isinstance(v, (np.ndarray, list)):
+        return [_to_json_safe(x) for x in v]
+    if isinstance(v, dict):
+        return {str(k): _to_json_safe(val) for k, val in v.items()}
+    return v
+
+
+def patch_to_dict(patch: Patch) -> dict:
+    return {
+        "deleted_rids": [int(r) for r in patch.deleted_rids],
+        "cell_edits": [[[int(k[0]), str(k[1])], _to_json_safe(v)] for k, v in patch.cell_edits],
+        "flagged": [[int(item[0]), str(item[1])] for item in patch.flagged],
+    }
+
+
+def patch_from_dict(d: dict) -> Patch:
+    if not d:
+        return Patch.create()
+    cell_edits = {tuple(k): v for k, v in d.get("cell_edits", [])}
+    flagged = {k: v for k, v in d.get("flagged", [])}
+    return Patch.create(
+        deleted_rids=d.get("deleted_rids", []),
+        cell_edits=cell_edits,
+        flagged=flagged,
+    )
+
+
+def get_active_patch(dataset_id: str, db: Session) -> Patch | None:
+    now = time.time()
+    if dataset_id in _PATCH_CACHE:
+        ts, patch = _PATCH_CACHE[dataset_id]
+        if now - ts < PATCH_TTL_SECONDS:
+            _PATCH_CACHE.move_to_end(dataset_id)
+            return patch
+        else:
+            del _PATCH_CACHE[dataset_id]
+            _ACTIVE_PATCHES.pop(dataset_id, None)
+
+    # Fallback to DB (H2)
+    run = (
+        db.query(OperationRun)
+        .filter(OperationRun.dataset_id == dataset_id, OperationRun.status == "applied")
+        .order_by(OperationRun.created_at.desc())
+        .first()
+    )
+    if run and run.applied_patch and isinstance(run.applied_patch, dict) and "full_patch" in run.applied_patch:
+        patch = patch_from_dict(run.applied_patch["full_patch"])
+        set_active_patch(dataset_id, patch)
+        return patch
+    return None
+
+
+def set_active_patch(dataset_id: str, patch: Patch):
+    now = time.time()
+    # Evict expired entries (M10)
+    expired = [k for k, (ts, _) in _PATCH_CACHE.items() if now - ts >= PATCH_TTL_SECONDS]
+    for k in expired:
+        del _PATCH_CACHE[k]
+        _ACTIVE_PATCHES.pop(k, None)
+    if len(_PATCH_CACHE) >= PATCH_CACHE_MAX_SIZE:
+        oldest_k, _ = _PATCH_CACHE.popitem(last=False)
+        _ACTIVE_PATCHES.pop(oldest_k, None)
+    _PATCH_CACHE[dataset_id] = (now, patch)
+    _ACTIVE_PATCHES[dataset_id] = patch
 
 # --- Routes ---
 
@@ -168,8 +246,9 @@ def get_dataset_profile(dataset_id: str, db: Session = Depends(get_db)):
     df = _load_dataset_df(dataset)
 
     # If an active patch exists, apply it for the profile
-    if dataset_id in _ACTIVE_PATCHES:
-        df = _ACTIVE_PATCHES[dataset_id].apply(df)
+    active_patch = get_active_patch(dataset_id, db)
+    if active_patch:
+        df = active_patch.apply(df)
 
     cols_profile = []
     for col in df.columns:
@@ -204,40 +283,32 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
 
     df = _load_dataset_df(dataset)
 
-    # Use simulated provider or generate cleaning operations
-    # Synthesize realistic candidate plans based on dataset features
-    plans = []
-    # Identify duplicate candidates and missing columns
+    # Use real research engine: MockProvider (H6)
     dup_cols = [c for c in df.columns if c not in ("_rid", "price", "total", "quantity")]
     null_cols = [c for c in df.columns if df[c].isna().any() and c != "_rid"]
 
-    # Plan 0: Standard deduplication
-    p0_ops = []
-    if dup_cols:
-        p0_ops.append({"op": "deduplicate", "params": {"by": [dup_cols[0]], "keep": "first"}})
-    for nc in null_cols:
-        p0_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": "drop"}})
-    plans.append({"ops": p0_ops, "confidence": 0.88})
+    gold_ops = []
+    ambiguous_params = {}
 
-    # Plan 1: Keep last or impute mean
-    p1_ops = []
     if dup_cols:
-        p1_ops.append({"op": "deduplicate", "params": {"by": [dup_cols[0]], "keep": "first"}})
-    for nc in null_cols:
-        strategy = "fill_mean" if pd.api.types.is_numeric_dtype(df[nc]) else "drop"
-        p1_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strategy}})
-    plans.append({"ops": p1_ops, "confidence": 0.82})
+        op_idx = len(gold_ops)
+        gold_ops.append({"op": "deduplicate", "params": {"by": [dup_cols[0]], "keep": "first"}})
+        amb_by = [dup_cols[:2]] if len(dup_cols) >= 2 else [[dup_cols[0]]]
+        ambiguous_params[op_idx] = {"keep": ["last"], "by": amb_by}
 
-    # Plan 2: Alternative deduplication scope
-    p2_ops = []
-    if len(dup_cols) >= 2:
-        p2_ops.append({"op": "deduplicate", "params": {"by": dup_cols[:2], "keep": "first"}})
-    elif dup_cols:
-        p2_ops.append({"op": "deduplicate", "params": {"by": [dup_cols[0]], "keep": "last"}})
     for nc in null_cols:
-        strategy = "fill_median" if pd.api.types.is_numeric_dtype(df[nc]) else "drop"
-        p2_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strategy}})
-    plans.append({"ops": p2_ops, "confidence": 0.79})
+        op_idx = len(gold_ops)
+        is_num = pd.api.types.is_numeric_dtype(df[nc])
+        strat = "fill_median" if is_num else "drop"
+        gold_ops.append({"op": "handle_missing", "params": {"col": nc, "strategy": strat}})
+        if is_num:
+            ambiguous_params[op_idx] = {"strategy": ["fill_mean", "drop"]}
+        else:
+            ambiguous_params[op_idx] = {"strategy": ["fill:Unknown"]}
+
+    provider = MockProvider(gold_ops, ambiguous_params=ambiguous_params, p_amb=0.4, eps=0.0)
+    seed = int(hashlib.sha256(dataset_id.encode()).hexdigest()[:8], 16)
+    plans = provider.generate_k(f"Clean dataset {dataset.filename}", seed=seed, k=3)
 
     # Store candidate plans
     db.query(CandidatePlan).filter(CandidatePlan.dataset_id == dataset_id).delete()
@@ -288,12 +359,13 @@ def clean_dataset(dataset_id: str, db: Session = Depends(get_db)):
 
     # If no disagreement or non-destructive, apply majority patch directly
     final_patch = majority_vote_patch(patches)
-    _ACTIVE_PATCHES[dataset_id] = final_patch
+    set_active_patch(dataset_id, final_patch)
 
     summary = {
         "deleted_rows": len(final_patch.deleted_rids),
         "edited_cells": len(final_patch.cell_edits),
         "flagged_rows": len(final_patch.flagged),
+        "full_patch": patch_to_dict(final_patch),
     }
 
     db.add(OperationRun(
@@ -334,7 +406,7 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
         raise HTTPException(status_code=400, detail="Invalid option selected")
 
     selected_patch = question.options[req.selected_option].patch
-    _ACTIVE_PATCHES[dataset_id] = selected_patch
+    set_active_patch(dataset_id, selected_patch)
 
     clarification.status = "resolved"
     clarification.answer = f"Option {req.selected_option}: {req.notes}"
@@ -343,6 +415,7 @@ def resolve_clarification(dataset_id: str, req: ClarifyRequest, db: Session = De
         "deleted_rows": len(selected_patch.deleted_rids),
         "edited_cells": len(selected_patch.cell_edits),
         "flagged_rows": len(selected_patch.flagged),
+        "full_patch": patch_to_dict(selected_patch),
     }
 
     db.add(OperationRun(
@@ -367,8 +440,9 @@ def analyze_dataset(dataset_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     df = _load_dataset_df(dataset)
-    if dataset_id in _ACTIVE_PATCHES:
-        df = _ACTIVE_PATCHES[dataset_id].apply(df)
+    active_patch = get_active_patch(dataset_id, db)
+    if active_patch:
+        df = active_patch.apply(df)
 
     total_cells = df.shape[0] * max(df.shape[1] - 1, 1)
     total_missing = int(df.isna().sum().sum())
@@ -396,8 +470,9 @@ def export_dataset(dataset_id: str, format: Literal["pdf", "csv", "xlsx"] = Quer
         raise HTTPException(status_code=404, detail="Dataset not found")
 
     df = _load_dataset_df(dataset)
-    if dataset_id in _ACTIVE_PATCHES:
-        df = _ACTIVE_PATCHES[dataset_id].apply(df)
+    active_patch = get_active_patch(dataset_id, db)
+    if active_patch:
+        df = active_patch.apply(df)
 
     # Always drop internal row id
     export_df = _drop_rid(df)
