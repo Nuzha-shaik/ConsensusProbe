@@ -20,3 +20,6 @@ backend/storage/
 firebase-debug.log
 .firebase/
 *.exe
+
+academicguard/
+scratch/

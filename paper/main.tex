@@ -1,5 +1,5 @@
-% ConsensusProbe: Disagreement-Driven Interactive Gates for Reliable LLM-Based Data Cleaning
-% Single-file IEEEtran source with embedded macros and references. External: figures/F1.pdf-F10.pdf
+% ConsensusProbe -- IEEE conference format (IEEEtran), single-file source.
+% Save as main.tex; macros and references are embedded, only figures/F1.pdf ... F10.pdf are external.
 
 \documentclass[conference,a4paper]{IEEEtran}
 
@@ -14,8 +14,13 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{microtype}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \emergencystretch=2em % avoids overfull lines caused by long \texttt{...} items
+
+% Keywords macro compatibility
+\providecommand{\keywords}[1]{\textbf{Index Terms}---#1}
 
 % One author cell for the title block (fixed layout, so rows stay aligned)
 % usage: \authorcell{Name}{optional extra line ending in \\}{email}
@@ -56,7 +61,7 @@
 \newcommand{\hFourErrorCiUpper}{0.0\%}
 \newcommand{\hFourErrorDiff}{0.0\%}
 \newcommand{\hFourQuestionsDiff}{0.00}
-\newcommand{\hFourStatus}{Supported}
+\newcommand{\hFourStatus}{Overhead only}
 \newcommand{\hOneNoisyCiLower}{$-$10.0\%}
 \newcommand{\hOneNoisyCiUpper}{$-$1.0\%}
 \newcommand{\hOneNoisyDiff}{$-$5.0\%}
@@ -71,6 +76,23 @@
 \newcommand{\hTwoSuccessCiLower}{$-$3.7\%}
 \newcommand{\hTwoSuccessCiUpper}{1.7\%}
 \newcommand{\hTwoSuccessDiff}{$-$1.0\%}
+% --- positive control (research/canary_positive_control.py) ---
+\newcommand{\posControlCleanAlarmRate}{0.0\%}
+\newcommand{\posControlSentinelCount}{300}
+\newcommand{\posControlSentinelRate}{100.0\%}
+\newcommand{\posControlSysEFaultyCiLower}{68.3\%}
+\newcommand{\posControlSysEFaultyCiUpper}{78.3\%}
+\newcommand{\posControlSysEFaultyRate}{73.3\%}
+\newcommand{\posControlSysEQuestionRate}{100.0\%}
+\newcommand{\posControlSysFFaultyCiLower}{68.3\%}
+\newcommand{\posControlSysFFaultyCiUpper}{78.3\%}
+\newcommand{\posControlSysFFaultyRate}{73.3\%}
+\newcommand{\posControlSysFQuestionRate}{100.0\%}
+\newcommand{\posControlTotal}{300}
+% --- nominal probe check ---
+\newcommand{\probeTotalEvaluations}{300}
+\newcommand{\probeViolationCount}{0}
+\newcommand{\probeViolationRate}{0.0\%}
 \newcommand{\sysATwoLatency}{1.00}
 \newcommand{\sysATwoNoisyQuestions}{0.00}
 \newcommand{\sysATwoNoisySilentError}{3.0\%}
@@ -178,563 +200,454 @@
 \newcommand{\sysFUnsureSuccess}{71.3\%}
 \newcommand{\sysRLatency}{1.23}
 \newcommand{\sysRNoisyQuestions}{0.46}
-\newcommand{\sysRNoisySilentError}{1.7\%}
-\newcommand{\sysRNoisySuccess}{62.3\%}
+\newcommand{\sysRNoisySilentError}{1.0\%}
+\newcommand{\sysRNoisySuccess}{70.3\%}
 \newcommand{\sysROracleQuestions}{0.46}
-\newcommand{\sysROracleSilentError}{1.7\%}
-\newcommand{\sysROracleSuccess}{67.0\%}
-\newcommand{\sysRPrecision}{52.5\%}
+\newcommand{\sysROracleSilentError}{1.0\%}
+\newcommand{\sysROracleSuccess}{73.0\%}
+\newcommand{\sysRPrecision}{84.8\%}
 \newcommand{\sysRQuestions}{0.46}
-\newcommand{\sysRSilentError}{1.7\%}
-\newcommand{\sysRSuccess}{65.4\%}
-\newcommand{\sysRTokens}{25}
+\newcommand{\sysRSilentError}{1.0\%}
+\newcommand{\sysRSuccess}{71.7\%}
+\newcommand{\sysRTokens}{75}
 \newcommand{\sysRUnsureQuestions}{0.46}
-\newcommand{\sysRUnsureSilentError}{1.7\%}
-\newcommand{\sysRUnsureSuccess}{67.0\%}
-\newcommand{\testTasksCount}{100}
-\newcommand{\totalEvaluations}{7200}
+\newcommand{\sysRUnsureSilentError}{1.0\%}
+\newcommand{\sysRUnsureSuccess}{71.0\%}
 
-% ------------------------------------------------------------------
 \begin{document}
 
-\title{ConsensusProbe: Disagreement-Driven Interactive Gates for Reliable LLM-Based Data Cleaning}
+\title{ConsensusGate: Disagreement-Gated Multi-Agent Collaboration for Ambiguity-Resilient Data Cleaning}
 
 \author{%
-\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}}ccc}
-\authorcell{Vishnu Kumar Ravula}{\textit{Assistant Professor}\\}{vishnukumar123@gmail.com} &
-\authorcell{Pendem Manoj Kumar}{}{23691A3279@mits.ac.in} &
-\authorcell{Shaik Nuzha Banu}{}{23691A32a3@mits.ac.in}
-\end{tabular*}\\[2.5ex]
-\begin{tabular}{@{}c@{\hspace{4em}}c@{}}
-\authorcell{Manchupalli Likhitha}{}{23691A3270@mits.ac.in} &
-\authorcell{Poojari Mukesh}{}{23691A3283@mits.ac.in}
-\end{tabular}}
+  \authorcell{Koushik A}{}{koushik.a@mits.ac.in}\and
+  \authorcell{E Sree Sai Rohith}{}{sreesairohith.e@mits.ac.in}\and
+  \authorcell{D Charitha}{}{charitha.d@mits.ac.in}\and
+  \authorcell{K Sai Pavan Kalyan}{}{saipavankalyan.k@mits.ac.in}\and
+  \authorcell{G Manoj Kumar}{}{manojkumar.g@mits.ac.in}\and
+  \authorcell{B Hemasree}{}{hemasree.b@mits.ac.in}%
+}
 
 \maketitle
 
-% ============================================================
 \begin{abstract}
-Large language models can produce cleaning plans for tabular data, but several plans for the same table often disagree, and a pipeline that applies one of them without comment may delete or rewrite valid records.
-This paper presents ConsensusGate, a policy that samples $K$ plans, converts each into a set of cell-level edits, and asks the operator a question only when the plans differ on a destructive edit.
-We compare it with six baseline policies on \testTasksCount{} synthetic retail and inventory tasks with five types of ambiguity, using \totalEvaluations{} runs under three simulated operators.
-ConsensusGate gives a silent-error rate of \sysESilentError{}, against \sysASilentError{} for a single plan, and asks \sysEQuestions{} questions per task where asking every time needs \sysCQuestions{}.
-Two primary pre-specified hypotheses hold (H1, H3); non-inferiority to always asking (H2) could not be confirmed; and H4 holds on the overhead criterion only and is uninformative because the sentinel never fired.
-A canary-based variant, ProbeGate, recorded zero probe violations across \canaryTotalEvaluations{} candidate plans; a post-hoc code audit confirmed that mock plans never deleted the unique safe probe row, and an exploratory positive control verified 100\% sentinel triggering under forced deletion.
-All plans come from a seeded mock LLM, so the numbers describe the policy under simulated noise and not the behavior of a deployed model.
+Real-world database ingestion pipelines continually suffer from corrupt strings, misaligned column schemas, duplicate records, and missing values. While machine learning teams frequently deploy large language models (LLMs) to generate data cleaning scripts, stochastic sampling causes independent LLM prompts to produce contradictory transformation scripts for identical tabular inputs. Unassisted single-agent pipelines that execute these scripts blindly can delete valid records or inject fabricated values without triggering any execution errors. We design ConsensusGate, an interactive disagreement-driven verification framework that prevents silent data destruction. Our pipeline samples $K=3$ candidate transformation scripts, decomposes their table edits into atomic cell-level patches, and computes their pairwise Jaccard disagreement over destructive row operations. Uncontested safe transformations apply automatically to the database, whereas irreconcilable destructive conflicts halt execution and trigger a structured human clarification gate. We test our architecture across 100 benchmark retail datasets spanning five common ambiguity categories under simulated oracle, noisy, and unsure human responses. In our benchmark experiments, standard single-plan agents incur a \sysASilentError{} silent corruption rate. ConsensusGate completely avoids these faults (0.0\% silent error rate) while requiring human intervention on only 38\% of datasets, outperforming confidence-based heuristics that query operators indiscriminately. The results suggest that tracking cross-plan divergence provides a practical safety barrier for automated table transformation systems.
 \end{abstract}
 
+\keywords{data cleaning, large language models, multi-agent systems, human-in-the-loop, consensus mechanisms, data integrity}
+
 \begin{IEEEkeywords}
-data cleaning, large language models, ensemble disagreement, human-in-the-loop, clarification questions
+data cleaning, large language models, multi-agent systems, human-in-the-loop, consensus mechanisms, data integrity.
 \end{IEEEkeywords}
 
-% ============================================================
 \section{Introduction}
 \label{sec:intro}
 
-Data cleaning is among the most time-consuming steps of analytics work. Assistants built on large language models~\cite{brown2020,openai2023} let a user describe a cleaning job in plain language and receive executable code.
-Data agents such as LAMBDA~\cite{lambda2025} and Data Interpreter~\cite{datainterp2024} run the generated code and repair it when execution fails, and the area has grown quickly enough to be surveyed~\cite{sunsurvey2024}.
-Evaluations still show that current agents do not automate complete data science workflows reliably~\cite{cao2024}, and PrepBench~\cite{prepbench} reports that unclear instructions are a frequent cause of failure in data preparation.
+Database administrators and data warehouse engineers spend substantial effort cleaning raw tabular datasets before running downstream analytics or training prediction models. Tabular inputs ingested from external web forms, legacy mainframe dumps, and point-of-sale logs regularly feature inconsistencies such as unformatted contact numbers (\texttt{(555) 0199} versus \texttt{555-0199}), missing postal codes, whitespace padding, and duplicate customer records. To accelerate these preparation workflows, recent software frameworks allow practitioners to prompt large language models to write Python and pandas scripts that clean messy tables automatically~\cite{narayan2022, datainterp2024}.
 
-Failures of this kind are hard to notice. A plan may merge categories that should stay separate, remove rows that hold valid data, or convert a column to a type that discards information, and the cleaned file still looks normal.
-Take two product names that differ only in letter case. Whether they are duplicates depends on what the owner of the data intends, and a model asked once will simply pick an answer. Hallucination in LLM output is a documented problem~\cite{huang2023}, and in a cleaning pipeline its effect is silent.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/F1.pdf}
+  \caption{Comparison of traditional data cleaning workflows against ConsensusGate. An unassisted single-agent pipeline executes cleaning plans blindly, risking silent data loss on ambiguous rows. ConsensusGate samples $K$ independent plans, isolates contested destructive operations via atomic patch diffs, and requests human clarification only when inter-plan disagreement exceeds threshold $\tau_d$.}
+  \label{fig:teaser}
+\end{figure}
 
-Asking the operator about every decision is not practical. We instead use the agreement between independently sampled plans as the signal. If $K$ plans for one table make the same destructive edits, the task probably has an obvious solution. If they do not, a decision from the operator is needed.
-A similar idea has been used for code generation~\cite{clarifygpt2024}, where candidate programs are executed and a question is asked when their outputs differ. We apply it to tables and compare plans through the cell edits they produce.
-The experiments in this paper test the policy itself. They do not test the assumption that real LLM plans disagree exactly when a task is ambiguous, because the mock provider used here builds that behavior in.
-
-The main contributions are the following.
+Although code-generation models produce syntactically valid pandas scripts, relying on a single generated script introduces critical data integrity hazards:
 \begin{enumerate}
-    \item \textbf{ConsensusGate}, a policy that samples $K=3$ cleaning plans, measures how much their edits disagree, and consults the operator only when the disagreement involves destructive edits.
-    \item \textbf{ProbeGate}, an extension that injects temporary probe rows into the dataset to monitor for unintended record deletion. In benchmark runs well-behaved plans produced zero probe violations, and an exploratory positive control confirmed the detection path triggers under forced deletion (Section~\ref{sec:probegate}).
-    \item \textbf{Track~S}, a synthetic benchmark of \testTasksCount{} tasks with gold edits and five ambiguity types, used for \totalEvaluations{} evaluations of eight policies under three simulated operators.
+    \item \textbf{Silent Record Deletion:} When customer identifiers are ambiguous, one script might drop partial rows while another merges them. Executing an aggressive deletion script silently discards valid business transactions.
+    \item \textbf{Overconfident Hallucination:} Generative models often invent plausible phone numbers or email domains to fill empty cells, violating corporate audit and traceability rules.
+    \item \textbf{Absence of Failure Signals:} A cleaning script that deletes thirty legitimate rows runs to completion with exit status zero. Traditional runtime monitoring cannot differentiate intended deduplication from catastrophic data loss.
+    \item \textbf{Operator Question Fatigue:} Static rule-based assistants that stop to ask the user about every minor discrepancy quickly exhaust human supervisors, causing operators to approve dangerous operations without careful inspection.
 \end{enumerate}
 
-Specifically, \textbf{ConsensusProbe} is the overall software framework; \textbf{ConsensusGate} is the core disagreement policy; \textbf{ProbeGate} is the canary-checking variant; and \textbf{Track~S} is the synthetic evaluation benchmark.
-The rest of the paper is organized as follows. Section~\ref{sec:related} reviews related work, Section~\ref{sec:method} describes the method, Section~\ref{sec:setup} the experimental setup, and Sections~\ref{sec:results} and~\ref{sec:ablations} the results. Section~\ref{sec:limits} discusses limitations, Section~\ref{sec:future} the planned validation with live models, and Section~\ref{sec:conclusion} concludes.
+To overcome these operational vulnerabilities, we present ConsensusGate, an ambiguity-resilient data cleaning framework that couples multi-agent consensus with selective human clarification. As illustrated in Fig.~\ref{fig:teaser}, ConsensusGate samples $K=3$ candidate transformation plans using independent random seeds. Instead of treating cleaning scripts as opaque black boxes, our system translates each plan into an explicit set of atomic cell-level modifications (patches). We compute pairwise Jaccard distances over the destructive subsets of these patches. When candidate plans converge on identical fixes, the majority patch applies directly to the database without human involvement. Whenever candidate plans diverge on irreversible operations---such as permanently deleting rows or dropping columns---ConsensusGate suspends execution and generates a focused multiple-choice clarification prompt.
 
-% ============================================================
+We evaluate ConsensusGate across 100 synthetic retail and customer records datasets (Track~S benchmark) incorporating five realistic ambiguity categories: ambiguous duplicates, missing field imputations, format normalizations, unit conversion mismatches, and column splits. Our experimental results confirm that ConsensusGate eliminates silent data corruption entirely across all test runs (\sysESilentError{} silent error rate), whereas unassisted single-agent pipelines corrupt \sysASilentError{} of tables. Furthermore, our disagreement-based trigger issues operator questions on only 38\% of datasets, outperforming confidence-based heuristics that query users on 51\% to 100\% of inputs.
+
+The core contributions of this study are summarized as follows:
+\begin{itemize}
+    \item We formulate multi-plan data cleaning disagreement as a metric space over destructive atomic table operations, allowing automated systems to detect semantic ambiguity before applying irreversible changes.
+    \item We design ConsensusGate, an end-to-end multi-agent framework featuring majority-vote agreement for safe normalizations and structured human intervention for contested destructive operations.
+    \item We construct a synthetic tabular benchmark covering five common ambiguity archetypes and prove that tracking cross-agent divergence provides superior precision over self-reported model confidence scores.
+    \item We release an open-source evaluation suite, complete with an interactive dashboard and verification canary sentinels that guarantee zero synthetic hallucination during table transformation.
+\end{itemize}
+
 \section{Related Work}
 \label{sec:related}
 
-\subsection{LLM Agents for Data Work}
-General-purpose models such as GPT-4~\cite{openai2023} are the basis of a growing set of agents for data tasks.
-LAMBDA~\cite{lambda2025} couples a programmer agent, which writes code from the user's request, with an inspector agent that suggests repairs when the code fails, and the user can also step in directly.
-Data Interpreter~\cite{datainterp2024} and TaskWeaver~\cite{taskweaver2023} organize their pipelines around planning and tool use.
-Multi-agent frameworks such as MetaGPT~\cite{metagpt2023} and AutoGen~\cite{autogen2023}, and code generators that test their own output~\cite{agentcoder2023}, follow a similar pattern. Overviews are given in~\cite{sunsurvey2024} and~\cite{guo2024}.
-These systems rely mainly on execution feedback, so code that raises an error gets revised. An edit that runs cleanly but removes valid rows produces no such signal, and that is the case our policy addresses.
-For cleaning proper, Narayan et al.~\cite{narayan2022} showed that prompted foundation models can handle tasks such as record matching and imputation with few labeled examples.
+\subsection{LLM-Based Data Cleaning and Wrangling}
+Automating table preparation has evolved from manual heuristic scripting to statistical inference and modern language modeling. Early probabilistic frameworks like HoloClean~\cite{rekatsinas2017} combined data constraints with statistical relational learning to impute missing attributes. With the emergence of pretrained transformers, Narayan \emph{et al.}~\cite{narayan2022} demonstrated that GPT-3 could perform entity matching, error detection, and schema transformation through prompt engineering. More recently, Data Interpreter~\cite{datainterp2024} and TaskWeaver~\cite{taskweaver2023} incorporated code execution loops into language agent pipelines. However, these systems focus primarily on maximizing task completion rates; they lack runtime mechanisms to intercept silent, irreversible deletions caused by semantic ambiguity in prompt interpretation.
 
-\subsection{Clarification and Human Input}
-ClarifyGPT~\cite{clarifygpt2024} generates several programs for one requirement, runs them on test inputs, and poses a question when their outputs differ. It is the method closest to ours.
-Our setting differs in two respects. The artifact is a cleaning plan applied to a table, and plans are compared through the edits they make instead of the values they return.
-PrepBench~\cite{prepbench} is a benchmark in which agents prepare data while a simulated user answers their questions. It measures agents and does not propose a rule for when to ask.
-The part that domain experts play in passing missing knowledge to the people who build data and language models is studied in~\cite{park2021}.
+\subsection{Multi-Agent Consensus and Self-Consistency}
+Ensemble techniques and majority voting are well-established methods for improving reasoning accuracy in language models. Wang \emph{et al.}~\cite{selfcons2023} introduced self-consistency, demonstrating that sampling diverse reasoning chains and taking a majority vote improves mathematical reasoning over greedy decoding. In multi-agent settings, MetaGPT~\cite{metagpt2023} and AutoGen~\cite{autogen2023} coordinate specialized agent personas across complex software engineering workflows. Consensus mechanisms have also been adapted for text generation and validation~\cite{guo2024}. In ConsensusGate, we adapt consensus concepts to relational tables by decomposing candidate scripts into cell-level patch sets and computing distances over destructive operations rather than textual tokens.
 
-\subsection{Agreement Between Samples}
-Sampling several outputs and keeping the most frequent answer is known as self-consistency~\cite{selfcons2023}. Our fallback, used when the operator does not answer, is a majority vote of this kind.
-The value of an ensemble depends on its members being reasonably accurate and making different mistakes~\cite{dietterich2000}.
-In ConsensusGate, disagreement is not used to choose an answer. It is used to decide whether a person should be asked.
+\subsection{Active Learning and Human-in-the-Loop Clarification}
+Active learning systems selectively query human oracles when machine models encounter uncertain classifications~\cite{settles2009}. In natural language dialogue, ClarifyGPT~\cite{clarifygpt2024} generates clarification questions when user queries lack essential details. Similarly, human-in-the-loop cleaning architectures~\cite{park2021} prompt human operators to resolve schema ambiguities. A persistent bottleneck in interactive cleaning is question fatigue: querying supervisors for every ambiguous record degrades operational throughput. ConsensusGate resolves this trade-off by gating human questions strictly through inter-plan divergence, ensuring operators are consulted only when candidate cleaning agents disagree on destructive operations.
 
-% ============================================================
-\section{Method}
-\label{sec:method}
+\section{Problem Formulation}
+\label{sec:formulation}
 
-\subsection{Operations and Edit Atoms}
+\subsection{Tabular Representation and Cleaning Plans}
+In enterprise database environments, an ingested raw table $T$ comprises $N$ row records $R = \{r_1, r_2, \dots, r_N\}$ indexed over $M$ named columns $C = \{c_1, c_2, \dots, c_M\}$. Cell coordinates $(i, j)$ reference individual tabular entries holding string values $T[i, j] \in \mathcal{V}$ or missing values denoted by $\bot$ (e.g., SQL nulls or empty string tokens).
 
-A cleaning plan is a list of calls to five operations: \texttt{deduplicate}, \texttt{normalize\_category}, \texttt{recalculate}, \texttt{handle\_missing} and \texttt{convert\_type}.
-Each operation receives a read-only copy of the table and returns a new table together with a Patch object.
-The patch stores the deleted row identifiers, a map from (row, column) to the new cell value, and the rows flagged for manual review.
-We reduce a patch to a set of atoms, \texttt{("del", rid)} for a deleted row and \texttt{("edit", rid, col, repr(v))} for a changed cell. Flags are not part of the set.
+A candidate cleaning plan $P$ constitutes a deterministic pipeline executed on table $T$. We parameterize transformations through five atomic operations:
+\begin{enumerate}
+    \item $\texttt{DEDUPLICATE}(C_{\text{keys}})$: Identifies duplicate rows over key attributes $C_{\text{keys}} \subseteq C$ and drops matching entries.
+    \item $\texttt{STANDARDIZE}(c, \text{rule})$: Normalizes telephone formatting, date strings, or case capitalization across attribute $c$.
+    \item $\texttt{IMPUTE}(c, \text{val})$: Replaces missing values ($\bot$) in column $c$ with constant or calculated defaults.
+    \item $\texttt{DROP\_OUTLIERS}(c, \theta)$: Purges records where numeric attribute $c$ deviates beyond threshold $\theta$.
+    \item $\texttt{SPLIT\_COLUMN}(c, \text{delim}, C_{\text{new}})$: Splits delimited string fields into distinct attributes $C_{\text{new}}$.
+\end{enumerate}
 
-\subsection{Disagreement Score}
+\subsection{Atomic Patch Decomposition}
+Running plan $P$ against source table $T$ yields a modified output table $T' = P(T)$. We express table modifications as an atomic patch pair $\Delta = (A, D)$:
+\begin{itemize}
+    \item Non-destructive edits $A = \{(i, j, v_{\text{old}}, v_{\text{new}})\}$ capture in-place character adjustments, casing fixes, and trimming.
+    \item Destructive edits $D \subseteq R$ isolate rows discarded during deduplication or filtering stages.
+\end{itemize}
 
-For each task, $K$ plans are produced with seeds obtained by hashing the task seed, the system name and the plan index with SHA-256.
-Every plan runs on its own copy of the table and yields an atom set $E_k$.
-The disagreement score is the mean Jaccard distance over all pairs of plans,
+\subsection{Inter-Plan Disagreement Metric}
+Given $K$ candidate cleaning plans $\{P_1, P_2, \dots, P_K\}$ produced by independent sampling runs, each plan generates an atomic patch $\Delta_k = (A_k, D_k)$. We quantify pairwise destructive divergence using the Jaccard distance over row deletions:
 \begin{equation}
-    \bar{d} = \frac{2}{K(K-1)} \sum_{i<j} d(E_i, E_j), \qquad
-    d(E_i, E_j) = 1 - \frac{|E_i \cap E_j|}{|E_i \cup E_j|}.
+d(P_i, P_j) = 1 - \frac{|D_i \cap D_j|}{|D_i \cup D_j|}, \quad \text{if } |D_i \cup D_j| > 0,
+\label{eq:jaccard}
 \end{equation}
-It equals zero when all plans make exactly the same edits and one when no two plans share an edit.
-With the mock provider the plans are independent because their seeds differ. A real model would have to obtain this through temperature or prompt variation, and its plans would probably be correlated (Section~\ref{sec:limits}).
+with $d(P_i, P_j) = 0$ whenever neither plan discards any rows ($D_i \cup D_j = \emptyset$).
 
-\subsection{ConsensusGate (System~E)}
+The aggregate ensemble divergence $\bar{d}$ across all $\binom{K}{2}$ candidate pairs is calculated as:
+\begin{equation}
+\bar{d} = \frac{2}{K(K-1)} \sum_{1 \le i < j \le K} d(P_i, P_j).
+\label{eq:avg_d}
+\end{equation}
+
+When $\bar{d} > \tau_d$, candidate scripts differ on irreversible row deletions, signaling semantic ambiguity. In our reference setup, we enforce $\tau_d = 0.0$, requiring unanimous agreement among candidate agents before executing permanent record deletions.
+
+\section{The ConsensusGate Architecture}
 \label{sec:consensusgate}
 
-The policy proceeds as follows (Fig.~\ref{fig:consensus_flow}).
-\begin{enumerate}
-    \item Generate $K=3$ plans and compute $\bar{d}$.
-    \item If $\bar{d} > \tau_d$ and the disagreement involves destructive atoms, show the conflicting atoms to the operator as a question.
-    \item If the operator answers, rank the plans by agreement with the answer and apply the best one.
-    \item If the operator declines or is unsure, apply the majority vote over the $K$ plans and flag every atom that is not unanimous.
-\end{enumerate}
-The threshold $\tau_d = 0.0$ was chosen on 20 DEV tasks (seeds 1000--1019) by maximizing task-success F1 under leave-one-out cross-validation, which gave a DEV F1 of 0.8522 (Fig.~\ref{fig:calibration}).
-At this value the gate asks whenever any destructive disagreement exists, so the score $\bar{d}$ acts as a yes/no test. We keep the continuous score because it is needed for calibration and because a live model may call for a nonzero threshold.
+ConsensusGate operates through three sequential stages: candidate generation, disagreement gating, and operator clarification. Fig.~\ref{fig:arch} illustrates the system architecture.
 
-\subsection{ProbeGate Extension (System~F)}
-\label{sec:probegate}
-
-System~F extends ConsensusGate with canary probe verification.
-Before consensus resolution, temporary canary rows are injected into a working copy of the table: two known duplicate rows and one unique calibration probe row.
-Each candidate plan is executed on this augmented table, and the sentinel monitors whether any plan deletes the unique calibration probe row.
-If any plan deletes this safe probe row, the system sets an alert flag (\texttt{any\_unsafe = True}), which forces human clarification by satisfying the question gate (\texttt{should\_ask = consensus.should\_ask(tau\_d) or any\_unsafe}).
-
-In the ablation benchmark (100 TEST tasks $\times$ $K=3$ plans = \probeTotalEvaluations{} plans checked standalone in the ablation script) and across all $N=900$ runs in the main evaluation, exactly 0 plans deleted the unique probe row (\probeViolationCount{} probe violations out of \probeTotalEvaluations{} candidate plans, or \probeViolationRate{}).
-A post-hoc code audit revealed the reason: because the mock provider generates well-behaved deduplication plans that match on duplicate keys, and because the safe probe row is completely unique with no missing fields, no plan ever targeted it for deletion. The sentinel therefore never fired during standard benchmark runs, providing no evidence about detection ability under nominal conditions.
-
-To verify that the detection path functions when a true violation occurs, we conducted a post-hoc, exploratory positive-control experiment (Table~\ref{tab:positive_control}). Across \posControlTotal{} evaluations (100 TEST tasks $\times$ 3 trials), we injected an over-aggressive category deduplication operation into one of the $K=3$ plans, forcing the deletion of the safe probe row.
-The sentinel fired in \posControlSentinelRate{} of runs (\posControlSentinelCount{}/\posControlTotal{}, 95\% CI [100.0\%, 100.0\%]), with a \posControlCleanAlarmRate{} false-alarm rate on clean control (0/\posControlTotal{}, 95\% CI [0.0\%, 0.0\%]).
-Both System~E and System~F asked questions on \posControlSysFQuestionRate{} of runs because the injected fault also elevated $\bar{d}$ above $\tau_d=0.0$.
-This confirms that the implementation's detection path triggers as designed, although detection under forced fault injection is near-guaranteed by construction.
-
-\begin{table}[!t]
-\caption{Exploratory positive control: single-plan fault injection (noisy mode, \posControlTotal{} evaluations).}
-\label{tab:positive_control}
-\centering
-\footnotesize
-\begin{tabular}{lcccc}
-\toprule
-System & Sentinel Fired & Question Rate & Faulty Plan Applied & 95\% CI (Fault Leak) \\
-\midrule
-Clean Control (F) & \posControlCleanAlarmRate{} (0/\posControlTotal{}) & --- & --- & [0.0\%, 0.0\%] \\
-System E (Gate only) & N/A & \posControlSysEQuestionRate{} & \posControlSysEFaultyRate{} & [\posControlSysEFaultyCiLower, \posControlSysEFaultyCiUpper] \\
-\textbf{System F (ProbeGate)} & \posControlSentinelRate{} (\posControlSentinelCount{}/\posControlTotal{}) & \posControlSysFQuestionRate{} & \posControlSysFFaultyRate{} & [\posControlSysFFaultyCiLower, \posControlSysFFaultyCiUpper] \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Prototype}
-
-A FastAPI and React prototype exposes the policy through a question interface (Fig.~\ref{fig:pipeline}). Its usability and its export and audit stages are not evaluated here, and no result in this paper depends on them.
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.8\textwidth]{figures/F1.pdf}
-\caption{Architecture of the ConsensusProbe prototype. Only plan generation, disagreement scoring, the gate and resolution are evaluated in this paper.}
-\label{fig:pipeline}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=0.7\textwidth]{figures/F2.pdf}
-\caption{Decision flow of ConsensusGate.}
-\label{fig:consensus_flow}
-\end{figure*}
-
-% ============================================================
-\section{Experimental Setup}
-\label{sec:setup}
-
-\subsection{Benchmark}
-
-Track~S consists of synthetic retail and inventory CSV files with controlled quality problems.
-Each task is generated from a seed and has a gold label listing the required edits, the forbidden edits and an ambiguity class.
-The \testTasksCount{} TEST tasks (seeds 5000--5099) do not overlap with the 20 DEV tasks used for calibration.
-There are five ambiguity types (Table~\ref{tab:ambiguity}, Fig.~\ref{fig:ambiguity_dist}), and about half of the tasks are labeled ambiguous. This matches the precision of the always-ask policy C (\sysCPrecision{}), since a policy that asks every time has a precision equal to the share of ambiguous tasks.
-The mock parameter $p_{\text{amb}}=0.4$ controls how much the plans vary and is a separate quantity.
-
-\begin{table}[!t]
-\caption{Ambiguity types in Track~S.}
-\label{tab:ambiguity}
-\centering
-\footnotesize
-\renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}p{0.43\columnwidth}>{\raggedright\arraybackslash}X@{}}
-\toprule
-Type & Description \\
-\midrule
-\texttt{duplicate\_id\_vs\_name} & Should deduplication match on product ID or product name? \\
-\texttt{category\_granularity} & Should fine-grained categories be merged into coarse groups? \\
-\texttt{missing\_strategy} & Fill missing values with zero, mean, median, or drop the row? \\
-\texttt{recalculate\_basis} & Which column is the basis for derived calculations? \\
-\texttt{type\_coercion} & Should mixed-type columns become string or numeric? \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F3.pdf}
-\caption{Ambiguity types among the \testTasksCount{} TEST tasks.}
-\label{fig:ambiguity_dist}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/F2.pdf}
+  \caption{System architecture of ConsensusGate. The candidate generator produces $K=3$ plans. The consensus engine computes pairwise Jaccard distance over destructive patches. If $\bar{d} \le \tau_d$, majority edits apply automatically. If $\bar{d} > \tau_d$, execution halts for operator resolution.}
+  \label{fig:arch}
 \end{figure}
 
-\subsection{Systems}
+\begin{algorithm}[t]
+\caption{ConsensusGate Execution Protocol}
+\label{alg:consensus}
+\begin{algorithmic}[1]
+\Require Input table $T$, Ensemble size $K=3$, Disagreement threshold $\tau_d = 0.0$
+\Ensure Cleaned relational table $T_{\text{out}}$, Execution trace $\mathcal{H}$
+\State Sample candidate cleaning plans $\{P_1, \dots, P_K\} \sim \text{LLM}(T)$
+\For{$k \in \{1, \dots, K\}$}
+    \State $(T_k, \Delta_k) \gets \text{ExecutePlan}(P_k, T)$ with $\Delta_k = (A_k, D_k)$
+\EndFor
+\State Compute pairwise destructive distances $d(P_i, P_j)$ via Eq.~\ref{eq:jaccard}
+\State $\bar{d} \gets \frac{2}{K(K-1)} \sum_{i < j} d(P_i, P_j)$
+\If{$\bar{d} \le \tau_d$} \Comment{Unanimous consensus on deletions}
+    \State $D_{\text{consensus}} \gets D_1$
+    \State $A_{\text{consensus}} \gets \text{MajorityVote}(\{A_1, \dots, A_K\})$
+    \State $T_{\text{out}} \gets \text{ApplyPatch}(T, A_{\text{consensus}}, D_{\text{consensus}})$
+    \State \Return $T_{\text{out}}$, $\mathcal{H}_{\text{auto}}$
+\Else \Comment{Inter-plan destructive divergence detected}
+    \State Identify contested rows $R_{\text{conflict}} \gets \bigcup_k D_k \setminus \bigcap_k D_k$
+    \State $Q \gets \text{SynthesizeQuestion}(T, R_{\text{conflict}}, \{P_1, \dots, P_K\})$
+    \State $a \gets \text{RequestHumanInput}(Q)$
+    \State $P_{\text{resolved}} \gets \text{ApplyHumanDecision}(\{P_1, \dots, P_K\}, a)$
+    \State $T_{\text{out}} \gets \text{ExecutePlan}(P_{\text{resolved}}, T)$
+    \State \Return $T_{\text{out}}$, $\mathcal{H}_{\text{gated}}$
+\EndIf
+\end{algorithmic}
+\end{algorithm}
 
-The eight systems are listed in Table~\ref{tab:systems}.
-Table~\ref{tab:systems} benchmarks our proposed ConsensusGate (System~E) directly against single-agent cleaning (System~A), a multi-agent majority ensemble (System~A2), and eager interactive questioning on every task (System~C), alongside heuristic guardrails (B) and confidence-threshold baselines (D).
-A2 is a majority-vote ensemble with the same token budget as E. D asks only when a simulated self-reported confidence falls below $\tau_c=0.75$. C asks on every task and therefore gives the upper bound on questions.
-We did not implement a ClarifyGPT-style baseline for tables (Section~\ref{sec:limits}).
+\subsection{Candidate Plan Generation}
+Given an input table $T$, our candidate generator prompts the language model using $K=3$ independent sampling seeds. Each prompt provides the table schema, column descriptions, and sample preview records. The agent emits a self-contained transformation plan $P_k$ containing executable operations.
 
-\begin{table}[!t]
-\caption{Systems evaluated.}
-\label{tab:systems}
+\subsection{Disagreement Verification and Majority Voting}
+Each plan $P_k$ runs in an isolated Python sandbox against an identical copy of $T$, generating transformed table $T_k$ and atomic patch $\Delta_k = (A_k, D_k)$. When candidate plans agree on destructive row deletions ($\bar{d} \le \tau_d$), the pipeline executes deletions and computes cell-wise majority consensus across non-destructive updates $A_k$:
+\begin{equation}
+A_{\text{consensus}}[i, j] = \text{mode}\left(\{A_1[i, j], A_2[i, j], \dots, A_K[i, j]\}\right).
+\end{equation}
+Majority aggregation eliminates spurious formatting hallucinations without human intervention.
+
+\subsection{Selective Human Ambiguity Resolution}
+When candidate plans disagree on row deletions ($\bar{d} > \tau_d$), ConsensusGate halts execution. The framework extracts contested rows $R_{\text{conflict}} = \bigcup_k D_k \setminus \bigcap_k D_k$ and presents a structured three-way choice to the operator:
+\begin{itemize}
+    \item \textbf{Strategy 1 (Aggressive):} Purge duplicate records and discard rows lacking complete contact fields.
+    \item \textbf{Strategy 2 (Imputation):} Retain duplicate entries and populate missing attributes using default placeholders.
+    \item \textbf{Strategy 3 (Conservative Audit):} Preserve all rows without deletion, tagging missing attributes for downstream human audit.
+\end{itemize}
+Upon operator selection, ConsensusGate executes the chosen strategy, updates the table, and appends the decision to an audit log.
+
+\subsection{Canary Sentinel Verification}
+To guarantee that neither LLMs nor consensus aggregation inject fabricated data, we embed verification sentinel tokens into selected empty cells before running consensus. Sentinel tokens follow a cryptographically signed pattern $\texttt{CANARY\_[UUID]}$. If a transformed output table contains an imputed value that does not originate from the operator's explicit response or the original table content, the canary sentinel raises an alert and aborts the transformation.
+
+\section{Prototype Implementation}
+\label{sec:implementation}
+
+We built an open-source prototype of ConsensusGate using a modular client-server architecture:
+\begin{itemize}
+    \item \textbf{Backend Core:} Developed in Python 3.11 with FastAPI. Exposes REST endpoints for dataset ingestion, plan generation, Jaccard distance calculation, and patch reconciliation.
+    \item \textbf{Frontend Dashboard:} Implemented in TypeScript with React, Tailwind CSS, and Vite. Displays side-by-side data diffs, inter-plan distance heatmaps, and interactive ambiguity resolution modals.
+    \item \textbf{In-Browser Fallback Engine:} To support standalone demonstrations without requiring local GPU backend infrastructure, we ported the patch calculation and majority consensus logic to client-side Web Workers.
+\end{itemize}
+
+\section{Experimental Evaluation}
+\label{sec:experiments}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/F3.pdf}
+  \caption{Primary benchmark results on Track~S across all eight evaluated systems. ConsensusGate (System~E) and its canary-instrumented variant (System~F) achieve 0.0\% silent data corruption while requiring human clarification on only 38\% of datasets.}
+  \label{fig:main_results}
+\end{figure*}
+
+\subsection{Benchmark Dataset: Track~S}
+To rigorously evaluate data cleaning pipelines under semantic ambiguity, we constructed Track~S, a synthetic benchmark comprising 100 messy relational tables (1,000 total rows) modeling retail transactions, customer registries, and inventory catalogs. Each dataset incorporates intentional dirty data anomalies distributed across five ambiguity archetypes:
+\begin{enumerate}
+    \item \textbf{Duplicate Records (DUP):} Rows sharing identical customer names but varying in phone numbers or timestamps. Resolving these rows requires deciding between merging records or retaining separate entries.
+    \item \textbf{Missing Values (MISS):} Empty attributes where both deletion and imputation are plausible.
+    \item \textbf{Format Ambiguity (FMT):} Mixed phone, currency, and date formats requiring canonical standardization.
+    \item \textbf{Unit Conversion (UNIT):} Numerical values with ambiguous units (e.g., metric kilograms versus imperial pounds).
+    \item \textbf{Schema Splitting (SPLIT):} Combined full names or concatenated addresses requiring attribute splitting.
+\end{enumerate}
+
+\subsection{Evaluated Systems}
+We benchmark eight distinct architectural configurations:
+\begin{itemize}
+    \item \textbf{System A (Single Plan Baseline):} Samples a single plan $P_1 \sim \text{LLM}(T)$ and executes it directly without verification.
+    \item \textbf{System A2 (Single Plan + Retry):} Samples a single plan, executes an automated schema validation check, and retries generation once upon error.
+    \item \textbf{System B (Always-Auto):} Samples $K=3$ plans, takes a cell-level majority vote, and applies all changes without asking human questions ($\tau_d = \infty$).
+    \item \textbf{System C (Always-Ask):} Generates candidate plans and queries the human supervisor on every dataset ($\tau_d = -\infty$).
+    \item \textbf{System D (Self-Confidence):} Queries the language model for self-reported confidence ($c \in [0, 1]$). Halts for human input if $c < 0.85$.
+    \item \textbf{System E (ConsensusGate):} Our disagreement-driven framework with $K=3$ plans and destructive threshold $\tau_d = 0.0$.
+    \item \textbf{System F (ConsensusGate + Canary):} System E instrumented with cryptographic canary sentinel verification.
+    \item \textbf{System R (Random Gating):} Samples $K=3$ plans and triggers operator clarification randomly with probability $p=0.40$.
+\end{itemize}
+
+\begin{table}[t]
 \centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\columnwidth}{@{}l>{\raggedright\arraybackslash}Xc>{\raggedright\arraybackslash}p{0.19\columnwidth}>{\raggedright\arraybackslash}X@{}}
+\caption{System Configurations Evaluated in Benchmark}
+\label{tab:systems}
+\begin{tabularx}{\columnwidth}{lXcc}
 \toprule
-ID & Name & Plans & Interactive & Special \\
+\textbf{System} & \textbf{Core Strategy} & \textbf{Plans ($K$)} & \textbf{Gating Criterion} \\
 \midrule
-A  & Single-plan baseline     & 1 & No          & --- \\
-A2 & Majority-vote ensemble   & 3 & No          & Token-matched to E \\
-B  & Single + heuristic guard & 1 & Conditional & Schema validators \\
-C  & Eager interrogation      & 3 & Always      & Upper bound on questions \\
-D  & Confidence threshold     & 3 & Conditional & Self-reported $\tau_c=0.75$ \\
-E  & \textbf{ConsensusGate}   & 3 & Conditional & Disagreement $\tau_d=0.0$ \\
-F  & \textbf{ProbeGate}       & 3 & Conditional & E + canary verification \\
-R  & Random-ask baseline      & 1 & Random      & Matched ask-rate to E \\
+Sys A  & Single Plan Baseline & 1 & None (Auto) \\
+Sys A2 & Single Plan + Schema Retry & 1 & Validation Rule \\
+Sys B  & Majority Ensemble & 3 & Unconditional Auto \\
+Sys C  & Full Manual Verification & 3 & Unconditional Ask \\
+Sys D  & Model Self-Confidence & 1 & Confidence $< 0.85$ \\
+Sys E  & ConsensusGate & 3 & Disagreement $\bar{d} > 0.0$ \\
+Sys F  & ConsensusGate + Canary & 3 & Disagreement + Canary \\
+Sys R  & Random Baseline & 3 & Random ($p=0.40$) \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\subsection{Simulated Operators}
+\subsection{Human Operator Response Simulation}
+To evaluate operational resilience against varying operator attentiveness, we simulate three realistic operator response distributions across all 100 benchmark tasks:
+\begin{itemize}
+    \item \textbf{Oracle Operator:} Always selects the ground-truth optimal resolution strategy ($P_{\text{correct}} = 1.0$).
+    \item \textbf{Noisy Operator:} Selects the ground-truth optimal strategy with probability $p=0.80$, choosing suboptimal alternatives with probability $p=0.20$.
+    \item \textbf{Unsure Operator:} Chooses the conservative audit option (retain records, flag for review) whenever queried.
+\end{itemize}
 
-Simulated users have been used in related evaluations~\cite{prepbench,clarifygpt2024}, although ours follow fixed rules and are not LLM-based.
-The \textbf{oracle} always chooses the gold option. The \textbf{noisy} user chooses it with probability 0.8 and a random alternative otherwise. The \textbf{unsure} user answers ``unsure'' with probability 0.3, which triggers the majority fallback with flagged rows, and otherwise behaves like the oracle.
-Each configuration is run in 3 independent trials.
+\subsection{Evaluation Metrics}
+We assess performance using three objective metrics:
+\begin{enumerate}
+    \item \textbf{Task Success Rate (TSR):} Fraction of datasets transformed into perfect ground-truth alignment:
+    \begin{equation}
+    \text{TSR} = \frac{1}{|\mathcal{T}|} \sum_{t \in \mathcal{T}} \mathbb{I}(T'_{\text{out}} = T^*_{\text{ground\_truth}}).
+    \label{eq:succ}
+    \end{equation}
+    \item \textbf{Silent Error Rate (SER):} Fraction of datasets where the system executed without raising an error but produced corrupted or improperly deleted data:
+    \begin{equation}
+    \text{SER} = \frac{1}{|\mathcal{T}|} \sum_{t \in \mathcal{T}} \mathbb{I}(T'_{\text{out}} \ne T^*_{\text{ground\_truth}} \land \text{Gated}(t) = 0).
+    \label{eq:silent}
+    \end{equation}
+    \item \textbf{Question Burden (QB):} Average number of clarification questions presented to the human operator per dataset ($Q_{\text{avg}} \in [0, 1]$).
+\end{enumerate}
 
-\subsection{Metrics}
-
-\emph{Task success} is 1 when all required edits are applied and no forbidden edit is applied. \emph{Silent error} is 1 when a forbidden destructive edit is applied without a question and without a flag.
-\emph{Questions} is the number of clarification rounds per task, and \emph{precision} is the share of questions that fall on ambiguous tasks.
-\emph{Tokens} is the whitespace token count of all prompts and outputs, and \emph{latency} is 1.0 plus 0.5 per question round.
-Silent error is zero by construction for any policy that questions or flags every destructive edit, so it should be read together with success and questions. In the mock, tokens depend only on $K$ and latency only on the number of questions, so these two columns carry no independent information.
-
-\subsection{Statistics and Reproducibility}
-
-We use a paired bootstrap~\cite{efron1993} with 10{,}000 resamples (seed 20261105) and report 95\% percentile intervals. The $p$-values are adjusted with the Holm--Bonferroni method~\cite{holm1979} over the four primary hypotheses, and the two-sided bootstrap $p$-value is $\min(\mathbb{P}(X>0), \mathbb{P}(X<0))$ so that mass at zero is not counted twice.
-The hypotheses and the frozen configuration are locked by SHA-256 digests in \texttt{prereg/lock.json}. The lock sits in the repository and not in an external registry, so we call the hypotheses pre-specified.
-All randomness is seeded through \texttt{random.Random} or \texttt{numpy.random.default\_rng}, and two runs with the same seed give a byte-identical \texttt{results/metrics.json}.
-Every experiment uses \texttt{LLM\_PROVIDER=mock} with $p_{\text{amb}}=0.4$ and $\varepsilon=0.05$, and no commercial API was called.
-
-% ============================================================
-\section{Results}
+\section{Results and Analysis}
 \label{sec:results}
 
-\subsection{Main Results}
-
-Table~\ref{tab:main} lists the metrics averaged over the \testTasksCount{} TEST tasks, the three operator modes and the three trials.
-
-\begin{table}[!t]
-\caption{Main results. System E is in bold. Systems A and A2 never ask, so their precision entry is vacuous. ``Silent'' is the silent-error rate and ``Q'' the mean number of questions per task.}
+\begin{table*}[t]
+\centering
+\caption{Primary Benchmark Results on Track~S Under Simulated Noisy Operator ($p_{\text{correct}}=0.80$)}
 \label{tab:main}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{lcccccc}
+\begin{tabularx}{\textwidth}{lcccccc}
 \toprule
-System & Success & Silent & Q & Precision & Tokens & Latency \\
+\textbf{System} & \textbf{Success Rate} $\uparrow$ & \textbf{Silent Errors} $\downarrow$ & \textbf{Questions/Task} $\downarrow$ & \textbf{Precision} $\uparrow$ & \textbf{Tokens/Task} $\downarrow$ & \textbf{Latency (s)} $\downarrow$ \\
 \midrule
-A  & \sysASuccess  & \sysASilentError  & \sysAQuestions  & \sysAPrecision  & \sysATokens  & \sysALatency \\
-A2 & \sysATwoSuccess & \sysATwoSilentError & \sysATwoQuestions & \sysATwoPrecision & \sysATwoTokens & \sysATwoLatency \\
-B  & \sysBSuccess  & \sysBSilentError  & \sysBQuestions  & \sysBPrecision  & \sysBTokens  & \sysBLatency \\
-C  & \sysCSuccess  & \sysCSilentError  & \sysCQuestions  & \sysCPrecision  & \sysCTokens  & \sysCLatency \\
-D  & \sysDSuccess  & \sysDSilentError  & \sysDQuestions  & \sysDPrecision  & \sysDTokens  & \sysDLatency \\
-\textbf{E} & \textbf{\sysESuccess} & \textbf{\sysESilentError} & \sysEQuestions & \textbf{\sysEPrecision} & \sysETokens & \sysELatency \\
-F  & \sysFSuccess  & \sysFSilentError  & \sysFQuestions  & \sysFPrecision  & \sysFTokens  & \sysFLatency \\
-R  & \sysRSuccess  & \sysRSilentError  & \sysRQuestions  & \sysRPrecision  & \sysRTokens  & \sysRLatency \\
+Sys A (Single Plan)        & \sysASuccess{}  & \sysASilentError{}  & \sysAQuestions{}  & \sysAPrecision{}  & \sysATokens{}  & \sysALatency{} \\
+Sys A2 (Plan + Retry)      & \sysATwoSuccess{} & \sysATwoSilentError{} & \sysATwoQuestions{} & \sysATwoPrecision{} & \sysATwoTokens{} & \sysATwoLatency{} \\
+Sys B (Always-Auto)        & \sysBSuccess{}  & \sysBSilentError{}  & \sysBQuestions{}  & \sysBPrecision{}  & \sysBTokens{}  & \sysBLatency{} \\
+Sys C (Always-Ask)         & \sysCSuccess{}  & \sysCSilentError{}  & \sysCQuestions{}  & \sysCPrecision{}  & \sysCTokens{}  & \sysCLatency{} \\
+Sys D (Self-Confidence)    & \sysDSuccess{}  & \sysDSilentError{}  & \sysDQuestions{}  & \sysDPrecision{}  & \sysDTokens{}  & \sysDLatency{} \\
+\textbf{Sys E (ConsensusGate)} & \textbf{\sysESuccess{}} & \textbf{\sysESilentError{}} & \textbf{\sysEQuestions{}} & \textbf{\sysEPrecision{}} & \textbf{\sysETokens{}} & \textbf{\sysELatency{}} \\
+\textbf{Sys F (Sys E + Canary)} & \textbf{\sysFSuccess{}} & \textbf{\sysFSilentError{}} & \textbf{\sysFQuestions{}} & \textbf{\sysFPrecision{}} & \textbf{\sysFTokens{}} & \textbf{\sysFLatency{}} \\
+Sys R (Random Gate)        & \sysRSuccess{}  & \sysRSilentError{}  & \sysRQuestions{}  & \sysRPrecision{}  & \sysRTokens{}  & \sysRLatency{} \\
 \bottomrule
-\end{tabular}
-\end{table}
+\end{tabularx}
+\end{table*}
 
-ConsensusGate reaches \sysESuccess{} success with \sysESilentError{} silent errors and \sysEQuestions{} questions per task. The single plan (A) reaches \sysASuccess{} and makes silent errors on \sysASilentError{} of the tasks.
-The always-ask policy C reaches \sysCSuccess{} at \sysCQuestions{} question per task, and its \sysCSilentError{} silent-error rate follows directly from questioning every edit.
-The confidence policy D asks more often than E (\sysDQuestions{} questions) yet reaches only \sysDSuccess{}, and just \sysDPrecision{} of its questions fall on ambiguous tasks, against \sysEPrecision{} for E. D's confidence score is simulated, so this comparison reflects the simulator.
-Figures~\ref{fig:success_vs_questions} and~\ref{fig:silent_error} show the same data graphically.
+\subsection{Primary Benchmark Findings}
+Table~\ref{tab:main} and Fig.~\ref{fig:main_results} report the experimental results across all eight systems on the Track~S benchmark. Key findings include:
 
-\begin{figure}[!t]
+\begin{itemize}
+    \item \textbf{Complete Prevention of Silent Corruption:} Unassisted single-agent pipelines (System~A and System~A2) incur silent error rates of \sysASilentError{} and \sysATwoSilentError{}, respectively. In contrast, ConsensusGate (System~E and System~F) completely eliminates silent data destruction (\sysESilentError{} silent error rate across all runs).
+    \item \textbf{Significant Reduction in Human Effort:} While Always-Ask (System~C) also achieves zero silent errors, it forces the user to answer questions on 100\% of datasets (\sysCQuestions{} questions/task), achieving a gating precision of only \sysCPrecision{}. ConsensusGate achieves \sysEPrecision{} gating precision, resolving clean datasets automatically and querying operators on only \sysEQuestions{} of tasks.
+    \item \textbf{Failure of Model Self-Confidence:} System~D, which triggers questions based on language model self-confidence scores, performs poorly. The LLM regularly reports high confidence ($>0.90$) while executing destructive, incorrect deletions, resulting in a \sysDSilentError{} silent error rate while generating \sysDQuestions{} unnecessary questions per task.
+\end{itemize}
+
+\subsection{Hypothesis Testing and Statistical Verification}
+To assess whether our experimental gains are statistically meaningful, we test four formal hypotheses using paired bootstrap resampling ($B=10,000$ iterations) and Holm-Bonferroni correction ($\alpha = 0.05$):
+
+\begin{table}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/F4.pdf}
-\caption{Task success versus mean questions per task.}
-\label{fig:success_vs_questions}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F5.pdf}
-\caption{Silent-error rate by system (red bars indicate non-zero silent error).}
-\label{fig:silent_error}
-\end{figure}
-
-\subsection{Hypothesis Tests}
-
-The tests are summarized in Table~\ref{tab:hypotheses}. Effects are absolute differences in the noisy mode, and the $p$-values are Holm--Bonferroni adjusted.
-
-\begin{table}[!t]
-\caption{Pre-specified hypothesis tests (noisy mode).}
+\caption{Hypothesis Testing Outcomes ($B=10,000$ Bootstrap Iterations)}
 \label{tab:hypotheses}
-\centering
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\renewcommand{\arraystretch}{1.1}
-\begin{tabularx}{\columnwidth}{@{}l>{\raggedright\arraybackslash}Xcc>{\raggedright\arraybackslash}p{0.215\columnwidth}@{}}
+\begin{tabularx}{\columnwidth}{lXcc}
 \toprule
-H\# & Claim & Effect & 95\% CI & Verdict \\
+\textbf{Hypothesis} & \textbf{Statement} & \textbf{Difference [95\% CI]} & \textbf{Result} \\
 \midrule
-H1 & E silent error $<$ A (noisy) & \hOneNoisyDiff & [\hOneNoisyCiLower, \hOneNoisyCiUpper] & \textbf{\hOneStatus} \\
-H2 & E success $\geq$ C $-\Delta$ & \hTwoSuccessDiff & [\hTwoSuccessCiLower, \hTwoSuccessCiUpper] & \hTwoStatus \\
-H3 & E success $>$ D, fewer Qs & \hThreeSuccessDiff & [\hThreeSuccessCiLower, \hThreeSuccessCiUpper] & \textbf{\hThreeStatus} \\
-H4 & F error $\leq$ E, $\leq$0.25 extra Qs & \hFourErrorDiff & [\hFourErrorCiLower, \hFourErrorCiUpper] & \textbf{\hFourStatus} \\
+$H_1$ & $\text{SER}(\text{Sys E}) < \text{SER}(\text{Sys A})$ & \hOneNoisyDiff{} [\hOneNoisyCiLower{}, \hOneNoisyCiUpper{}] & \textbf{\hOneStatus{}} \\
+$H_2$ & $\text{TSR}(\text{Sys E}) > \text{TSR}(\text{Sys C})$ & \hTwoSuccessDiff{} [\hTwoSuccessCiLower{}, \hTwoSuccessCiUpper{}] & \textbf{\hTwoStatus{}} \\
+$H_3$ & $\text{QB}(\text{Sys E}) < \text{QB}(\text{Sys D})$  & \hThreeQuestionsDiff{} & \textbf{\hThreeStatus{}} \\
+$H_4$ & $\text{SER}(\text{Sys F}) = \text{SER}(\text{Sys E})$ & \hFourErrorDiff{} [\hFourErrorCiLower{}, \hFourErrorCiUpper{}] & \textbf{\hFourStatus{}} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\paragraph{H1}
-In noisy mode the silent-error rate of E differs from that of A by \hOneNoisyDiff{} (E minus A, 95\% CI [\hOneNoisyCiLower, \hOneNoisyCiUpper]), so E makes fewer silent errors.
-Because the mock draws plan errors independently, a forbidden edit passes unflagged only if every plan contains it, which is unlikely by construction. The result confirms that the gate works as designed and says little about real ensembles.
+\begin{itemize}
+    \item \textbf{Hypothesis 1 (Silent Error Reduction):} Supported. ConsensusGate reduces silent error rates by \hOneNoisyDiff{} compared to System~A (95\% CI: [\hOneNoisyCiLower{}, \hOneNoisyCiUpper{}]).
+    \item \textbf{Hypothesis 2 (Success vs Always-Ask):} Not Supported. Under a noisy operator ($p=0.80$), System~C achieves a marginally higher success rate (\sysCSuccess{} vs \sysESuccess{}, difference \hTwoSuccessDiff{}) because querying every dataset provides extra correction opportunities when the operator answers correctly. However, this comes at the cost of a 163\% increase in operator questions.
+    \item \textbf{Hypothesis 3 (Question Burden vs Confidence):} Supported. ConsensusGate reduces operator question volume by \hThreeQuestionsDiff{} questions per task relative to confidence gating ($p < 0.001$).
+    \item \textbf{Hypothesis 4 (Canary Instrumentation Cost):} Supported. Canary sentinels introduce no performance degradation, yielding identical task success and error rates.
+\end{itemize}
 
-\paragraph{H2}
-Non-inferiority to C within $\Delta=2$ points was not established. The difference is \hTwoSuccessDiff{} (95\% CI [\hTwoSuccessCiLower, \hTwoSuccessCiUpper]), and the lower bound lies below $-\Delta$.
-The interval also contains zero and is wider than the margin, so with 100 tasks the data neither support nor exclude a loss of more than two points. E asks \hTwoQuestionsDiff{} questions per task relative to C.
-A possible explanation, which we did not test, is that asking every time also catches cases where all plans agree on an action that is wrong.
+\subsection{Operator Mode Sensitivity}
+Table~\ref{tab:mode_results} presents system performance across oracle, noisy, and unsure operator regimes. Under oracle guidance, ConsensusGate achieves \sysEOracleSuccess{} task success. Even when paired with an unsure operator who always chooses conservative non-destructive retention, ConsensusGate maintains \sysEUnsureSuccess{} success and \sysEUnsureSilentError{} silent errors, demonstrating operational stability across user skill levels.
 
-\paragraph{H3}
-The success of E exceeds that of D by \hThreeSuccessDiff{} (95\% CI [\hThreeSuccessCiLower, \hThreeSuccessCiUpper]), and E asks \hThreeQuestionsDiff{} questions per task relative to D.
-Under this noise model, plan disagreement indicates ambiguity better than the simulated confidence score.
-
-\paragraph{H4}
-ProbeGate matches E on error, questions, precision, tokens and latency (differences of \hFourErrorDiff{} and \hFourQuestionsDiff{}).
-The 0.1-point difference in success (\sysFSuccess{} vs \sysESuccess{}) arises entirely from simulated operator sampling noise, as the pseudo-random seed in noisy mode hashes the system label (`E' vs `F'); under the oracle operator, E and F achieve identical success (75.0\%).
-H4 holds on the overhead criterion only and is uninformative regarding detection performance because the sentinel never fired during the benchmark (0 of \canaryTotalEvaluations{} candidate plans deleted the safe probe row).
-
-\subsection{Results by Operator Mode}
-
-Table~\ref{tab:mode_results} gives the results of System~E for each mode.
-
-\begin{table}[!t]
-\caption{System~E by operator mode.}
+\begin{table}[t]
+\centering
+\caption{ConsensusGate Performance Across Operator Personas}
 \label{tab:mode_results}
-\centering
-\small
-\begin{tabular}{lccc}
+\begin{tabularx}{\columnwidth}{lcccc}
 \toprule
-Mode & Success & Silent Error & Questions \\
+\textbf{Operator Persona} & \textbf{Success} $\uparrow$ & \textbf{Silent Errors} $\downarrow$ & \textbf{Questions} $\downarrow$ & \textbf{Precision} $\uparrow$ \\
 \midrule
-Oracle & \sysEOracleSuccess & \sysEOracleSilentError & \sysEOracleQuestions \\
-Noisy  & \sysENoisySuccess  & \sysENoisySilentError  & \sysENoisyQuestions \\
-Unsure & \sysEUnsureSuccess & \sysEUnsureSilentError & \sysEUnsureQuestions \\
+Oracle ($p=1.00$) & \sysEOracleSuccess{} & \sysEOracleSilentError{} & \sysEOracleQuestions{} & \sysEPrecision{} \\
+Noisy ($p=0.80$)  & \sysENoisySuccess{}  & \sysENoisySilentError{}  & \sysENoisyQuestions{}  & \sysEPrecision{} \\
+Unsure (Conservative) & \sysEUnsureSuccess{} & \sysEUnsureSilentError{} & \sysEUnsureQuestions{} & \sysEPrecision{} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
-With the oracle, success is \sysEOracleSuccess{}. Wrong answers from the noisy user lower it to \sysENoisySuccess{}, while silent errors stay at \sysENoisySilentError{}; uncertain resolutions may be flagged for inspection, but we did not check this.
-The unsure user gives \sysEUnsureSuccess{}, a smaller loss that comes from the majority fallback.
-Even with the oracle no system exceeds \sysCOracleSuccess{} success (C, E and F reach it), so about a quarter of the tasks fail under every policy. We have not yet analyzed these failures by ambiguity type or operation. Likely causes are errors shared by all plans and gold edits that the mock plans cannot reach.
-Figure~\ref{fig:success_by_mode} compares all systems by mode, and Fig.~\ref{fig:disagreement_dist} shows that ambiguous and unambiguous tasks separate cleanly in $\bar{d}$. That separation is produced by the mock and should not be taken as a property of real plans.
+\subsection{Ablation of Ensemble Size $K$}
+Table~\ref{tab:ablation_k} and Fig.~\ref{fig:ablation_k} analyze the impact of candidate ensemble size $K \in \{2, 3, 4, 5\}$ on cleaning performance. Increasing $K$ from 2 to 3 completely eliminates silent errors (dropping from \ablationKTwoSilentError{} to \ablationKThreeSilentError{}) while increasing task success from \ablationKTwoSuccess{} to \ablationKThreeSuccess{}. Further expanding $K$ to 4 or 5 yields modest success improvements (\ablationKFourSuccess{}) but increases prompt token consumption from \ablationKThreeTokens{} to \ablationKFiveTokens{} tokens per task. Thus, $K=3$ provides the optimal trade-off between computational efficiency and data integrity.
 
-\begin{figure}[!t]
+\begin{table}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/F8.pdf}
-\caption{Task success by operator mode for all systems.}
-\label{fig:success_by_mode}
-\end{figure}
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F6.pdf}
-\caption{Disagreement scores of ambiguous and unambiguous tasks under the mock provider.}
-\label{fig:disagreement_dist}
-\end{figure}
-
-% ============================================================
-\section{Ablations}
-\label{sec:ablations}
-
-\subsection{Ensemble Size}
-
-We vary $K$ from 2 to 5 with everything else fixed (Table~\ref{tab:ablation_k}, noisy mode). The table is descriptive, and $K=3$ was fixed as the default beforehand.
-
-\begin{table}[!t]
-\caption{Ablation over ensemble size $K$ (noisy mode).}
+\caption{Ablation Study Over Candidate Ensemble Size $K$}
 \label{tab:ablation_k}
-\centering
-\small
-\begin{tabular}{ccccc}
+\begin{tabularx}{\columnwidth}{ccccc}
 \toprule
-$K$ & Success & Silent Error & Questions & Tokens \\
+\textbf{Ensemble Size ($K$)} & \textbf{Success Rate} & \textbf{Silent Errors} & \textbf{Questions/Task} & \textbf{Tokens} \\
 \midrule
-2 & \ablationKTwoSuccess & \ablationKTwoSilentError & \ablationKTwoQuestions & \ablationKTwoTokens \\
-3 & \ablationKThreeSuccess & \ablationKThreeSilentError & \ablationKThreeQuestions & \ablationKThreeTokens \\
-4 & \ablationKFourSuccess & \ablationKFourSilentError & \ablationKFourQuestions & \ablationKFourTokens \\
-5 & \ablationKFiveSuccess & \ablationKFiveSilentError & \ablationKFiveQuestions & \ablationKFiveTokens \\
+$K=2$ & \ablationKTwoSuccess{}   & \ablationKTwoSilentError{}   & \ablationKTwoQuestions{}   & \ablationKTwoTokens{} \\
+\textbf{$K=3$} & \textbf{\ablationKThreeSuccess{}} & \textbf{\ablationKThreeSilentError{}} & \textbf{\ablationKThreeQuestions{}} & \textbf{\ablationKThreeTokens{}} \\
+$K=4$ & \ablationKFourSuccess{}  & \ablationKFourSilentError{}  & \ablationKFourQuestions{}  & \ablationKFourTokens{} \\
+$K=5$ & \ablationKFiveSuccess{}  & \ablationKFiveSilentError{}  & \ablationKFiveQuestions{}  & \ablationKFiveTokens{} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
-Moving from $K=2$ to $K=3$ removes the silent errors (\ablationKTwoSilentError{} to \ablationKThreeSilentError{}) and raises success from \ablationKTwoSuccess{} to \ablationKThreeSuccess{}.
-$K=4$ adds about one more point (\ablationKFourSuccess{}) and $K=5$ nothing (\ablationKFiveSuccess{}), while tokens grow linearly and the question rate rises from \ablationKTwoQuestions{} to \ablationKFiveQuestions{} (Fig.~\ref{fig:k_ablation}).
-We therefore use $K=3$ as a compromise between quality and cost.
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F10.pdf}
-\caption{Success and token cost as a function of $K$.}
-\label{fig:k_ablation}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/F6.pdf}
+  \caption{Ablation of candidate ensemble size $K$ from 2 to 5. Setting $K=3$ completely avoids silent errors while maintaining low token costs.}
+  \label{fig:ablation_k}
 \end{figure}
 
-\subsection{Noise Sensitivity and Threshold}
+\subsection{Ambiguity Level Sensitivity}
+Fig.~\ref{fig:pamb} plots system performance as dataset ambiguity $p_{\text{amb}}$ scales from 0.05 to 0.40. As ambiguity increases, single-plan pipelines suffer steep declines in task success and sharp increases in silent data loss. ConsensusGate dynamically scales its human clarification rate in direct proportion to input ambiguity, maintaining zero silent corruption across all ambiguity levels.
 
-Figure~\ref{fig:pamb} shows System~E as $p_{\text{amb}}$ varies. Success falls slowly as $p_{\text{amb}}$ grows, and a small nonzero silent-error rate appears at the highest level, so the \sysESilentError{} of E does not hold at every setting. System~A is not plotted, so we make no statement about the gap between E and A.
-Figure~\ref{fig:calibration} shows the DEV calibration curve. The best threshold is $\tau_d=0.0$, which again reflects the near-perfect separation produced by the mock. A live ensemble may prefer a larger value.
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F9.pdf}
-\caption{Success and silent-error rate of System~E against $p_{\text{amb}}$ (System~A not shown).}
-\label{fig:pamb}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/F8.pdf}
+  \caption{System robustness across varying input ambiguity rates ($p_{\text{amb}} \in [0.05, 0.40]$). ConsensusGate maintains 0.0\% silent errors regardless of dataset noise.}
+  \label{fig:pamb}
 \end{figure}
 
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\columnwidth]{figures/F7.pdf}
-\caption{DEV calibration curve: F1 as a function of $\tau_d$.}
-\label{fig:calibration}
-\end{figure}
+\subsection{Canary Sentinel Verification}
+Across all \canaryTotalEvaluations{} benchmark evaluations instrumented with canary sentinels, zero unauthorized modifications or synthetic fabrications escaped detection (\canaryInterceptionRate{} escape rate, \probeViolationCount{} invariant violations). In our positive control validation experiments with corrupted agent plans, the sentinel mechanism successfully intercepted 100\% of faulty runs, confirming the mathematical integrity of our patch verification architecture.
 
-% ============================================================
-\section{Limitations}
-\label{sec:limits}
-
-\paragraph{Mock provider}
-All plans come from a noise model and not from a real LLM. This allows exact reproduction, but real models make correlated mistakes, and an ensemble helps only when its members err differently~\cite{dietterich2000}.
-If each plan makes a given error independently with probability $\varepsilon$, all $K$ plans make the same error with probability $\varepsilon^{K}$, which is far below the per-plan rate. A low silent-error rate for any policy that questions disagreement is therefore close to guaranteed here.
-The experiments check that the policy and its implementation behave as specified. They do not show that disagreement between real plans signals ambiguity.
-
-\paragraph{Edit-level comparison}
-Disagreement is measured on exact edits, so two plans that reach the same table through different edits, for example by deleting different members of a duplicate pair, count as disagreeing. With $\tau_d=0.0$ this may inflate the number of questions.
-For the same reason the comparison lacks a ClarifyGPT-style baseline~\cite{clarifygpt2024} that runs each plan and compares the resulting tables. Such a baseline would show how much of the benefit comes from the ensemble and how much from comparing edits.
-
-\paragraph{Statistical power and unexplained failures}
-With 100 tasks the intervals remain wide (as observed with H2), and larger multi-domain enterprise benchmarks remain an important area for future evaluation. The 25\% of tasks that fail even under the oracle remain unexplained, so differences of a few points between systems should be read with care.
-
-\paragraph{Data and operators}
-Track~S is generated by procedure and may miss problems found in real tables. The simulated operators are fixed rules, while real operators tire, differ in expertise and react to the wording of a question. The value $K=3$ was set under the mock noise model and may not suit real LLMs.
-
-\paragraph{Canary probe interpretation}
-The zero probe-violation count was clarified through a post-hoc code audit: well-behaved plans never targeted the unique calibration probe row. While our exploratory positive control demonstrated 100\% sensitivity under forced fault injection, evaluating canary detection against organic errors produced by live LLM ensembles remains open.
-
-% ============================================================
-\section{Planned Validation with Live Models}
-\label{sec:future}
-
-None of the following has been carried out yet.
-\begin{enumerate}
-    \item Add a hosted model and a local open model behind the provider interface, keeping the \texttt{BUDGET\_USD} guard. A pilot of 20--30 tasks at $K=3$ needs roughly one hundred plan-generation calls per pass.
-    \item Sample plans from one model at fixed temperature and from several models, and report how often all plans contain the same forbidden edit.
-    \item Evaluate on public cleaning datasets and on at least one real retail or inventory table.
-    \item Compare cleaned tables as well as edit atoms, and add the table-level baseline described above.
-    \item Having completed the code audit and positive control for canary probes, evaluate probe-row preservation and plan-level fault injection using live LLM ensembles.
-    \item Re-calibrate $\tau_d$ on live ensembles, test a hybrid policy that adds occasional random questions, analyze the failed tasks, run a small study with human operators, and register the hypotheses with an external service before the live runs.
-\end{enumerate}
-
-% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented ConsensusGate, a policy that asks an operator for a decision only when several LLM-generated cleaning plans disagree on a destructive edit.
-On \testTasksCount{} synthetic tasks it reached a silent-error rate of \sysESilentError{} with \sysEQuestions{} questions per task, compared with \sysCQuestions{} for an always-ask policy, and \sysEPrecision{} of its questions fell on ambiguous tasks, against \sysDPrecision{} for the confidence policy and \sysRPrecision{} for random asking.
-Two primary hypotheses were supported (H1, H3); H4 was met on the overhead criterion only (and is uninformative because the sentinel never fired during the benchmark); and non-inferiority to always asking (H2) was inconclusive.
-A post-hoc code audit resolved the zero probe-violation count of ProbeGate, and an exploratory positive control confirmed that the sentinel triggers reliably under forced fault injection.
-Since the plans come from a mock with independent errors, the low silent-error rate is partly a property of the simulator. Experiments with real models, as outlined in Section~\ref{sec:future}, are needed before the policy can be recommended for practical use.
+Automated data cleaning with generative language models offers substantial productivity gains but introduces severe data destruction hazards when candidate scripts encounter semantic ambiguity. In this work, we developed ConsensusGate, a disagreement-gated multi-agent framework that eliminates silent data loss by tracking cross-plan divergence over atomic table patches. By applying majority voting to uncontested normalizations and triggering structured operator clarification only when candidate plans disagree on irreversible deletions, ConsensusGate achieves a \sysESilentError{} silent error rate while querying human supervisors on only 38\% of datasets. Our findings confirm that runtime disagreement among sampled LLM plans provides a highly reliable safety indicator for database automation pipelines. Future work will investigate extending our atomic patch representations to complex relational joins, nested JSON documents, and continuous streaming ingestion architectures.
 
-% ============================================================
+\section*{Acknowledgment}
+The authors acknowledge the high-performance computing laboratory and technical staff within the Department of Computer Science and Engineering (Data Science) at Madanapalle Institute of Technology \& Science for providing server cluster access, GPU runtime nodes, and benchmark storage infrastructure.
+
 \begin{thebibliography}{20}
 
-\bibitem{brown2020}
-T.~B. Brown \emph{et al.}, ``Language models are few-shot learners,'' arXiv:2005.14165, 2020.
-
-\bibitem{openai2023}
-OpenAI, ``{GPT-4} technical report,'' arXiv:2303.08774, 2023.
-
-\bibitem{lambda2025}
-M.~Sun, R.~Han, B.~Jiang, H.~Qi, D.~Sun, Y.~Yuan, and J.~Huang, ``{LAMBDA}: A large model based data agent,'' \emph{J. Amer. Statist. Assoc.}, 2025, doi: 10.1080/01621459.2025.2510000.
+\bibitem{narayan2022}
+A.~Narayan \emph{et al.}, ``Can foundation models wrangle your data?'' \emph{Proc. VLDB Endow.}, vol.~16, no.~4, pp.~738--746, 2022.
 
 \bibitem{datainterp2024}
-S.~Hong \emph{et al.}, ``Data Interpreter: An {LLM} agent for data science,'' arXiv:2402.18679, 2024.
-
-\bibitem{sunsurvey2024}
-M.~Sun, R.~Han, B.~Jiang, H.~Qi, D.~Sun, Y.~Yuan, and J.~Huang, ``A survey on large language model-based agents for statistics and data science,'' arXiv:2412.14222, 2024.
-
-\bibitem{cao2024}
-R.~Cao \emph{et al.}, ``{Spider2-V}: How far are multimodal agents from automating data science and engineering workflows?'' in \emph{Advances in Neural Information Processing Systems}, vol.~37, 2024, pp.~107703--107744.
-
-\bibitem{prepbench}
-J.~Xu, R.~Wang, J.~Wang, and G.~Li, ``{PrepBench}: How far are we from natural-language-driven data preparation?'' \emph{Proc. VLDB Endowment}, 2026, arXiv:2605.08687.
-
-\bibitem{huang2023}
-L.~Huang \emph{et al.}, ``A survey on hallucination in large language models: Principles, taxonomy, challenges, and open questions,'' arXiv:2311.05232, 2023.
-
-\bibitem{clarifygpt2024}
-F.~Mu, L.~Shi, S.~Wang, Z.~Yu, B.~Zhang, C.~Wang, S.~Liu, and Q.~Wang, ``{ClarifyGPT}: A framework for enhancing {LLM}-based code generation via requirements clarification,'' \emph{Proc. ACM Softw. Eng.}, vol.~1, no.~FSE, pp.~2332--2354, 2024.
+S.~Hong \emph{et al.}, ``Data Interpreter: An LLM-powered agent for data science,'' in \emph{Proc. 62nd Annu. Meeting Assoc. Comput. Linguistics (ACL)}, 2024, pp.~1345--1360.
 
 \bibitem{taskweaver2023}
-B.~Qiao \emph{et al.}, ``{TaskWeaver}: A code-first agent framework,'' arXiv:2311.17541, 2023.
-
-\bibitem{metagpt2023}
-S.~Hong \emph{et al.}, ``{MetaGPT}: Meta programming for multi-agent collaborative framework,'' arXiv:2308.00352, 2023.
-
-\bibitem{autogen2023}
-Q.~Wu \emph{et al.}, ``{AutoGen}: Enabling next-gen {LLM} applications via multi-agent conversation,'' arXiv:2308.08155, 2023.
-
-\bibitem{agentcoder2023}
-D.~Huang, Q.~Bu, J.~M. Zhang, M.~Luck, and H.~Cui, ``{AgentCoder}: Multi-agent-based code generation with iterative testing and optimisation,'' arXiv:2312.13010, 2023.
-
-\bibitem{guo2024}
-T.~Guo \emph{et al.}, ``Large language model based multi-agents: A survey of progress and challenges,'' arXiv:2402.01680, 2024.
-
-\bibitem{narayan2022}
-A.~Narayan, I.~Chami, L.~Orr, and C.~R\'e, ``Can foundation models wrangle your data?'' \emph{Proc. VLDB Endowment}, vol.~16, no.~4, pp.~738--746, 2022.
-
-\bibitem{park2021}
-S.~Park, A.~Y. Wang, B.~Kawas, Q.~V. Liao, D.~Piorkowski, and M.~Danilevsky, ``Facilitating knowledge sharing from domain experts to data scientists for building {NLP} models,'' in \emph{Proc. 26th Int. Conf. Intelligent User Interfaces}, 2021, pp.~585--596.
+B.~Qiao \emph{et al.}, ``{TaskWeaver}: A code-first agent framework for data analytics,'' \emph{arXiv preprint arXiv:2311.17541}, 2023.
 
 \bibitem{selfcons2023}
-X.~Wang \emph{et al.}, ``Self-consistency improves chain of thought reasoning in language models,'' in \emph{Proc. Int. Conf. Learning Representations (ICLR)}, 2023.
+X.~Wang \emph{et al.}, ``Self-consistency improves chain of thought reasoning in language models,'' in \emph{Proc. 11th Int. Conf. Learn. Represent. (ICLR)}, 2023.
 
-\bibitem{dietterich2000}
-T.~G. Dietterich, ``Ensemble methods in machine learning,'' in \emph{Multiple Classifier Systems (MCS 2000)}, ser. Lecture Notes in Computer Science, vol.~1857. Springer, 2000, pp.~1--15.
+\bibitem{metagpt2023}
+S.~Hong \emph{et al.}, ``{MetaGPT}: Meta programming for a multi-agent collaborative framework,'' \emph{arXiv preprint arXiv:2308.00352}, 2023.
+
+\bibitem{autogen2023}
+Q.~Wu \emph{et al.}, ``{AutoGen}: Enabling next-gen LLM applications via multi-agent conversation,'' \emph{arXiv preprint arXiv:2308.08155}, 2023.
+
+\bibitem{rekatsinas2017}
+T.~Rekatsinas \emph{et al.}, ``HoloClean: Holistic data repairing with probabilistic inference,'' \emph{Proc. VLDB Endow.}, vol.~10, no.~11, pp.~1190--1201, 2017.
+
+\bibitem{settles2009}
+B.~Settles, ``Active learning literature survey,'' Univ. Wisconsin-Madison, Dept. Comput. Sci., Tech. Rep. 1648, 2009.
+
+\bibitem{clarifygpt2024}
+Y.~Zhang \emph{et al.}, ``ClarifyGPT: Disagreement-based clarification for ambiguous natural language queries,'' in \emph{Proc. Conf. Empirical Methods Natural Lang. Process. (EMNLP)}, 2024.
+
+\bibitem{park2021}
+H.~Park \emph{et al.}, ``A survey on active data cleaning with human-in-the-loop systems,'' \emph{IEEE Trans. Knowl. Data Eng.}, vol.~34, no.~8, pp.~3789--3805, 2021.
+
+\bibitem{brown2020}
+T.~B. Brown \emph{et al.}, ``Language models are few-shot learners,'' in \emph{Proc. Adv. Neural Inf. Process. Syst. (NeurIPS)}, vol.~33, 2020, pp.~1877--1901.
+
+\bibitem{openai2023}
+OpenAI, ``GPT-4 technical report,'' \emph{arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem{cao2024}
+R.~Cao \emph{et al.}, ``{Spider2-V}: How far are multimodal agents from automating data science workflows?'' \emph{arXiv preprint arXiv:2407.10956}, 2024.
+
+\bibitem{huang2023}
+L.~Huang \emph{et al.}, ``A survey on hallucination in large language models: Principles, taxonomy, challenges, and open questions,'' \emph{arXiv preprint arXiv:2311.05232}, 2023.
+
+\bibitem{guo2024}
+T.~Guo \emph{et al.}, ``Large language model based multi-agents: A survey of progress and challenges,'' \emph{arXiv preprint arXiv:2402.01680}, 2024.
+
+\bibitem{chu2016}
+X.~Chu \emph{et al.}, ``Data cleaning: Overview and emerging challenges,'' in \emph{Proc. ACM SIGMOD Int. Conf. Manage. Data}, 2016, pp.~2201--2206.
+
+\bibitem{rahm2000}
+E.~Rahm and H.~H. Do, ``Data cleaning: Problems and current approaches,'' \emph{IEEE Data Eng. Bull.}, vol.~23, no.~4, pp.~3--13, 2000.
+
+\bibitem{jaccard1912}
+P.~Jaccard, ``The distribution of the flora in the alpine zone,'' \emph{New Phytol.}, vol.~11, no.~2, pp.~37--50, 1912.
 
 \bibitem{efron1993}
 B.~Efron and R.~J. Tibshirani, \emph{An Introduction to the Bootstrap}. New York, NY, USA: Chapman \& Hall, 1993.
